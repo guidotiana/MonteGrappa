@@ -7,6 +7,34 @@
 		MPI Datatypes
 ***********************************************/
 
+void Create_vector_datatype(MPI_Datatype *Vectortype)
+{
+	struct vector *x;
+	x=calloc(1,sizeof(struct vector));
+	MPI_Aint adress[4];
+	MPI_Get_address(x, &adress[0]);
+        MPI_Get_address(&(*x).x, &adress[1]);
+        MPI_Get_address(&(*x).y, &adress[2]);
+        MPI_Get_address(&(*x).z, &adress[3]);
+
+	MPI_Datatype type[3]={MPI_DOUBLE,MPI_DOUBLE,MPI_DOUBLE};
+
+	int blocklen[3]={1,1,1};
+        MPI_Aint disp[3];
+
+        int i;
+        for(i=0; i<3; i++) {disp[i]=adress[i+1]-adress[0];}
+
+        MPI_Type_create_struct(3,blocklen,disp,type,Vectortype);
+        MPI_Type_commit(Vectortype);
+        free(x);
+
+        return;
+
+
+}
+
+
 void Create_rot_datatype(MPI_Datatype *Rottype)
 {
 	struct s_rotamers *x;
@@ -302,21 +330,48 @@ void send_struct(int *nback, int iproc, int nprocs, int *nat, int *ntypes, MPI_S
 	return;
 }
 
-
 //polymer status
 struct s_polymer *send_pol(int iproc, int nprocs, int nback, MPI_Datatype Backtype, MPI_Datatype Sidetype,  MPI_Datatype Rottype, struct s_polymer *startp, MPI_Status astatus, int npol, int shell, int nosidechains)
 {
-	int i, j, k, l;
+	int i, j, k, l,position,buffer_size;
 
-	(startp+npol)->nback = nback;	
-	if(iproc==0) for(i=1; i<nprocs; i++) for(j=0; j<nback;j++) MPI_Send(((startp+npol)->back)+j, 1, Backtype, i, 300+100*i+j, MPI_COMM_WORLD);	
-	if(iproc!=0) for(j=0; j<nback;j++) MPI_Recv(((startp+npol)->back)+j, 1, Backtype, 0, 300+100*iproc+j, MPI_COMM_WORLD, &astatus);	
+	char buffer[buffer_max];
+	(startp+npol)->nback = nback;
+	buffer_size=(sizeof(struct s_back)*nback);
+//	fprintf(stderr,"send_pol: BUFFER SIZE IS %d\n",buffer_size);
+	if(buffer_size>buffer_max)
+        {
+        	fprintf(stderr,"Buffer too small\n");
+                MPI_Finalize();
+                exit(1);
+        }
+
+	if(iproc==0) 
+	{
+		position=0;
+		for(j=0;j<nback;j++)
+			MPI_Pack(((startp+npol)->back)+j,1,Backtype,buffer,buffer_size,&position,MPI_COMM_WORLD);
+		for(i=1; i<nprocs; i++)
+			MPI_Send(buffer,position,MPI_PACKED,i, 300+100*i, MPI_COMM_WORLD);
+	}
+
+	if(iproc!=0)
+	{
+		MPI_Recv(buffer,buffer_size,MPI_PACKED,0, 300+100*iproc, MPI_COMM_WORLD, &astatus);		
+		position=0;
+		for(j=0;j<nback;j++)
+			MPI_Unpack(buffer,buffer_size,&position,((startp+npol)->back)+j,1,Backtype,MPI_COMM_WORLD);	
+	}
 
 	if(!(nosidechains))
-	{
-		if(iproc==0) for(i=1; i<nprocs; i++) for(j=0; j<nback;j++) for(k=0; k<((startp->back)+j)->nside;k++) 
+        {
+		if(iproc==0)
+		{
+			for(i=1; i<nprocs; i++) for(j=0; j<nback;j++) for(k=0; k<((startp->back)+j)->nside;k++) 
 					MPI_Send(((((startp+npol)->back)+j)->side)+k, 1, Sidetype, i, 2000+100*i+10*j+k, MPI_COMM_WORLD);
-		if(iproc!=0) for(j=0; j<nback;j++) for(k=0; k<((startp->back)+j)->nside;k++)
+		}	
+
+	if(iproc!=0) for(j=0; j<nback;j++) for(k=0; k<((startp->back)+j)->nside;k++)
 					MPI_Recv(((((startp+npol)->back)+j)->side)+k, 1, Sidetype, 0, 2000+100*iproc+10*j+k, MPI_COMM_WORLD, &astatus);
 		if(iproc==0) for(i=1; i<nprocs; i++) for(j=0; j<nback;j++) for(k=0; k<((startp->back)+j)->nside;k++) for(l=0; l<((startp->back)+j)->nrot; l++)
 					MPI_Send(((((((startp+npol)->back)+j)->side)+k)->rot)+l, 1, Rottype, i, 10000+1000*i+100*j+10*k+l, MPI_COMM_WORLD);
@@ -324,6 +379,8 @@ struct s_polymer *send_pol(int iproc, int nprocs, int nback, MPI_Datatype Backty
 					MPI_Recv(((((((startp+npol)->back)+j)->side)+k)->rot)+l, 1, Rottype, 0, 10000+1000*iproc+100*j+10*k+l , MPI_COMM_WORLD, &astatus);	
 	}
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	if(iproc!=0)
 	{
 		for(i=0; i<nback; i++) ((startp+npol)->vback)[(((startp+npol)->back)+i)->ia ] = &(((((startp+npol)->back)+i)->pos));
@@ -332,7 +389,6 @@ struct s_polymer *send_pol(int iproc, int nprocs, int nback, MPI_Datatype Backty
 	
 	return startp;
 }
-
 //potential
 struct s_potential *send_pot(int nat, int ntypes, int noangpot, int nodihpot, int hb, int iproc, int nprocs, MPI_Datatype Pottype, struct s_potential *u, MPI_Status astatus)
 {
@@ -411,19 +467,27 @@ void send_int_matrix(int length1, int length2, int iproc, int **m, int source)
  Copy a polymer structure from a replica to another 
  
  *****************************************************************************/
-void ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_polymer *oldp, struct s_mc_parms *parms, struct s_potential *u, int iproc, int ntemp, int even, int *ex_count, int *ex_acc, MPI_Datatype Backtype, MPI_Datatype Sidetype, MPI_Datatype Rottype, MPI_Status astatus)
+void ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_polymer *oldp, struct s_mc_parms *parms, struct s_potential *u, int iproc, int ntemp, int even, int *ex_count, int *ex_acc, MPI_Datatype Backtype, MPI_Datatype Sidetype, MPI_Datatype Rottype, MPI_Datatype Vectortype, MPI_Status astatus)
 {
-	int i,j,k,l, a=0;
+	int i,j,k,l, position,a=0;
 	int x[ntemp];
 	double delta;
 	double E[ntemp];
 	int nback = polymer->nback;
-	
+	int buffer_back_size=sizeof(struct s_back)*nback;
+	char *buffer_back=malloc(buffer_back_size);	
+//	int side_dims[nback];
+//i	int buffer_side_size,buffer_vector_size,sidechains=0;
+	int nosidechains=parms->nosidechains;
+
+
 	for(i=0;i<ntemp;i++) 
 		E[i]=100.;
 	E[iproc]=polymer->etot;
 	for(i=0;i<ntemp;i++)
 		MPI_Bcast(&(E[i]),1,MPI_DOUBLE,i,MPI_COMM_WORLD);  //exchanging energy values between replicas
+
+
 	for(i=even;i<ntemp-1;i=i+2)
 	{
 		if(iproc==i) //sender		
@@ -440,42 +504,153 @@ void ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_
 		MPI_Barrier(MPI_COMM_WORLD); 
 		if(a==1) //confirmed exchange
 		{	
-			fprintf(stderr,"exchanged\n");
-			//backbone
+//			fprintf(stderr,"exchanged\n");
+			//backbone	i -> i+1
+			//backbone	i+1 -> 1
 			if(iproc==i)
-				for(j=0; j<polymer->nback;j++) MPI_Send((polymer->back)+j, 1, Backtype, i+1, 10000+100*i+j, MPI_COMM_WORLD);
+			{
+				position=0;
+				for(j=0;j<nback;j++)
+        		                MPI_Pack((polymer->back)+j,1,Backtype,buffer_back,buffer_back_size,&position,MPI_COMM_WORLD);
+	                         MPI_Send(buffer_back,position,MPI_PACKED,i+1, 10000+100*i, MPI_COMM_WORLD);
+			}
 			if(iproc==i+1)
 			{
-				for(j=0; j<polymer->nback;j++) MPI_Recv((replica->back)+j, 1, Backtype, i, 10000+100*i+j, MPI_COMM_WORLD, &astatus);
-				for(j=0; j<polymer->nback;j++) MPI_Send((polymer->back)+j, 1, Backtype, i, 20000+100*i+j, MPI_COMM_WORLD);			
-			}
-			if(iproc==i)
-				for(j=0; j<polymer->nback;j++) MPI_Recv((replica->back)+j, 1, Backtype, i+1, 20000+100*i+j, MPI_COMM_WORLD, &astatus);
+				MPI_Recv(buffer_back,buffer_back_size,MPI_PACKED,i,10000+100*i, MPI_COMM_WORLD, &astatus);
+		                position=0;
+                		for(j=0;j<nback;j++)
+	               	        	MPI_Unpack(buffer_back,buffer_back_size,&position,(replica->back)+j,1,Backtype,MPI_COMM_WORLD);
 
-			if(!(parms->nosidechains))
-			{
-				if(iproc==i) for(j=0; j<nback;j++) for(k=0; k<((polymer->back)+j)->nside;k++) 
-						MPI_Send((((polymer->back)+j)->side)+k, 1, Sidetype, i+1, 1000000+100*i+10*j+k, MPI_COMM_WORLD);
-				if(iproc==i+1) for(j=0; j<nback;j++) for(k=0; k<((replica->back)+j)->nside;k++)
-						MPI_Recv((((replica->back)+j)->side)+k, 1, Sidetype, i, 1000000+100*i+10*j+k, MPI_COMM_WORLD, &astatus);
-				if(iproc==i) for(j=0; j<nback;j++) for(k=0; k<((polymer->back)+j)->nside;k++) for(l=0; l<((polymer->back)+j)->nrot; l++)
-						MPI_Send((((((polymer->back)+j)->side)+k)->rot)+l, 1, Rottype, i+1, 2000000+1000*i+100*j+10*k+l, MPI_COMM_WORLD);
-				if(iproc==i+1) for(j=0; j<nback;j++) for(k=0; k<((replica->back)+j)->nside;k++) for(l=0; l<((replica->back)+j)->nrot; l++)
-						MPI_Recv((((((replica->back)+j)->side)+k)->rot)+l, 1, Rottype, i, 2000000+1000*i+100*j+10*k+l , MPI_COMM_WORLD, &astatus);	
+				position=0;
+			
+				for(j=0;j<nback;j++)
+                                        MPI_Pack((polymer->back)+j,1,Backtype,buffer_back,buffer_back_size,&position,MPI_COMM_WORLD);
+	                        MPI_Send(buffer_back,position,MPI_PACKED,i, 20000+100*i, MPI_COMM_WORLD);
+
 			}
 			
-			if(!(parms->nosidechains))
+			if(iproc==i)
 			{
-				if(iproc==i+1) for(j=0; j<nback;j++) for(k=0; k<((polymer->back)+j)->nside;k++) 
-						MPI_Send((((polymer->back)+j)->side)+k, 1, Sidetype, i, 3000000+100*i+10*j+k, MPI_COMM_WORLD);
-				if(iproc==i) for(j=0; j<nback;j++) for(k=0; k<((replica->back)+j)->nside;k++)
-						MPI_Recv((((replica->back)+j)->side)+k, 1, Sidetype, i+1, 3000000+100*i+10*j+k, MPI_COMM_WORLD, &astatus);
-				if(iproc==i+1) for(j=0; j<nback;j++) for(k=0; k<((polymer->back)+j)->nside;k++) for(l=0; l<((polymer->back)+j)->nrot; l++)
-						MPI_Send((((((polymer->back)+j)->side)+k)->rot)+l, 1, Rottype, i, 4000000+1000*i+100*j+10*k+l, MPI_COMM_WORLD);
-				if(iproc==i) for(j=0; j<nback;j++) for(k=0; k<((replica->back)+j)->nside;k++) for(l=0; l<((replica->back)+j)->nrot; l++)
-						MPI_Recv((((((replica->back)+j)->side)+k)->rot)+l, 1, Rottype, i+1, 4000000+1000*i+100*j+10*k+l , MPI_COMM_WORLD, &astatus);	
+			        MPI_Recv(buffer_back,buffer_back_size,MPI_PACKED,i+1, 20000+100*i, MPI_COMM_WORLD, &astatus);
+                                position=0;
+                                for(j=0;j<nback;j++)
+                                        MPI_Unpack(buffer_back,buffer_back_size,&position,(replica->back)+j,1,Backtype,MPI_COMM_WORLD);
+
+
 			}
-			ex_acc[i]++;	//accepted exchange counter
+			
+			if(!nosidechains)
+			{
+
+				int side_dims[nback];
+				int rot_dims[nback];
+               			int buffer_side_size,sidechains=0;
+				int buffer_rot_size,rotamersl=0;
+			        for(j=0;j<nback;j++)
+                		{
+                        		side_dims[j]=((polymer->back)+j)->nside;
+					rot_dims[j]=((polymer->back)+j)->nrot;
+					sidechains+=side_dims[j];
+					rotamersl+=rot_dims[j];
+                		}
+
+		                buffer_side_size=sizeof(struct s_side)*sidechains;
+//		                buffer_rot_size=sizeof(struct s_rotamers)*rotamersl;
+//				fprintf(stderr,"\nSIZE OF %d ROTs IS %d\n",rotamersl,buffer_rot_size);
+     				char *buffer_side=malloc(buffer_side_size);
+//	        	        char *buffer_rot=malloc(buffer_rot_size);
+
+
+				//sidechains	i -> i+1	
+				if(iproc==i)
+				{
+					position=0;
+					for(j=0; j<nback;j++) for(k=0; k<side_dims[j];k++)
+						MPI_Pack((((polymer->back)+j)->side)+k,1,Sidetype,buffer_side,buffer_side_size,&position,MPI_COMM_WORLD);	
+					MPI_Send(buffer_side,position,MPI_PACKED,i+1, 1000000+100*i, MPI_COMM_WORLD);
+				}
+				if(iproc==i+1) 
+				{
+					MPI_Recv(buffer_side,buffer_side_size,MPI_PACKED,i,1000000+100*i, MPI_COMM_WORLD, &astatus);
+					position=0;
+					for(j=0; j<nback;j++) for(k=0; k<side_dims[j];k++) 
+						MPI_Unpack(buffer_side,buffer_side_size,&position,(((replica->back)+j)->side)+k,1,Sidetype,MPI_COMM_WORLD);
+				}
+
+
+				//rotamers	i -> i+1
+				if(iproc==i)
+				{
+//					position=0;
+					for(j=0; j<nback;j++) for(k=0; k<side_dims[j];k++) for(l=0; l<rot_dims[j]; l++)
+//								MPI_Pack((((((polymer->back)+j)->side)+k)->rot)+l,1,Rottype,buffer_rot,buffer_rot_size,&position,MPI_COMM_WORLD);
+//					MPI_Send(buffer_rot,position,MPI_PACKED,i+1, 2000000+1000*i, MPI_COMM_WORLD);
+						MPI_Send((((((polymer->back)+j)->side)+k)->rot)+l, 1, Rottype, i+1, 2000000+1000*i+100*j+10*k+l, MPI_COMM_WORLD);
+				}
+
+				if(iproc==i+1)
+				{
+//					MPI_Recv(buffer_rot,buffer_rot_size,MPI_PACKED,i,2000000+1000*i, MPI_COMM_WORLD, &astatus);
+//					position=0;
+					for(j=0; j<nback;j++) for(k=0; k<side_dims[j];k++) for(l=0; l<rot_dims[j]; l++)
+//						MPI_Unpack(buffer_rot,buffer_rot_size,&position,(((((replica->back)+j)->side)+k)->rot)+l,1,Rottype,MPI_COMM_WORLD);
+						MPI_Recv((((((replica->back)+j)->side)+k)->rot)+l, 1, Rottype, i, 2000000+1000*i+100*j+10*k+l , MPI_COMM_WORLD, &astatus);	
+				}
+
+			
+		//}
+				//sidechains	i+i -> i
+	//	if(!nosidechains)
+	//	{	
+				if(iproc==i+1)
+				{
+					position=0;
+                                        for(j=0; j<nback;j++) for(k=0; k<side_dims[j];k++)
+                                               MPI_Pack((((polymer->back)+j)->side)+k,1,Sidetype,buffer_side,buffer_side_size,&position,MPI_COMM_WORLD);
+                                        MPI_Send(buffer_side,position,MPI_PACKED,i, 3000000+100*i, MPI_COMM_WORLD);
+
+//					 for(j=0; j<nback;j++) for(k=0; k<((polymer->back)+j)->nside;k++) 
+//						MPI_Send((((polymer->back)+j)->side)+k, 1, Sidetype, i, 3000000+100*i+10*j+k, MPI_COMM_WORLD);
+				}
+				if(iproc==i)
+				{
+	  		              	MPI_Recv(buffer_side,buffer_side_size,MPI_PACKED,i+1,3000000+100*i, MPI_COMM_WORLD, &astatus);
+                                      	position=0;
+                                        for(j=0; j<nback;j++) for(k=0; k<side_dims[j];k++)
+                                                MPI_Unpack(buffer_side,buffer_side_size,&position,(((replica->back)+j)->side)+k,1,Sidetype,MPI_COMM_WORLD);
+//					for(j=0; j<nback;j++) for(k=0; k<((replica->back)+j)->nside;k++)
+//						MPI_Recv((((replica->back)+j)->side)+k, 1, Sidetype, i+1, 3000000+100*i+10*j+k, MPI_COMM_WORLD, &astatus);
+				}
+
+				//rotamers 	i+1 -> i
+				if(iproc==i+1)
+				{
+/*					position=0;
+ 	                                for(j=0; j<nback;j++) for(k=0; k<((polymer->back)+j)->nside;k++) for(l=0; l<rot_dims[j]; l++)
+                                                MPI_Pack((((((polymer->back)+j)->side)+k)->rot)+l,1,Rottype,buffer_rot,buffer_rot_size,&position,MPI_COMM_WORLD);
+                                       MPI_Send(buffer_rot,position,MPI_PACKED,i, 4000000+1000*i, MPI_COMM_WORLD);
+*/
+					 for(j=0; j<nback;j++) for(k=0; k<((polymer->back)+j)->nside;k++) for(l=0; l<((polymer->back)+j)->nrot; l++)
+						MPI_Send((((((polymer->back)+j)->side)+k)->rot)+l, 1, Rottype, i, 4000000+1000*i+100*j+10*k+l, MPI_COMM_WORLD);
+				}
+		
+				if(iproc==i)
+				{
+/*					MPI_Recv(buffer_rot,buffer_rot_size,MPI_PACKED,i+1,4000000+1000*i, MPI_COMM_WORLD, &astatus);
+                                        position=0;
+                                       for(j=0; j<nback;j++) for(k=0; k<((replica->back)+j)->nside;k++) for(l=0; l<rot_dims[j]; l++)
+                                        MPI_Unpack(buffer_rot,buffer_rot_size,&position,(((((replica->back)+j)->side)+k)->rot)+l,1,Rottype,MPI_COMM_WORLD);
+*/
+					 for(j=0; j<nback;j++) for(k=0; k<((replica->back)+j)->nside;k++) for(l=0; l<((replica->back)+j)->nrot; l++)
+						MPI_Recv((((((replica->back)+j)->side)+k)->rot)+l, 1, Rottype, i+1, 4000000+1000*i+100*j+10*k+l , MPI_COMM_WORLD, &astatus);	
+				}
+		
+
+			}
+			
+		
+
+		ex_acc[i]++;	//accepted exchange counter
 			x[i]=1; x[i+1]=1;		
 		}
 		else

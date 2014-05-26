@@ -1,5 +1,6 @@
 
 //MPI Types
+void Create_vector_datatype(MPI_Datatype *Vectortype);
 void Create_rot_datatype(MPI_Datatype *Rottype);
 void Create_side_datatype(MPI_Datatype *Sidetype);
 void Create_back_datatype(MPI_Datatype *Backtype);
@@ -15,8 +16,7 @@ void send_double_matrix(int length1, int length2, int iproc, double **m, int sou
 void send_int_matrix(int length1, int length2, int iproc, int **m, int source);
 
 //Exchange
-void ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_polymer *oldp, struct s_mc_parms *parms, struct s_potential *u, int iproc, int ntemp, int even, int *ex_count, int *ex_acc, MPI_Datatype Backtype, MPI_Datatype Sidetype, MPI_Datatype Rottype, MPI_Status astatus);
-
+void ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_polymer *oldp, struct s_mc_parms *parms, struct s_potential *u, int iproc, int ntemp, int even, int *ex_count, int *ex_acc, MPI_Datatype Backtype, MPI_Datatype Sidetype, MPI_Datatype Rottype, MPI_Datatype Vecttype, MPI_Status astatus);
 //Potential-related
 #ifdef OPTIMIZEPOT
 struct s_optimizepot_input *Allo_op_input(int nrestr);

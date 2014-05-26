@@ -17,7 +17,7 @@
  *****************************************************************************/
 int softexit;
 
-void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *replica, struct s_polymer *native, struct s_potential *pot, struct s_mc_parms *parms, FILE *ftrj, FILE *fe, struct s_polymer *oldp, FILE *fproc, int my_rank, int irun, MPI_Datatype Backtype, MPI_Datatype Sidetype, MPI_Datatype Rottype, MPI_Status astatus)
+void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *replica, struct s_polymer *native, struct s_potential *pot, struct s_mc_parms *parms, FILE *ftrj, FILE *fe, struct s_polymer *oldp, FILE *fproc, int my_rank, int irun, MPI_Datatype Backtype, MPI_Datatype Sidetype, MPI_Datatype Rottype, MPI_Datatype Vecttype, MPI_Status astatus)
 {
 	int i,istep=0,ok=0,iprinttrj=0,iprintlog=0,iprinte=0,ishell=0,ntm=0,ci,mcount[NMOVES],macc[NMOVES],mdone[NMOVES];
 //	int anneal_count=0, anneal_status=0;
@@ -133,7 +133,7 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 	////////////////////////////////////////
 	do
 	{
-//                 for (i=0;i<NMOVES;i++) mcount[i] ++;
+
 
 	
 		#ifdef DEBUG
@@ -141,7 +141,7 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 			fprintf(stderr,"-----------------\nStep %d\n",istep);
 		#endif
 
-	//	for (i=0;i<NMOVES;i++) mcount[i] ++;
+
 
 		// make a move (one per allowed type)
 		if (mcount[0] == parms->movetype[0])						// flip of backbone
@@ -154,7 +154,7 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 		
 		if (mcount[1] == parms->movetype[1])						// pivot of backbone
 		{
-//			fprintf(stderr,"pivot \n");
+			//fprintf(stderr,"pivot \n");
 			ok = MoveBackbonePivot(p,oldp,pot,parms,t);
 			if (ok>-1) mcount[1] = 0;
 			if (ok==1) macc[1]++;
@@ -211,8 +211,8 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 		}
 
 				
-			// if you want to anneal
-			//if (parms->anneal) Anneal(parms,&t,&anneal_count,&anneal_status,&ok,&ishell,mcount);
+		// if you want to anneal
+		//if (parms->anneal) Anneal(parms,&t,&anneal_count,&anneal_status,&ok,&ishell,mcount);
 
 		// print log
 		if (iprintlog == parms->nprintlog && ok>-2)
@@ -310,14 +310,14 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
                         if(parms->debug>2) 
 				if(my_rank==0)
 					fprintf(stderr,"\nstep=%d\n",istep);
-                	ExchangePol(p,replica,oldp,parms,pot,my_rank,parms->ntemp,0,ex_count,ex_acc,Backtype,Sidetype,Rottype,astatus);	
+                	ExchangePol(p,replica,oldp,parms,pot,my_rank,parms->ntemp,0,ex_count,ex_acc,Backtype,Sidetype,Rottype,Vecttype,astatus);	
 		}
                 
 		if(ptempering_count==(parms->nstep_exchange) && parms->ntemp>1)
                 {
                 	MPI_Barrier(MPI_COMM_WORLD);
                         if(parms->debug>2) if(my_rank==0) fprintf(stderr,"\nstep=%d\n",istep);
-                        ExchangePol(p,replica,oldp,parms,pot,my_rank,parms->ntemp,1,ex_count,ex_acc,Backtype,Sidetype,Rottype,astatus);
+                        ExchangePol(p,replica,oldp,parms,pot,my_rank,parms->ntemp,1,ex_count,ex_acc,Backtype,Sidetype,Rottype,Vecttype,astatus);
                         ptempering_count=0;
                 }
                 #endif

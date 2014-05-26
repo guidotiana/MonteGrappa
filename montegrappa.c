@@ -38,13 +38,14 @@ int main(int argc, char *argv[])
 	MPI_Comm_size(MPI_COMM_WORLD,&nprocs);
 	MPI_Comm_rank(MPI_COMM_WORLD,&my_rank);	
 
-	MPI_Datatype Parms_mpi, Back_mpi, Side_mpi, Rot_mpi, Pot_mpi;
+	MPI_Datatype Parms_mpi, Back_mpi, Side_mpi, Rot_mpi, Pot_mpi, Vect_mpi;
 
 	Create_parms_datatype(&Parms_mpi);
 	Create_back_datatype(&Back_mpi);
 	Create_side_datatype(&Side_mpi);
 	Create_rot_datatype(&Rot_mpi);
 	Create_pot_datatype(&Pot_mpi);	
+	Create_vector_datatype(&Vect_mpi);
 	
 	#endif
 	
@@ -282,7 +283,7 @@ int main(int argc, char *argv[])
 
 		// MAKE MONTE CARLO
 			
-		Do_MC(polymer,fragment,replica,startp,u,parms,ftrj,fe,oldp,fproc,my_rank,irun,Back_mpi,Side_mpi,Rot_mpi,astatus);
+		Do_MC(polymer,fragment,replica,startp,u,parms,ftrj,fe,oldp,fproc,my_rank,irun,Back_mpi,Side_mpi,Rot_mpi,Vect_mpi,astatus);
 
 		 #ifdef OPTIMIZEPOT
 	         	if (strcmp(parms->op_minim,"none"))
@@ -409,6 +410,8 @@ void Welcome(FILE *fp)
       fprintf(fp,"  G. Tiana, 2010\n");
       fprintf(fp,"pid = %d\n",getpid());
 */
+
+/*
 fprintf(fp,"\n\n");
 fprintf(fp,"  __  __             _              \n");
 fprintf(fp," |  \\/  | ___  _ __ | |_ ___        \n");
@@ -422,10 +425,25 @@ fprintf(fp," | |  _| '__/ _` | ' _\\| '_ \\ / _` |\n");
 fprintf(fp," | |_| | | | (_| | |_) | |_) | (_| |\n");
 fprintf(fp,"  \\____|_|  \\__,_| .__/| .__/ \\__,_|\n");
 fprintf(fp,"                 |_|   |_|          \n");
-fprintf(fp," G. Tiana, 2010\n");
-fprintf(fp," pid = %d\n",getpid());
+fprintf(fp,"\nG. Tiana, 2010\n");
+fprintf(fp,"pid = %d\n",getpid());
+fprintf(fp,"\n\n");
+*/
+
+
+
+fprintf(fp,"\n\n");
+fprintf(fp,"             ,/k.\n");
+fprintf(fp,"            /  ih,\t\t*MonteGrappa*\n");     
+fprintf(fp,"       ,-' ,  `:7b \t\t\tv1.0\n");
+fprintf(fp,"     _.-/   '  /b.`.4p,\n");
+fprintf(fp,"  --   ,    ,-' ^6x, `.'^=._\n");
+fprintf(fp,"\n");
+fprintf(fp,"\nG. Tiana, 2010\n");
+fprintf(fp,"pid = %d\n",getpid());
 fprintf(fp,"\n\n");
 
-}
 
+
+}
 

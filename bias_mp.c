@@ -170,8 +170,6 @@ int CopyFragment(struct s_polymer *p,struct s_polymer *f,int offset,int n,int ip
 
 
 
-//calcola la matrice G basandosi sul frammento da k a k+n; scritta cosi' funziona per la singola catena
-//nota: per k si inizia a contare da 0
 int ComputeG(double **g,struct s_polymer *fragment,struct s_polymer *p,int k,int n,int np,struct s_mc_parms *parms)
 {
 	int ok=1;
@@ -260,7 +258,7 @@ int MoveBiasedGaussian(struct s_polymer *p, struct s_polymer *oldp,struct s_poly
       iw=(NMUL)+irand( (((p+ip)->nback))/3-(NMUL) +1) ;
       deltaE = -GetEnergyMonomerRange(p,(iw*3)-(NMUL*3),(3*iw),ip); 
 
-      //if last segment, mpivot forward
+      //pivot forward
       if(iw==(((p+ip)->nback/3)))
       {
             int pippa;
@@ -315,11 +313,11 @@ int MoveBiasedGaussian(struct s_polymer *p, struct s_polymer *oldp,struct s_poly
             }
 
   
-      }//end of last segment
+      }//end pivot forward
       
 
  
-      //if first segment, mpivot backward     
+      //pivot backward     
       else if(iw==NMUL)
       {
 
@@ -372,7 +370,7 @@ int MoveBiasedGaussian(struct s_polymer *p, struct s_polymer *oldp,struct s_poly
                  parms->acc++;
             }
 
-      }//end of first segment
+      }//end pivot backward
 
 
 
@@ -447,25 +445,24 @@ int MoveBiasedGaussian(struct s_polymer *p, struct s_polymer *oldp,struct s_poly
 		  
                   if(ok==0)
 		  {
-//			fprintf(stderr,"MOVEBIAS< NON ACCETTATA!!! \n");
+
                         UpdateMonomerRange(oldp,p,0,(p+ip)->nback-1,ip,parms->shell);
                    }  
 		  else
                   {
-//			fprintf(stderr,"MOVE BIAS, accepted!!!! \n");
                         UpdateMonomerRange(p,oldp,0,(3*iw),ip,parms->shell);
                         p->etot+=deltaE;
                         parms->acc++;
                   }
 
-            }//end of loose pivot condition
+            }//loose pivot condition
 
-            else //se non va bene la loose
+            else //if not loose pivot
             {
                   UpdateMonomerRange(oldp,p,0,(p+ip)->nback-1,ip,parms->shell);
             }
  
-      }//end of local segment
+      }//end of local pivot
 
       parms->mov++;
 
@@ -487,7 +484,7 @@ int B_Metropolis(double deltaE,double temp,double WN,double WD,struct s_tables *
       if (deltaE<=0)
             return 1;
       double p;
-//      p=exp(-deltaE/temp);
+
       p=FastExp(-deltaE/temp,t);
       p=p*(WN/WD);
 
