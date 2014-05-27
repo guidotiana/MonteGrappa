@@ -20,11 +20,19 @@ int main(int argc, char *argv[])
 	time_t rawtime;
 	double **ematold;
 
+	
+
+
 	if (argc<4)
 	{
-		fprintf(stderr,"\nusage: MonteGrappa polymer.pol potential.pot parameters.par\n");
+		Welcome(stderr);
+		fprintf(stderr,"\nusage:\n$ montegrappa polymer.pol potential.pot parameters.par\n\n");
 		exit(1);
 	}
+
+			
+
+	
 
 
 	int nprocs;
@@ -453,6 +461,11 @@ fprintf(fp,"  --   ,    ,-' ^6x, `.'^=._\n");
 fprintf(fp,"\n");
 fprintf(fp,"\nG. Tiana, 2010\n");
 fprintf(fp,"pid = %d\n",getpid());
+#ifdef ACTIVE_MPI
+fprintf(fp,"MPI ON");
+#else
+fprintf(fp,"MPI OFF");
+#endif
 fprintf(fp,"\n\n");
 
 
