@@ -35,7 +35,7 @@ If you have a pre-compiled copy of MonteGrappa on your machine, the command
 
       $ montegrappa
 
-will print a welcome message with the current version.
+without arguments will print a welcome/usage message with the current version.
 
 
  
