@@ -35,7 +35,7 @@ If you have a pre-builded copy of MonteGrappa on your machine, the command
 
       $ montegrappa
 
-will print a welcome message with the current compiled version.
+will print a welcome message with the current version.
 
 
  
