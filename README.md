@@ -13,7 +13,9 @@
 This file contains all the necessary information to compile and install
 Montegrappa v1.0.    
 
-The DEFAULT version of the code needs gsl libraries to be installed in /opt/local/lib and their headers installed in /opt/local/include
+
+
+The DEFAULT version of the code needs gsl libraries to be installed in /opt/local/lib and their headers installed in /opt/local/include.
 If they are in different locations, you have to modify the second and
 third line of Makefile accordingly
 ->METTIAMO UNA VARIABILE *****
@@ -29,10 +31,12 @@ To build the MPI version,  you must type
 
       $ make version=MPI 
 
+If you have a pre-compiled copy of MonteGrappa , the execution of the binary
+without parameters will print a welcome message with the current version.
+
+$ montegrappa
+
+
+
  
-
-
-
-
-
 
