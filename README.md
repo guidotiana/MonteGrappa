@@ -31,7 +31,7 @@ To build the MPI version,  you must type
 
       $ make version=MPI 
 
-If you have a pre-builded copy of MonteGrappa on your machine, the command
+If you have a pre-compiled copy of MonteGrappa on your machine, the command
 
       $ montegrappa
 
