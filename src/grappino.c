@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 	// allocate stuff
 	fprintf(stderr,"Allocate polymer\n");
 	polymer = AlloPolymer(nchain,nbackmax,NSIDEMAX,NROTMAX,npdb,0,0,stderr);
-	polymer->tables = InitTables();
+	polymer->tables = InitTables(stderr);
 	for (i=1;i<nchain;i++) (polymer+i)->tables = polymer->tables;			// tables of all polymers point to same address
 
 	// transfer pdb to polymer structure
