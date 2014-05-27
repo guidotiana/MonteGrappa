@@ -31,11 +31,11 @@ To build the MPI version,  you must type
 
       $ make version=MPI 
 
-If you have a pre-compiled copy of MonteGrappa , the execution of the binary
-without parameters will print a welcome message with the current version.
+If you have a pre-builded copy of MonteGrappa on your machine, the command
 
-$ montegrappa
+      $ montegrappa
 
+will print a welcome message with the current compiled version.
 
 
  
