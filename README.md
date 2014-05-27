@@ -6,7 +6,7 @@
 	  --   ,    ,-' ^6x, `.'^=._
 
 		   
-     WELCOME TO THE FIRST RELEASE OF MONTEGRAPPA !    
+     WELCOME TO THE FIRST VERSION OF MONTEGRAPPA !    
 
 =======================================================
 
