@@ -19,6 +19,8 @@ int main(int argc, char *argv[])
 	double **cm;                            // ???
 	FILE *fin;
 
+    GrappinoWelcome(stderr);
+    
 	if (argc != 2) {
         fprintf(stderr,"usage: grappino file.in\n");
         exit(1);
@@ -337,4 +339,21 @@ struct atom_s *AlloAtoms(int n)
 }
 
 
-
+void GrappinoWelcome(FILE *fp) {
+    
+    fprintf(fp,"\n\n");
+    fprintf(fp,"       [=]\n");
+    fprintf(fp,"       | |\t*Grappino*\n");
+    fprintf(fp,"       }@{\t\tv1.0\n");
+    fprintf(fp,"      /   \\ \n");
+    fprintf(fp,"     /     \\ \n");
+    fprintf(fp,"    /       \\ \n");
+    fprintf(fp,"    :_______;\n");
+    fprintf(fp,"    | MONTE |   \\~~~/\n");
+    fprintf(fp,"    |GRAPPA |    \\_/\n");
+    fprintf(fp,"    |-------|     |\n");
+    fprintf(fp,"    '_______'   __|__\n");
+    fprintf(fp,"\n\n");
+    fprintf(fp,"\nG. Tiana, 2010\n");
+    fprintf(fp,"pid = %d\n",getpid());
+}

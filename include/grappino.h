@@ -125,7 +125,7 @@ void Parse(FILE *fp, struct s_parms *p);
 void AppendPotentialComments(struct s_parms *p, char *eoutfile);
 struct atom_s *AlloAtoms(int n);
 void Help(FILE *fp);
-
+void GrappinoWelcome(FILE *fp);
 
 double **ReadEMat(char *fname, struct s_parms *p);
 double Dist(struct vector a, struct vector b);
