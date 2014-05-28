@@ -2,24 +2,52 @@
 # Grappino input file sample #
 ##############################
 
+#########
+# Input #
+#########
+
 pdbfile         1VII.pdb          # path of pdb file
 
-r_hardcore      0.86              # hardcore distance (in angstrom)
-r_native        2.0               # native threshold distance (in angstrom)
 
-use_nativedist                    # if defined, set well width to experimental
-                                  # native distance
-k_native_r      1.4               # multiply native distance by this factor
-                                  # (in use_nativedist)
-k_native_hc     0.8               # multiply hardcore distance by this factor
-                                  # (in use_nativedist)
+###########
+# Polymer #
+###########
 
-hydrogen                          # if defined, keeps hydrogens present in
+#hydrogen                          # if defined, keeps hydrogens present in
                                   # pdb file
+nosidechain                       # if defined, uses a CA model (???)
+
+# ROTAMERS
+#rotamers                          # if defined, uses rotamers to define
+                                  # sidechains
+#rotfile         rotamers.lib      # path of rotamers library
+
+#cbpdb                             # if defined, uses the CB positions in
+                                  # the pdb file
+#pdb_rot                           # if defined, uses the rotamers positions
+                                  # in the pdb file
 
 #############
 # Potential #
 #############
+
+backbone_atoms  3 N C CA
+locked_atoms    N
+
+imin            9                 # minimum distance between backbone atoms
+                                  # to define a native interaction
+
+r_hardcore      2.0              # hardcore distance (in angstrom)
+r_native        4.5               # native threshold distance (in angstrom)
+
+
+#use_nativedist                    # if defined, set well width to experimental
+                                  # native distance
+#k_native_hc     0.8               # multiply hardcore distance by this factor
+                                  # (in use_nativedist)
+#k_native_r      1.4               # multiply native distance by this factor
+                                  # (in use_nativedist)
+
 
 potential       go                # initial potential
 
@@ -29,13 +57,31 @@ go-energy       -1.0              # potential well
 atomtypes       go                # go = label each atom with a different
                                   #      type
                                   # <filename> = read types from file
-# ROTAMERS
-rotamers                          # if defined, uses rotamers to define 
-                                  # sidechains
-rotfile         rotamers.lib      # path of rotamers library
-
+#go_dihedrals                      # if defined, set a dihedral potential
+                                  # based on conformation
+#go_angles                         # if defined, set an angle potential
+                                  # based on conformation
 
 # RAMACHANDRAN DIHEDRALS
-propensity      pred.dat          # path of propensity (e.g.PSIPRED output)
+#propensity      psipred.dat       # path of propensity (e.g.PSIPRED output)
+
+# HOMOPOLYMERIC INTERACTION
+#r_homo          1.5               # homopolymeric interaction well
+                                  # width (angstrom)
+#e_homo          -1.0              # ...and depth
 
 
+#########
+# Stuff #
+#########
+
+debug           1                 # set the verbosity level
+
+
+##########
+# Output #
+##########
+
+polfile         1VII.pol
+potfile         1VII.pot
+contactfile     1VII_contact.dat
