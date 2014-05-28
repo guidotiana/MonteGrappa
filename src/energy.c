@@ -347,7 +347,16 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
 	// distances between native CA (numbers are ia)
 	if (!strcmp(kind,"GO_DIST_CA"))
 	{
-		for (ic=0;ic<nchains;ic++)
+        int nrest = 0;
+        for (ic=0;ic<nchains;ic++)
+			for (i=0;i<(p+ic)->nback;i++)
+				for (jc=0;jc<nchains;jc++)
+					for (j=0;j<(p+jc)->nback;j++)
+						if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
+                            nrest++;
+		fprintf(fp,"ndata %d\n",nrest);
+        
+        for (ic=0;ic<nchains;ic++)
 			for (i=0;i<(p+ic)->nback;i++)	
 				for (jc=0;jc<nchains;jc++)
 					for (j=0;j<(p+jc)->nback;j++)
@@ -360,7 +369,15 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
 	// contacts between backbones (numbers are iback, only one chain)
 	if (!strcmp(kind,"GO_DIST_CONT"))
 	{
-		for (i=0;i<(p+0)->nback;i++)	
+        int nrest = 0;
+		for (i=0;i<(p+0)->nback;i++)
+			for (j=i+4;j<(p+0)->nback;j++)
+				for (k=0;k<(((p+0)->back)+i)->ncontacts;k++)
+					if ( *(((((p+0)->back)+i)->contacts)+k) == j )
+                        nrest++;
+		fprintf(fp,"ndata %d\n",nrest);
+        
+        for (i=0;i<(p+0)->nback;i++)
 			for (j=i+4;j<(p+0)->nback;j++)
 				for (k=0;k<(((p+0)->back)+i)->ncontacts;k++)
 					if ( *(((((p+0)->back)+i)->contacts)+k) == j )
