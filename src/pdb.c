@@ -29,111 +29,108 @@ int ReadPDB(struct atom_s *x, char *pdbfile, int hydrogens, int *nchain, int *nb
   oldchainname=' ';
 
   fp = fopen(pdbfile,"r");
-  if (!fp)
-    {
+  if (!fp) {
       fprintf(stderr,"Problem with file %s.\n",pdbfile);
       Error("Cannot find PDB file ");
-    }
+  }
 
   while(fgets(aux,500,fp)!=NULL)
-    if (!strncmp(aux,"ATOM",4))						//if the first four letters of aux are not ATOM
-      {
-    	ok=1;
+    //if the first four letters of aux are not ATOM
+    if (!strncmp(aux,"ATOM",4)){
+      ok=1;
+      // Copy atom name, positioned between 12 and 16 on the pdb lines
+      k=0;
+      for(i=12;i<=15;i++) {
+	    if (aux[i]!=' ') {
+          atom[k]=aux[i];
+	      k++;
+	    }
+      }
+      atom[k]='\0';
 
-    	 // Copy atom name, positioned between 12 and 16 on the pdb lines
-    	 k=0;
-	     for (i=12;i<=15;i++)
-	    	 if (aux[i]!=' ')
-	    		{
-	    		   atom[k]=aux[i];
-	    		   k++;
-	    		}
-	     atom[k]='\0';
+	  if (aux[16]!=' ') Error("Grappino can't handle alternate positions of atoms ");
+      // remove hydrogens if requested
+	  if (hydrogens==0 && atom[0]=='H') ok=0;
+        for(i=0;i<parms->n_back_a;i++)
+		  if (!strcmp(atom,parms->back_a[i])) (*nbackmax) ++;
+        
+        // Copy amino acid name
+      k=0;
+	  for(i=17;i<=19;i++) {
+	    if (aux[i]!=' ') {
+          aa[k]=aux[i];
+	      k++;
+        }
+      }
+      aa[k]='\0';
 
-//	     if (aux[16]!=' ') Error("Weird pdb file");
-	     if (hydrogens==0 && atom[0]=='H') ok=0;			// remove hydrogens
-	     for (i=0;i<parms->n_back_a;i++)
-		if ( !strcmp(atom,parms->back_a[i]) ) (*nbackmax) ++;
-                                          
-	     // Copy amino acid name
-	     k=0;
-	     for (i=17;i<=19;i++)
-	    	 if (aux[i]!=' ')
-	    		{
-	    		   aa[k]=aux[i];
-	    		   k++;
-	    		}
-	     aa[k]='\0';
+	  // Copy chain
+      if (aux[21]!=' ') chainname=aux[21];
 
-	     // Copy chain
-	     if (aux[21]!=' ') chainname=aux[21];
-
-	     // Copy amino acid number
-	     k=0;
-	     for (i=22;i<=25;i++)
-	    	 if (aux[i]!=' ')
-	    		{
+	  // Copy amino acid number
+	  k=0;
+      for(i=22;i<=25;i++) {
+        if (aux[i]!=' ') {
 	    		   aux2[k]=aux[i];
 	    		   k++;
-	    		}
-	     aux2[k]='\0';
-	     iaa = atoi(aux2);
-	     if (iaa0==-1) iaa0=iaa;
+	    }
+      }
+      aux2[k]='\0';
+	  iaa = atoi(aux2);
+	  if (iaa0==-1)
+        iaa0=iaa;
 
-	     // Copy x coordinate
-	     k=0;
-	     for (i=30;i<=37;i++)
-	    	 if (aux[i]!=' ')
-	    		{
-	    		   aux2[k]=aux[i];
-	    		   k++;
-	    		}
-	     aux2[k]='\0';
-	     px = atof(aux2);
+      // Copy x coordinate
+	  k=0;
+      for(i=30;i<=37;i++) {
+        if (aux[i]!=' ') {
+          aux2[k]=aux[i];
+	      k++;
+	    }
+      }
+      aux2[k]='\0';
+	  px = atof(aux2);
 
-	     // Copy y coordinate
-	     k=0;
-	     for (i=38;i<=45;i++)
-	    	 if (aux[i]!=' ')
-	    		{
-	    		   aux2[k]=aux[i];
-	    		   k++;
-	    		}
-	     aux2[k]='\0';
-	     py = atof(aux2);
+	  // Copy y coordinate
+	  k=0;
+	  for(i=38;i<=45;i++)
+        if (aux[i]!=' ') {
+	      aux2[k]=aux[i];
+	      k++;
+	    }
+      aux2[k]='\0';
+	  py = atof(aux2);
 
-	     // Copy z coordinate
-	     k=0;
-	     for (i=46;i<=53;i++)
-	    	 if (aux[i]!=' ')
-	    		{
-	    		   aux2[k]=aux[i];
-	    		   k++;
-	    		}
-	     aux2[k]='\0';
-	     pz = atof(aux2);
+	  // Copy z coordinate
+	  k=0;
+	  for(i=46;i<=53;i++)
+        if (aux[i]!=' ') {
+          aux2[k]=aux[i];
+	      k++;
+	    }
+      aux2[k]='\0';
+	  pz = atof(aux2);
 
-	     // copy everything to structure
-	     strcpy( (x+iatom)->atom,atom);
-	     strcpy( (x+iatom)->aa,aa);
-	     (x+iatom)->iaa = iaa;
-	     ((x+iatom)->pos).x = px;
-	     ((x+iatom)->pos).y = py;
-	     ((x+iatom)->pos).z = pz;
+	  // copy everything to structure
+	  strcpy( (x+iatom)->atom,atom);
+	  strcpy( (x+iatom)->aa,aa);
+	  (x+iatom)->iaa = iaa;
+	  ((x+iatom)->pos).x = px;
+	  ((x+iatom)->pos).y = py;
+	  ((x+iatom)->pos).z = pz;
 			 
-	     if (iatom>0)
-	    	 if (chainname != oldchainname )
-	    	 {
-	    		 (*nchain) ++;
-			 iaa0=-1;
-	    	 }
-	     (x+iatom)->chain = *nchain;
-	     oldchainname = chainname;
+	  if (iatom>0)
+	    if (chainname != oldchainname ) {
+          (*nchain) ++;
+		  iaa0=-1;
+	    }
+      (x+iatom)->chain = *nchain;
+	  oldchainname = chainname;
 
-
-	     // accept atom
-	     if (ok==1) iatom ++;
-	     if (iatom>NATOMMAX) Error("NATOMMAX too small");
+      // accept atom
+      if (ok==1) iatom ++;
+      if (iatom>NATOMMAX)
+        Error("NATOMMAX too small");
       }
 
 
@@ -151,7 +148,7 @@ int PDB2CA(struct atom_s *pdb, struct atom_s *ca, int n)
 {
    int i,k=0;
 
-   for (i=0;i<n;i++)
+   for(i=0;i<n;i++)
 	 if ( !strcmp( (pdb+i)->atom, "CA" ) )
 	 {
 	    strcpy((ca+k)->aa,(pdb+i)->aa);
@@ -162,8 +159,8 @@ int PDB2CA(struct atom_s *pdb, struct atom_s *ca, int n)
         k++;
 	 }
 
-   // check
-   for (i=0;i<k;i++)
+   // check if every residue has a CA
+   for(i=0;i<k;i++)
 	 if ( (ca+i)->iaa != i+1) fprintf(stderr,"WARNING: missing CA for residue %d\n",(ca+i)->iaa);
 
 	return k;
@@ -177,7 +174,7 @@ int PDB2CACB(struct atom_s *pdb, struct atom_s *ca, int n)
    int i,k=0,j,nacb;
    struct vector cm;
 
-   for (i=0;i<n;i++)
+   for(i=0;i<n;i++)
 	 if ( !strcmp( (pdb+i)->atom, "CA" ) )
 	 {
 		// add CA
@@ -189,14 +186,14 @@ int PDB2CACB(struct atom_s *pdb, struct atom_s *ca, int n)
 	    k++;
 
 	    // add CB
+        // If the residue is a GLY, use H instead
 	    if (strcmp((ca+k-1)->aa,"GLY"))
 	    {
 	       nacb=0;
 	       cm.x=0; cm.y=0; cm.z=0;
-	       for (j=0;j<n;j++)
+	       for(j=0;j<n;j++)
 	    	 if ( (pdb+j)->iaa == (pdb+i)->iaa )
-	    	   if ( strcmp( (pdb+j)->atom,"C") && strcmp( (pdb+j)->atom,"O") && strcmp( (pdb+j)->atom,"N") &&
-	    			   strcmp( (pdb+j)->atom,"H") && strcmp( (pdb+j)->atom,"HA") )
+	    	   if ( strcmp( (pdb+j)->atom,"C") && strcmp( (pdb+j)->atom,"O") && strcmp( (pdb+j)->atom,"N") && strcmp( (pdb+j)->atom,"H") && strcmp( (pdb+j)->atom,"HA") )
 	    	   {
 	    		   cm.x += ((pdb+j)->pos).x;
 	    		   cm.y += ((pdb+j)->pos).y;
@@ -220,7 +217,7 @@ int PDB2CACB(struct atom_s *pdb, struct atom_s *ca, int n)
 }
 
 /****************************************************************************
-
+ Fill an empty polymer file with atom positions and return the total atom number 
  *****************************************************************************/
 int Pdb2Polymer(struct atom_s *a, int nchains, int na, struct s_polymer *polymer, struct s_parms *parms, struct rot_input_s *rotamers, int nrot_kinds)
 {
@@ -249,7 +246,7 @@ int Pdb2Polymer(struct atom_s *a, int nchains, int na, struct s_polymer *polymer
 	}
 
 	fprintf(stderr,"Backbone atoms found for the different chains: ");
-	for (i=0;i<nchains;i++) fprintf(stderr,"%d ",(polymer+i)->nback);
+	for(i=0;i<nchains;i++) fprintf(stderr,"%d ",(polymer+i)->nback);
 	fprintf(stderr,"\n");
 
 	fprintf(stderr,"Transferred in polymer %d atoms\n",iamax);
@@ -266,15 +263,15 @@ int CreateBackboneFromPDB(struct atom_s *a, int nchains, int na, struct s_polyme
 {
 	int i,ic,j,iamax=0;
 
-	for (i=0;i<nchains;i++) ib[i]=0;
+	for(i=0;i<nchains;i++) ib[i]=0;
 
 	// add backbone
-	for (i=0;i<na;i++)
+	for(i=0;i<na;i++)
 	{
 		if (IsBackbone((a+i)->atom,parms))											// if i is backbone atom
 		{
 			ic = (a+i)->chain;
-			for (j=0;j<parms->n_back_a;j++)											// check if that atom can be moved
+			for(j=0;j<parms->n_back_a;j++)											// check if that atom can be moved
 			if (!strcmp((a+i)->atom,parms->back_a[j])) (((polymer+ic)->back)+ib[ic])->move=parms->move_a[j];
 
 			(((polymer+ic)->back)+ib[ic])->iaa = (a+i)->iaa;
@@ -299,7 +296,7 @@ int CreateBackboneFromPDB(struct atom_s *a, int nchains, int na, struct s_polyme
 		}
 	}
 	
-	for (ic=0;ic<nchains;ic++)
+	for(ic=0;ic<nchains;ic++)
 		(polymer+ic)->nback = ib[ic];
 
 	return i;
@@ -317,10 +314,10 @@ int CreateSidechainFromPDB(struct atom_s *a, int nchains, int na, struct s_polym
 	CreateTopology(a,na,top,parms->tthresh,parms->debug);		// matrix indexed on structure atom_s
 
 	// add sidechains
-	for (ic=0;ic<nchains;ic++)
+	for(ic=0;ic<nchains;ic++)
 	{
 		ib = (polymer+ic)->nback;
-		for (i=0;i<(polymer+ic)->nback;i++)
+		for(i=0;i<(polymer+ic)->nback;i++)
 		{
 			if (parms->debug>1) fprintf(stderr,"\tside of chain=%d back=%d atom=%d\n",ic,i,(((polymer+ic)->back)+i)->ia);
 
@@ -346,7 +343,7 @@ int IsBackbone(char *atom, struct s_parms *p)
 {
 	int i;
 
-	for (i=0;i<p->n_back_a;i++)
+	for(i=0;i<p->n_back_a;i++)
 		if (!strcmp(atom,p->back_a[i])) return 1;
 
 	return 0;
@@ -359,8 +356,8 @@ void CreateTopology(struct atom_s *a, int n, int **top, double thresh, int debug
 	fprintf(stderr,"Create topology of bonded interactions\n");
 	if (debug>2) fprintf(stderr,"Bonded topology:\n");
 
-	for (i=0;i<n;i++)
-		for (j=i+1;j<n;j++)
+	for(i=0;i<n;i++)
+		for(j=i+1;j<n;j++)
 			if ( (a+i)->chain == (a+j)->chain )					// must be the same chain
 			 if (Dist((a+i)->pos,(a+j)->pos)<thresh)			// bonded if dist<thresh
 				 if ( !(!strcmp((a+i)->aa,"PRO") && !strcmp((a+i)->atom,"N") && !strcmp((a+j)->atom,"CD")) &&
@@ -389,14 +386,14 @@ void FindSidechain(struct atom_s *a, int natoms, int ipol, int iback, int w, int
 	int i,j,ok,out;
 	struct vector b1,b2,b3;
 
-	for (i=0;i<natoms;i++)
+	for(i=0;i<natoms;i++)
 		if (top[w][i]==1)
 			if ( (a+i)->iaa == (a+w)->iaa && (a+i)->chain == (a+w)->chain )
 				if ( IsBackbone((a+i)->atom,parms)==0 )
 				{
 					// check if already added
 					ok=1;
-					for (j=0;j<(((p+ipol)->back)+iback)->nside;j++)
+					for(j=0;j<(((p+ipol)->back)+iback)->nside;j++)
 						if ( (((((p+ipol)->back)+iback)->side)+j)->ia == i ) ok = 0;
 
 					if (ok==1)
@@ -466,17 +463,17 @@ void SetRotamersSimilarToPDB(int nc, struct s_polymer *p, struct atom_s *a, int 
 
 	fprintf(stderr,"Set rotamers close to those of PDB\n");
 
-	for (ic=0;ic<nc;ic++)
-		for (i=0;i<(p+ic)->nback;i++)
+	for(ic=0;ic<nc;ic++)
+		for(i=0;i<(p+ic)->nback;i++)
 			if (!strcmp( (((p+ic)->back)+i)->type , "CA" ) && (((p+ic)->back)+i)->nside>0)		// loop on all CA atoms
 			{
 				iaa = (((p+ic)->back)+i)->iaa;
 
 				// find positions in the pdb
-				for (is=1;is< (((p+ic)->back)+i)->nside; is++)				// loop on sides of polymer, except CB
+				for(is=1;is< (((p+ic)->back)+i)->nside; is++)				// loop on sides of polymer, except CB
 				{
 					found=0;
-					for (ipdb=0;ipdb<napdb;ipdb++)
+					for(ipdb=0;ipdb<napdb;ipdb++)
 					{
 						if ( (a+ipdb)->chain == ic && (a+ipdb)->iaa == iaa && 
 							!strcmp((a+ipdb)->atom,((((((p+ic)->back)+i)->side)+is)->type) ) )
@@ -487,12 +484,12 @@ void SetRotamersSimilarToPDB(int nc, struct s_polymer *p, struct atom_s *a, int 
 				// find the best rotamer
 				rmsd2min=99999.;
 				irotmin=0;
-				for (ir=0;ir< (((p+ic)->back)+i)->nrot;ir++)
+				for(ir=0;ir< (((p+ic)->back)+i)->nrot;ir++)
 				{
 					(((p+ic)->back)+i)->irot = ir;
 
 					AddSidechain(p,i,i,ic);
-					for (is=1;is<(((p+ic)->back)+i)->nside; is++) CopyVector( &((((((p+ic)->back)+i)->side)+is)->pos),cpol+is-1 );
+					for(is=1;is<(((p+ic)->back)+i)->nside; is++) CopyVector( &((((((p+ic)->back)+i)->side)+is)->pos),cpol+is-1 );
 					x = DumbRMSD2( pdb, cpol, (((p+ic)->back)+i)->nside-1 );
 					if (x<rmsd2min) { rmsd2min=x; irotmin=ir; };
 
@@ -513,7 +510,7 @@ double DumbRMSD2(struct vector *a, struct vector *b, int n)
 	int i;
 	double rmsd2=0;
 
-	for (i=0;i<n;i++)
+	for(i=0;i<n;i++)
 	{
 		rmsd2 += Dist2(a[i],b[i]);
 	}
@@ -528,7 +525,7 @@ void CopyPDB(struct atom_s *from, struct atom_s *to, int n)
 {
 	int i;
 
-	for (i=0;i<n;i++)
+	for(i=0;i<n;i++)
 	{
 		strcpy( (to+i)->atom, (from+i)->atom );
 		strcpy( (to+i)->aa, (from+i)->aa );
@@ -548,7 +545,7 @@ int SimplifyPDB(struct atom_s *x, int n, char *model)
 
 	y = AlloAtoms(n);
 
-	if (!strcmp(model,"CA")) m =PDB2CA(x,y,n);
+	if (!strcmp(model,"CA")) m = PDB2CA(x,y,n);
 	else if (!strcmp(model,"CACB")) m = PDB2CACB(x,y,n);
 	else Error("Model not defined in SimplifyPDB");
 

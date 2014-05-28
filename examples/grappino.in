@@ -1,7 +1,14 @@
-# Grappino input file sample
+##############################
+# Grappino input file sample #
+##############################
+
 pdbfile         1VII.pdb          # path of pdb file
 
 r_hardcore      0.86              # hardcore distance (in angstrom)
 r_native        2.0               # native threshold distance (in angstrom)
 
 potential       go                # initial potential
+
+# GO POTENTIAL
+go-energy       -1.0              # potential well 
+
