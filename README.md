@@ -37,7 +37,7 @@ To build the MPI version,  you must type
 
       $ make version=MPI 
 
-Finally, to compile the tool grappino, you have to type
+Finally, you can compile the tool grappino 
       
       $ make grappino
 
