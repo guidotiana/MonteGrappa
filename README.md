@@ -10,10 +10,9 @@
 
 =======================================================
 
-This file contains all the necessary information to compile and install
-Montegrappa v1.0.    
+This file will help you to compile and install Montegrappa v1.0.    
 
-The package contains two programs. The Monte Carlo engine "montegrappa"
+The package contains two programs: the Monte Carlo engine "montegrappa"
 and "grappino", a tool to create the input files for montegrappa.
 
 
