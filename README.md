@@ -14,11 +14,8 @@ This file contains all the necessary information to compile and install
 Montegrappa v1.0.    
 
 The package contains two programs:
-
 montegrappa: the Monte Carlo engine
-
 grappino: a tool to create the input files for montegrappa.
-
 
 
 The DEFAULT version of the code needs gsl libraries to be installed in /opt/local/lib and their headers installed in /opt/local/include.
