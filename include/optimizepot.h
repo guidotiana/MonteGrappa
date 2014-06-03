@@ -10,7 +10,7 @@
 #define OP_NCONTMAX	500	// maximum number of contacts
 #define OP_NRESMAX	100	// maximum number of restrains
 #define REALLOCATE		// if the number of contacts exceed OP_NCONTMAX, reallocate the structure
-//#define OP_DEBUG
+#define OP_DEBUG
 
 struct s_optimizepot *InitializeOptimizePot(struct s_mc_parms *parms, int ntypes, struct s_potential *u, FILE *fproc, int iproc, FILE *fp, int *nrestr);
 struct s_optimizepot *AlloOptimizePot(struct s_mc_parms *parms, int ntypes, int nrestr, FILE *fproc);

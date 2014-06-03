@@ -55,7 +55,7 @@
 #define NMUL 8
 #define NSTART 4
 #define NCHECK 1
-//#define DEBUG
+#define DEBUG
 
 #define PI 3.14159265
 #define EPSILON 0.0001

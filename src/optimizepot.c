@@ -25,7 +25,7 @@ struct s_optimizepot *InitializeOptimizePot(struct s_mc_parms *parms, int ntypes
 		return x;
 	}
 
-	fprintf(fproc,"\nActivating module OPTIMIZE POTENTIAL\n\nInitialize structures\n");
+	fprintf(fproc,"\nActivating POTENTIAL OPTIMIZATION\n\nInitialize structures\n");
 	
 	// read restrains from file (and allocates input structure)
 	if(iproc==0)
@@ -160,7 +160,7 @@ struct s_optimizepot_input *ReadOPRestrains(struct s_mc_parms *parms)
 
 
 /***************************************************
- Get the actual values of the resrtain from chain ipol
+ Get the actual values of the restrain from chain ipol
  of polymer p
  ***************************************************/
 void OP_GetRestrain(int it, struct s_polymer *p, int ipol, struct s_optimizepot_input *opi)
@@ -334,7 +334,7 @@ void OP_SamplePotential(struct s_polymer *p, struct s_mc_parms *parms, int ntype
 		nstep ++;
 
 		// print something
-		if (!(istep%parms->op_print)) fprintf(stderr,"   %5d\t\t%lf\t%lf\n",istep,chi2old, chi2old/(parms->op_input->ndata));
+		if (!(istep%parms->op_print)) fprintf(stderr,"   %5d\t\t\t%lf\t%lf\n",istep,chi2old, chi2old/(parms->op_input->ndata));
 
 		// exit condition
 		if (chi2<parms->op_stop) break;
@@ -358,7 +358,7 @@ void OP_SamplePotential(struct s_polymer *p, struct s_mc_parms *parms, int ntype
 	
 
 	// print to file
-	sprintf(aux,"restraints_%d.dat",irun);
+	sprintf(aux,"restrains_%d.dat",irun);
 	fp = fopen(aux,"w");
 	for (i=0;i<parms->op_input->ndata;i++)
 		fprintf(fp,"%d\t%lf\t%lf\t%lf\n",i,p->op->rest_av[i],parms->op_input->expdata[i],parms->op_input->sigma[i]);
@@ -445,15 +445,16 @@ double OP_function(double **e, struct s_optimizepot *x, struct s_optimizepot_inp
 		boltz = exp(-enew/parms->op_T + eold/x->t[ifr] - emax);
 
 		// make the average
-		for (ir=0;ir<in->ndata;ir++) 
-			x->rest_av[ir] +=  x->restrain[ifr][ir] * boltz;
-                                                                                                                            
+		for (ir=0;ir<in->ndata;ir++)
+         	x->rest_av[ir] +=  x->restrain[ifr][ir] * boltz;
+        
 		z += boltz;
 	}
+    
 
+	for (ir=0;ir<in->ndata;ir++)
+        x->rest_av[ir] /= z;
 
-	for (ir=0;ir<in->ndata;ir++) x->rest_av[ir] /= z;
-	
 	chi2 = Chi2(x->rest_av,in->expdata,in->sigma,in->ndata);
 
 	return chi2;
@@ -467,6 +468,11 @@ double Chi2(double *x, double *xexp, double *sigma, int n)
 	int i;
 	double chi2=0.;
 
+    // HO INIZIATO A FARE TESTING A CASO.
+    // IN QUESTO PUNTO x[i] E' UNA SEQUELA DI nan.
+    // RESTA DA CAPIRE IL PERCHE'. BISOGNA DARCI UN
+    // OCCHIO PERCHE' PUZZA STA ROBA.
+    // JOHN NaN ORA PRO NOBIS
 	for (i=0;i<n;i++)
 		chi2 += (x[i] - xexp[i])*(x[i] - xexp[i]) / ( sigma[i] * sigma[i] );
 
