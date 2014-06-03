@@ -1,0 +1,11 @@
+
+1) MC NORMALE
+2) MC + OPT
+
+3) PAR NORMALE
+4) PAR + OPT
+
+5) SIM_T NORMALE
+6) SIM_T + OPT
+
+
