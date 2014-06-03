@@ -394,28 +394,32 @@ int main(int argc, char *argv[])
       {
 
       for(i=0;i<parms->npol;i++)
-           free( (fragment+i)->back );
-            
+     { 
+    free( (fragment+i)->back );
+        
             for(j=0;j<parms->nmul_local*2;j++)
             {
-                  free( (fragment+i)->A[j] );
+
+	          free( (fragment+i)->A[j] );
                   free( (fragment+i)->G[j] );
                   free( (fragment+i)->L[j] );
                   free( (fragment+i)->Y[j] );
+
            }
 
-      free( (fragment+i)->A );
-      free( (fragment+i)->G );
-      free( (fragment+i)->L );
-      free( (fragment+i)->Y );
-      free( (fragment+i)->d_ang );
-      free( (fragment+i)->g_ang );
+
+      free((fragment+i)->A );
+      free((fragment+i)->G );
+      free((fragment+i)->L );
+      free((fragment+i)->Y );
+      free((fragment+i)->d_ang );
+      free((fragment+i)->g_ang );
 
 
       free(fragment);
-	
-
-      }
+	}	
+	}
+      
 
 	free(parms);
 
