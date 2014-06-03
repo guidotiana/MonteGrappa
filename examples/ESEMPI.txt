@@ -9,3 +9,30 @@
 6) SIM_T + OPT
 
 
+---------------------------------------
+
+1) MC NORMALE
+
+      
+      POL               POT
+      
+      1VII.pdb CA       go               
+      1VII.pdb CA       go + e_dih
+      1VII.pdb NCAC     go + e_dih 
+      1VII.pdb all      go + e_dih
+
+      - diversi atomtype
+      - +sidechain
+      - go / go + e_dih
+
+2) MC + OPT
+
+
+      POL               POT
+
+      1VII.pdb CA       go    
+      1VII.pdb NCAC     go + e_dih
+      1VII.pdb all      go + e_dih
+
+      - test CHI2
+      - test con nuovo potenziale, confronto caso non opt
