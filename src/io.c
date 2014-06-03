@@ -429,6 +429,8 @@ struct s_mc_parms *ReadMcParms(char *fname)
 		#endif
 		#ifndef ACTIVE_MPI
 		ReadParF(aux,"T",&(x->T));
+        if (x->T == 0.0)
+            Error("Temperature is not set");
 		#endif
 
 		#ifdef ACTIVE_MPI

@@ -468,11 +468,6 @@ double Chi2(double *x, double *xexp, double *sigma, int n)
 	int i;
 	double chi2=0.;
 
-    // HO INIZIATO A FARE TESTING A CASO.
-    // IN QUESTO PUNTO x[i] E' UNA SEQUELA DI nan.
-    // RESTA DA CAPIRE IL PERCHE'. BISOGNA DARCI UN
-    // OCCHIO PERCHE' PUZZA STA ROBA.
-    // JOHN NaN ORA PRO NOBIS
 	for (i=0;i<n;i++)
 		chi2 += (x[i] - xexp[i])*(x[i] - xexp[i]) / ( sigma[i] * sigma[i] );
 
