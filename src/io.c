@@ -429,8 +429,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
 		#endif
 		#ifndef ACTIVE_MPI
 		ReadParF(aux,"T",&(x->T));
-        if (x->T == 0.0)
-            Error("Temperature is not set");
+        
 		#endif
 
 		#ifdef ACTIVE_MPI
@@ -462,6 +461,15 @@ struct s_mc_parms *ReadMcParms(char *fname)
 	chk=-1;
 	for (i=0;i<NMOVES;i++) if ( x->movetype[i] != -1 ) chk=1;
 	if (chk==-1) Error("No move type defined");
+    if (x->nstep == 0) Error("Number of MC steps set to 0");
+    
+    
+    
+    // Temperatures check
+    #ifndef ACTIVE_MPI
+    if (x->T <= 0.)
+        Error("Temperature is not set or less than zero");
+    #endif
 
 
 	x->flog=fopen(nlog,"w");
