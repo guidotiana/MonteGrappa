@@ -38,7 +38,7 @@
       - +sidechain
       - go / go + e_dih
 
-2) MC + OPT
+2) MC + OPT	ndBob: Guido lo fa anche con la cromatina
 
       "la mia prima simulazione con ottimizzazione"
       - creazione .pot per ottimizzazione, nessuna modifica ai .pol
