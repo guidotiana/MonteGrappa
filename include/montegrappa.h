@@ -26,7 +26,7 @@
 #define NMOVES		9		// number of types of allowed moves
 #define NDIHFMAX	361		// maximum number of bins in tabled dihedral potential
 
-#define NTEMPMAX	20
+#define NTEMPMAX	25
 #define NAAMAX		1000
 #define NCHAINMAX	25
 
@@ -50,12 +50,12 @@
 
 //LM_DELTAA per la mossa biased-gaussian
 #define LM_DELTAA	0.0001
-#define PARAM_A   10
-#define PARAM_B   200
-#define NMUL 8
+#define PARAM_A   0.2
+#define PARAM_B   1000
+#define NMUL 4
 #define NSTART 4
 #define NCHECK 1
-#define DEBUG
+//#define DEBUG
 
 #define PI 3.14159265
 #define EPSILON 0.0001
@@ -169,14 +169,29 @@ int MoveCoM(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms *parms
 void Anneal(struct s_mc_parms *p, double *t, int *counter, int *status, int *ok, int *ishell, int *mcount);
 
 //bias_mp.c
+
+void InvertTriang( double **Inv, double **Mat, int n );
+double Squared_n_Norma( double *vect, int dim );
+void TransposedMatOnVect( double **Mat, double *vect, double *risu, int n);
+int print_square_matrix(double **m,int n);
+int print_vector(double *v,int n);
+int Gaussian_Angles(double *angles,int n);
+void MatA( double **A, double **G, int dim);
+void Cholesky_2( double **L, double **A, int dim);
+
+
 void CopyResidueCoordinates(struct s_back *from,struct s_back *to);
 int ComputeG(double **g,struct s_polymer *fragment,struct s_polymer *p,int k,int n,int npol,struct s_mc_parms *parms);
 int MoveBiasedGaussian(struct s_polymer *p,struct s_polymer *oldp,struct s_polymer *fragment,struct s_potential *pot,int nmul,struct s_mc_parms *mc_parms,double t);
 int MoveReallyLocal(struct s_polymer *p,struct s_polymer *oldp,struct s_potential *pot,int nmul,struct s_mc_parms *mc_parms,double t);
-int CopyFragment(struct s_polymer *p,struct s_polymer *f,int k,int n,int ip);
+int CopyFragment(struct s_polymer *p,struct s_polymer *f,int iw,int nmul,int natom_fragment,int ip);
 int B_Metropolis(double deltaE,double T,double WN,double WD,struct s_tables *t);
 struct s_polymer *AlloFragment(int npol,int nmul_local,FILE *flog);
 
+//local_move.c
+struct s_polymer *Allo_Fragment(int npol, int nback,int nang, FILE *flog);
+int LocalMove(struct s_polymer *p, struct s_polymer *oldp,struct s_polymer *fragment,struct s_potential *pot,int nmul,struct s_mc_parms *parms, double t);
+int Compute_G(double **g,struct s_polymer *fragment,struct s_polymer *p,int istart,int natom_fragment,int nang,struct s_mc_parms *parms);
 //misc.c
 int irand(int r);
 double frand(void);
