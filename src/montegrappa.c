@@ -108,21 +108,12 @@ int main(int argc, char *argv[])
 	oldp = AlloPolymer(parms->npol,NRESMAX,NSIDEMAX,NROTMAX,NATOMMAX,parms->shell,parms->nosidechains,parms->flog);
 	replica = AlloPolymer(parms->npol,NRESMAX,NSIDEMAX,NROTMAX,NATOMMAX,parms->shell,parms->nosidechains,fproc);
 
-     	if( NMUL !=0)
+     	if( parms->nmul_local !=0)
      	{
             fprintf(stderr,"Fragment length: %d(+1)\n",parms->nmul_local);
-		int nmul_local=NMUL;      
-	      fragment=AlloFragment(parms->npol,nmul_local,parms->flog);
-        	
-            for(i=0;i<parms->npol;i++)
-           	{
-                	(fragment+i)->A=AlloDoubleMatrix(nmul_local*2,nmul_local*2);
-                	(fragment+i)->G=AlloDoubleMatrix(nmul_local*2,nmul_local*2);
-                	(fragment+i)->L=AlloDoubleMatrix(nmul_local*2,nmul_local*2);
-                	(fragment+i)->Y=AlloDoubleMatrix(nmul_local*2,nmul_local*2);
-                	(fragment+i)->g_ang=AlloDouble(nmul_local*2);      
-                	(fragment+i)->d_ang=AlloDouble(nmul_local*2);
-            }       
+		     int nmul_local=parms->nmul_local; 
+	      fragment=Allo_Fragment(parms->npol,parms->nmul_local,parms->nmul_local,parms->flog);
+
 	}
 	
 	startp->tables = InitTables(fproc);                         // keep tables only in (polymer+0)
@@ -397,7 +388,7 @@ int main(int argc, char *argv[])
      { 
     free( (fragment+i)->back );
         
-            for(j=0;j<parms->nmul_local*2;j++)
+            for(j=0;j<parms->nmul_local;j++)
             {
 
 	          free( (fragment+i)->A[j] );
