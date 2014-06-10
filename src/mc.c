@@ -55,8 +55,9 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
         MPI_Datatype Sidetype=mpiparms->Side_mpi;
         MPI_Datatype Rottype=mpiparms->Rot_mpi;
         MPI_Status astatus=mpiparms->astatus;
-
-
+	
+	int ptempering_count=0;
+	int ex_count[(parms->ntemp)-1],ex_acc[(parms->ntemp)-1];
         t=parms->T[my_rank];
        #else
 	int my_rank=0;
@@ -99,7 +100,7 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 	}
 
 	     #ifdef ACTIVE_MPI
-      for (i=0;i<(parms->ntemp)-1;i++) { ex_count[i]=0; ex_acc[i]=0;}
+      //for (i=0;i<(parms->ntemp)-1;i++) { ex_count[i]=0; ex_acc[i]=0;}
       #endif
 
 
