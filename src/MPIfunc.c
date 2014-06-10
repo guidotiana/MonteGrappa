@@ -386,7 +386,7 @@ struct s_polymer *send_pol(int iproc, int nprocs, int nback, MPI_Datatype Backty
 		for(i=0; i<nback; i++) ((startp+npol)->vback)[(((startp+npol)->back)+i)->ia ] = &(((((startp+npol)->back)+i)->pos));
 		for(i=0; i<nback; i++) for(j=0; j<(((startp+npol)->back)+i)->nside; j++) ((startp+npol)->vback)[ (((((startp+npol)->back)+i)->side)+j)->ia ] = &((((((startp+npol)->back)+i)->side)+j)->pos);
 	}
-	
+		
 	return startp;
 }
 //potential
@@ -645,7 +645,7 @@ void ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_
 						MPI_Recv((((((replica->back)+j)->side)+k)->rot)+l, 1, Rottype, i+1, 4000000+1000*i+100*j+10*k+l , MPI_COMM_WORLD, &astatus);	
 				}
 		
-
+				free(buffer_side);
 			}
 			
 		
@@ -668,6 +668,8 @@ void ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_
 		polymer->etot = TotalEnergy(polymer,u,parms,parms->npol,1,parms->nosidechains,parms->debug,iproc);
 		if (parms->shell==1)	UpdateShell(polymer,parms);
 	}	
+
+	free(buffer_back);
 
 }
 #ifdef OPTIMIZEPOT
