@@ -16,8 +16,8 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	
 
 
-montegrappa:  $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/mc.o $(OBJDIR)/bias_mp.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/optimizepot.o $(OBJDIR)/montegrappa.o 
-	$(CC) $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/mc.o $(OBJDIR)/bias_mp.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/optimizepot.o $(OBJDIR)/montegrappa.o -o montegrappa $(LFLAGS)
+montegrappa:  $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/mc.o $(OBJDIR)/local_move.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/optimizepot.o $(OBJDIR)/montegrappa.o 
+	$(CC) $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/mc.o  $(OBJDIR)/local_move.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/optimizepot.o $(OBJDIR)/montegrappa.o -o montegrappa $(LFLAGS)
 	
 
 else
@@ -28,8 +28,8 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 
 
 
-montegrappa_MPI:    $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/mc.o $(OBJDIR)/bias_mp.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/optimizepot.o $(OBJDIR)/montegrappa.o $(OBJDIR)/MPIfunc.o
-	$(CCMP) $(INCMPIFLAG) $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/mc.o $(OBJDIR)/bias_mp.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/optimizepot.o $(OBJDIR)/montegrappa.o $(OBJDIR)/MPIfunc.o -o montegrappa $(LFLAGS) 
+montegrappa_MPI:    $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/mc.o $(OBJDIR)/local_move.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/optimizepot.o $(OBJDIR)/montegrappa.o $(OBJDIR)/MPIfunc.o
+	$(CCMP) $(INCMPIFLAG) $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/mc.o $(OBJDIR)/local_move.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/optimizepot.o $(OBJDIR)/montegrappa.o $(OBJDIR)/MPIfunc.o -o montegrappa $(LFLAGS) 
 
 endif
 
