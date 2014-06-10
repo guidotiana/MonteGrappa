@@ -57,24 +57,6 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
         MPI_Status astatus=mpiparms->astatus;
 
 
-        FILE *fstat=NULL, *fexch=NULL;
-	int ex_count[(parms->ntemp)-1],ex_acc[(parms->ntemp)-1];
-	char fname[50];
-	int ptempering_count=0;
-	fprintf(fproc,"\n");
-       //open statistic file   
-        sprintf(fname,"%s_run%d_temp%.2f.ene","statistic/e",irun,parms->T[my_rank]);
-        fstat = fopen(fname,"w");
-        if (!fstat) Error("Cannot open statistic file for writing");
-
-       if(my_rank==0)
-	{
-		sprintf(fname,"%s_run%d.dat","statistic/exchange",irun);
-		fexch = fopen(fname,"w");
-		if (!fexch) Error("Cannot open statistic-exchange file for writing");
-        }
-
-	 
         t=parms->T[my_rank];
        #else
 	int my_rank=0;
@@ -226,8 +208,9 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 		if (mcount[7] == parms->movetype[7])
                 {
 //			fprintf(stderr,"biased gaussian\n");
-                	ok= MoveBiasedGaussian(p,oldp,fragment,pot,parms->nmul_local,parms,t);
-                        if(ok>-1) mcount[7]=0;
+                	//ok= MoveBiasedGaussian(p,oldp,fragment,pot,parms->nmul_local,parms,t);
+                        ok=LocalMove(p,oldp,fragment,pot,parms->nmul_local,parms,t);
+			if(ok>-1) mcount[7]=0;
                         if(ok==1) macc[7]++;
                         mdone[7]++;
 		}
@@ -409,20 +392,6 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 	sprintf(p->title,"final");
 	PrintPDBStream(p,parms->npol,ftrj);
 
-	#ifdef ACTIVE_MPI
-	if(my_rank==0)
-	{
-        	double sum =0.;
-        	for(i=0; i<parms->ntemp-1; i++) sum += (double)ex_acc[i]/ex_count[i];
-		if(fexch!=NULL) 
-			for(i=0; i<parms->ntemp-1; i++)
-				fprintf(fexch,"%d\t%d\t%d\t%f\t%f\n",i,ex_acc[i],ex_count[i],(double)ex_acc[i]/ex_count[i], ((double)ex_acc[i]/ex_count[i])/sum);
-            fflush(fexch);	
-	}
-	
-	fclose(fstat);
-	if(my_rank==0) fclose(fexch);	
-	#endif
 
 
 
@@ -1148,12 +1117,13 @@ void CompareStructures(struct s_polymer *a, struct s_polymer *b, int nc, int nat
  *****************************************************************************/
 int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potential *pot, int nmul, struct s_mc_parms *parms, double t)
 {
-	int half,ok=1,m,iw,ip,idir;
+	int half,ok=1,m,iw,ip,idir,nback;
 	double dw=0,deltaE,rc2;
 
 	if(nmul<0) nmul=2+irand(-nmul-1);				//generate random nmul in [2,-mul] if required
 
 	rc2 = parms->r_cloose * parms->r_cloose;
+	
 
 	ip = irand(parms->npol);
 	half = (p+ip)->nback / 2;
@@ -1189,7 +1159,7 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 
 				ok *= PivotBackward((p+ip),iw+1-m,dw,nmul-m,parms);				// moves iw-1-m => overall moves in [iw-nmul,iw-1] (and sidechains of iw-imul-1 and iw)
 			}
-		if (iw-nmul-1>=0)
+		if (iw-nmul-1>0)
 			if ( Abs(Dist2( (((p+ip)->back)+iw-nmul)->pos, (((p+ip)->back)+iw-nmul-1)->pos ) - (((p+ip)->back)+iw-nmul-1)->d2_next) > rc2 ) ok=0;		// if covalent bond is broken
 
 		if (ok==1)
@@ -1229,7 +1199,7 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 
 				ok *= PivotForward((p+ip),iw-1+m,dw,nmul-m,parms);					// moves iw+1+m => overall moves in [iw+1,iw+nmul]
 			}
-		if (iw+nmul+1<(p+ip)->nback)
+		if (iw+nmul<(p+ip)->nback)
 			if ( Abs(Dist2( (((p+ip)->back)+iw+nmul)->pos, (((p+ip)->back)+iw+nmul+1)->pos ) - (((p+ip)->back)+iw+nmul+1)->d2_next) > rc2 ) ok=0; 		// if covalent bond is broken
 
 		if (ok==1)
@@ -1247,7 +1217,6 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 			}
 		}
 	}
-
 	#ifdef DEBUG
 	if (parms->debug>2) fprintf(stderr,"deltaE=%lf\n",deltaE); fflush(stderr);
 	#endif
