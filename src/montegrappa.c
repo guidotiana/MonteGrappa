@@ -354,7 +354,11 @@ int main(int argc, char *argv[])
    
 	        CheckOverlaps(polymer,u,parms,parms->npol,parms->nosidechains,1,fproc);
             	PrintPolymer(fname,polymer,parms->npol);
-           	fprintf(fproc,"Final: Etot=%lf\tEtot(true)=%lf\n",polymer->etot,TotalEnergy(polymer,u,parms,parms->npol,0,parms->nosidechains,parms->debug,my_rank));
+  		#ifdef DEBUG
+	       	fprintf(fproc,"Final: Etot=%lf\tEtot(true)=%lf\n",polymer->etot,TotalEnergy(polymer,u,parms,parms->npol,0,parms->nosidechains,parms->debug,my_rank));
+		#else
+		fprintf(fproc,"Final: Etot=%lf\n",polymer->etot);
+		#endif
 
 		// close files
 		if (strcmp(parms->fntrj,"")) fclose(ftrj);
