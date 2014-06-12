@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 
 	#ifdef ACTIVE_MPI
 
-      MPI_Init(&argc,&argv);
+	MPI_Init(&argc,&argv);
 	MPI_Status astatus;
 	struct s_mpi_parms *mpiparms=malloc(sizeof(struct s_mpi_parms));
 
@@ -41,10 +41,10 @@ int main(int argc, char *argv[])
 	MPI_Comm_rank(MPI_COMM_WORLD,&my_rank);	
 
 	Create_parms_datatype(&(mpiparms->Parms_mpi));
-      Create_back_datatype(&(mpiparms->Back_mpi));
-      Create_side_datatype(&(mpiparms->Side_mpi));
-      Create_rot_datatype(&(mpiparms->Rot_mpi));
-      Create_pot_datatype(&(mpiparms->Pot_mpi));
+	Create_back_datatype(&(mpiparms->Back_mpi));
+	Create_side_datatype(&(mpiparms->Side_mpi));
+	Create_rot_datatype(&(mpiparms->Rot_mpi));
+	Create_pot_datatype(&(mpiparms->Pot_mpi));
 		
 	mpiparms->my_rank=my_rank;
 	mpiparms->nprocs=nprocs;
@@ -88,18 +88,18 @@ int main(int argc, char *argv[])
 	#ifdef ACTIVE_MPI
 	parms=send_parms(mpiparms->my_rank,nprocs,mpiparms->Parms_mpi,parms,astatus);
 	if (strcmp(parms->fnproc,""))
-      {
+	{
             sprintf(fname,"%s_%d.log",parms->fnproc,my_rank);
             fproc = fopen(fname,"w");
             if (!fproc)
 		      Error("Cannot open log-process file for writing");
 	}
 
-      if(parms->debug>1) 
+	if(parms->debug>1) 
 		fprintf(fproc, "iproc=%d\tnrun=%d\tnstep=%d\tnpol=%d\ttemp=%f\tnstep_exchange=%d\n", my_rank, parms->nrun, parms->nstep, parms->npol, parms->T[mpiparms->my_rank],parms->nstep_exchange);
-      #else
-      fproc = stderr;
-      #endif
+	#else
+	fproc = stderr;
+	#endif
 
 	parms->seed = Randomize(parms->seed);
 
@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
 	oldp = AlloPolymer(parms->npol,NRESMAX,NSIDEMAX,NROTMAX,NATOMMAX,parms->shell,parms->nosidechains,parms->flog);
 	replica = AlloPolymer(parms->npol,NRESMAX,NSIDEMAX,NROTMAX,NATOMMAX,parms->shell,parms->nosidechains,fproc);
 
-     	if( parms->nmul_local !=0)
+     	if( parms->nmul_local !=0 && parms->movetype[7]!=-1) 
      	{
             fprintf(stderr,"Fragment length: %d(+1)\n",parms->nmul_local);
 		     int nmul_local=parms->nmul_local; 
@@ -130,16 +130,16 @@ int main(int argc, char *argv[])
 
 	#ifdef ACTIVE_MPI
       
-      for (i=0;i<parms->npol;i++)
+	for (i=0;i<parms->npol;i++)
 	{
         	send_struct(&((startp+i)->nback),mpiparms-> my_rank, nprocs, &nat, &ntypes, astatus);
         	startp = send_pol(mpiparms->my_rank, nprocs, (startp+i)->nback, mpiparms->Back_mpi, mpiparms->Side_mpi, mpiparms->Rot_mpi, startp, astatus, i, parms->nshell, parms->nosidechains);
-      }
+	}
 	
-      if(parms->debug>1)
+	if(parms->debug>1)
             fprintf(fproc,"iproc=%d\tnat=%d\tntypes=%d\tnback=%d\n",mpiparms->my_rank, nat, ntypes, startp->nback);
 
-      #endif
+	#endif
 
 	for (i=0;i<parms->npol;i++)
             if(!AddSidechain(startp,0,startp->nback,i))
@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
 	
 	//POTENZIALE SUI DIEDRI 
 	if(u->dih_ram)
-      {
+	{
         	for(i=0;i<2;i++)
                   for(j=0;j<2;j++)
                         if(u->sigma[i][j]<=0)
@@ -235,6 +235,10 @@ int main(int argc, char *argv[])
 	fprintf(stderr,"> rank %d Starting simulation...\n",my_rank);
 
 	// do Monte Carlo
+	#ifdef OPTIMIZEPOT
+	if(parms->chi2start==0)
+		remove("chi2.dat");
+	#endif
 	for (irun=0;irun<parms->nrun;irun++)
 	{
 		if (irun==0 || parms->always_restart)
@@ -386,52 +390,51 @@ int main(int argc, char *argv[])
       	
 
 	if(parms->nmul_local !=0 && parms->movetype[7]!=-1)
-      {
+	{
 
-      for(i=0;i<parms->npol;i++)
-     { 
-    free( (fragment+i)->back );
+	for(i=0;i<parms->npol;i++)
+	{ 
+		free( (fragment+i)->back );
         
-            for(j=0;j<parms->nmul_local;j++)
-            {
+      		for(j=0;j<parms->nmul_local;j++)
+            	{
 
 	          free( (fragment+i)->A[j] );
                   free( (fragment+i)->G[j] );
                   free( (fragment+i)->L[j] );
                   free( (fragment+i)->Y[j] );
 
-           }
+           	}
 
 
-      free((fragment+i)->A );
-      free((fragment+i)->G );
-      free((fragment+i)->L );
-      free((fragment+i)->Y );
-      free((fragment+i)->d_ang );
-      free((fragment+i)->g_ang );
+	free((fragment+i)->A );
+	free((fragment+i)->G );
+	free((fragment+i)->L );
+	free((fragment+i)->Y );
+	free((fragment+i)->d_ang );
+	free((fragment+i)->g_ang );
 
 
-      free(fragment);
+	free(fragment);
 	}	
 	}
       
-
 	free(parms);
 
 	
-      #ifdef ACTIVE_MPI
-      time(&rawtime);
-      fprintf(fproc,"Run finished at %s\n\n",asctime(localtime(&rawtime)));
-      MPI_Type_free(&mpiparms->Parms_mpi);
-      MPI_Type_free(&mpiparms->Pot_mpi);
-      MPI_Type_free(&mpiparms->Rot_mpi);
-      MPI_Type_free(&mpiparms->Side_mpi);
-      MPI_Type_free(&mpiparms->Back_mpi);
+	#ifdef ACTIVE_MPI
+	time(&rawtime);
+	fprintf(fproc,"Run finished at %s\n\n",asctime(localtime(&rawtime)));
+	MPI_Type_free(&mpiparms->Parms_mpi);
+	MPI_Type_free(&mpiparms->Pot_mpi);
+	MPI_Type_free(&mpiparms->Rot_mpi);
+	MPI_Type_free(&mpiparms->Side_mpi);
+	MPI_Type_free(&mpiparms->Back_mpi);
 
 
-      MPI_Barrier(MPI_COMM_WORLD);
-      MPI_Finalize();
-      #endif
+	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Finalize();
+	#endif
 
 
 	return 0;

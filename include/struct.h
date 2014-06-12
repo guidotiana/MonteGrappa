@@ -22,8 +22,12 @@ struct s_polymer
 	struct s_tables *tables;	// tables of sin,cos,etc. ( needs InitTables before use)
 	double etot;			// total energy
 	double t;			// its temperature (necessary for op)
-      double **A,**G,**L,**Y;      //local move
-      double *g_ang,*d_ang;        //loval move
+      	double **A;
+	double **G;
+	double **L;
+	double **Y;    
+     	double *g_ang;
+	double	*d_ang;
 
 
 
@@ -212,10 +216,14 @@ struct s_mc_parms
 	int anneal_step;	// carry out * step at higher temperature (* decreases to zero)
 	double anneal_t;	// higher temperature
 	int anneal_recov;	// do nothing for * steps after returning to actual temperature
+
 	
 
 	int nstep_exchange;	
 	int nmul_local;
+	
+	int chi2start;
+
 };
 
 struct s_tables

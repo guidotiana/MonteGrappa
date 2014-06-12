@@ -178,7 +178,7 @@ void Create_parms_datatype(MPI_Datatype *Parmstype){
 	x = calloc(1,sizeof(struct s_mc_parms));
 	if (!x) Error("Cannot allocate mc_parms");
 
-	MPI_Aint adress[62];
+	MPI_Aint adress[63];
 	MPI_Get_address(x, &adress[0]);
 	MPI_Get_address(&(*x).npol, &adress[1]);
 	MPI_Get_address(&(*x).nstep, &adress[2]);
@@ -242,19 +242,20 @@ void Create_parms_datatype(MPI_Datatype *Parmstype){
 	MPI_Get_address(&(*x).op_r0, &adress[59]);
 	MPI_Get_address(&(*x).nstep_exchange, &adress[60]);
 	MPI_Get_address(&(*x).nmul_local,&adress[61]);
+	MPI_Get_address(&(*x).chi2start,&adress[62]);
 	#else
 	MPI_Get_address(&(*x).nstep_exchange, &adress[48]);
 	#endif
 	
 	#ifdef OPTIMIZEPOT
-	MPI_Datatype type[61]={MPI_INT, MPI_INT, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_CHAR, MPI_CHAR, MPI_CHAR, MPI_CHAR, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_INT, MPI_INT, MPI_INT,MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT,  MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT,  MPI_DOUBLE,  MPI_DOUBLE,  MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_INT,  MPI_INT,  MPI_INT,  MPI_INT, MPI_DOUBLE, MPI_INT, MPI_CHAR, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_INT};
-	int blocklen[61]={1,1,1,1,1,1,1,1,50,50,50,50,1,1,1,1,1,1,1,NTEMPMAX,1,1,NMOVES,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,50,1,1,1,1,1,1,1,1,1,1,1,1,1};
-	MPI_Aint disp[61];
+	MPI_Datatype type[62]={MPI_INT, MPI_INT, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_CHAR, MPI_CHAR, MPI_CHAR, MPI_CHAR, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_INT, MPI_INT, MPI_INT,MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT,  MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT,  MPI_DOUBLE,  MPI_DOUBLE,  MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_INT,  MPI_INT,  MPI_INT,  MPI_INT, MPI_DOUBLE, MPI_INT, MPI_CHAR, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_INT,MPI_INT};
+	int blocklen[62]={1,1,1,1,1,1,1,1,50,50,50,50,1,1,1,1,1,1,1,NTEMPMAX,1,1,NMOVES,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,50,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+	MPI_Aint disp[62];
 	
 	int i;
-	for(i=0; i<61; i++) {disp[i]=adress[i+1]-adress[0];}
+	for(i=0; i<62; i++) {disp[i]=adress[i+1]-adress[0];}
 	
-	MPI_Type_create_struct(61,blocklen,disp,type,Parmstype);
+	MPI_Type_create_struct(62,blocklen,disp,type,Parmstype);
 	MPI_Type_commit(Parmstype);
 	free(x);
 	#else

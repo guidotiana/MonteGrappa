@@ -333,6 +333,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
 	x->r_cloose = 0.5;
 	x->a_cloose = -1;
 	x->d_cloose = -1;
+	x->chi2start =0;
 	#ifdef OPTIMIZEPOT
 	strcpy(x->fnop,"");
 	strcpy(x->op_minim,"none");
@@ -407,6 +408,8 @@ struct s_mc_parms *ReadMcParms(char *fname)
 		ReadParD(aux,"anneal_step",&(x->anneal_step));
 		ReadParD(aux,"anneal_recov",&(x->anneal_recov));
 		ReadParF(aux,"anneal_t",&(x->anneal_t));
+		ReadParD(aux,"chi2start",&(x->chi2start));
+
 		#ifdef OPTIMIZEPOT
 		 ReadParS(aux,"op_minim",(x->op_minim));
 		 ReadParS(aux,"op_file",x->fnop);
@@ -429,7 +432,6 @@ struct s_mc_parms *ReadMcParms(char *fname)
 		#endif
 		#ifndef ACTIVE_MPI
 		ReadParF(aux,"T",&(x->T));
-        
 		#endif
 
 		#ifdef ACTIVE_MPI
@@ -461,15 +463,6 @@ struct s_mc_parms *ReadMcParms(char *fname)
 	chk=-1;
 	for (i=0;i<NMOVES;i++) if ( x->movetype[i] != -1 ) chk=1;
 	if (chk==-1) Error("No move type defined");
-    if (x->nstep == 0) Error("Number of MC steps set to 0");
-    
-    
-    
-    // Temperatures check
-    #ifndef ACTIVE_MPI
-    if (x->T <= 0.)
-        Error("Temperature is not set or less than zero");
-    #endif
 
 
 	x->flog=fopen(nlog,"w");
