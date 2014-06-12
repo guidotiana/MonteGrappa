@@ -25,7 +25,7 @@ struct s_optimizepot *InitializeOptimizePot(struct s_mc_parms *parms, int ntypes
 		return x;
 	}
 
-	fprintf(fproc,"\nActivating POTENTIAL OPTIMIZATION\n\nInitialize structures\n");
+	fprintf(fproc,"\nActivating module OPTIMIZE POTENTIAL\n\nInitialize structures\n");
 	
 	// read restrains from file (and allocates input structure)
 	if(iproc==0)
@@ -160,7 +160,7 @@ struct s_optimizepot_input *ReadOPRestrains(struct s_mc_parms *parms)
 
 
 /***************************************************
- Get the actual values of the restrain from chain ipol
+ Get the actual values of the resrtain from chain ipol
  of polymer p
  ***************************************************/
 void OP_GetRestrain(int it, struct s_polymer *p, int ipol, struct s_optimizepot_input *opi)
@@ -277,10 +277,12 @@ void OP_AddEnergy(struct s_polymer *p, int a1, int a2, double mul)
  ***************************************************/
 void OP_SamplePotential(struct s_polymer *p, struct s_mc_parms *parms, int ntypes, double **u, int irun, double **ematold)
 {
-	int istep,iacc=0,a1,a2,iw,ifr,i,j,n=0,nstep=0;
+	int istep,irunstart,iacc=0,a1,a2,iw,ifr,i,j,n=0,nstep=0;
 	double chi2,chi2old,deltae,eav=0,eav2=0,de2=0;
 	char aux[500];
 	FILE *fp, *fc;
+	
+	irunstart=parms->chi2start;
 
 	if ( p->op->nframes == 0 ) Error("Cannot optimize potential: no frame recorded for OP_SamplePotential");
 
@@ -298,7 +300,7 @@ void OP_SamplePotential(struct s_polymer *p, struct s_mc_parms *parms, int ntype
 	{
 		sprintf(aux,"chi2.dat");
 		fc = fopen(aux,"a");
-		fprintf(fc,"%d\t%lf\n",irun, chi2old/(parms->op_input->ndata));
+		fprintf(fc,"%d\t%lf\n",irun+irunstart, chi2old/(parms->op_input->ndata));
 		fclose(fc);
 	}
 	
@@ -334,7 +336,7 @@ void OP_SamplePotential(struct s_polymer *p, struct s_mc_parms *parms, int ntype
 		nstep ++;
 
 		// print something
-		if (!(istep%parms->op_print)) fprintf(stderr,"   %5d\t\t\t%lf\t%lf\n",istep,chi2old, chi2old/(parms->op_input->ndata));
+		if (!(istep%parms->op_print)) fprintf(stderr,"   %5d\t\t%lf\t%lf\n",istep,chi2old, chi2old/(parms->op_input->ndata));
 
 		// exit condition
 		if (chi2<parms->op_stop) break;
@@ -358,7 +360,7 @@ void OP_SamplePotential(struct s_polymer *p, struct s_mc_parms *parms, int ntype
 	
 
 	// print to file
-	sprintf(aux,"restrains_%d.dat",irun);
+	sprintf(aux,"restraints_%d.dat",irun);
 	fp = fopen(aux,"w");
 	for (i=0;i<parms->op_input->ndata;i++)
 		fprintf(fp,"%d\t%lf\t%lf\t%lf\n",i,p->op->rest_av[i],parms->op_input->expdata[i],parms->op_input->sigma[i]);
@@ -445,16 +447,15 @@ double OP_function(double **e, struct s_optimizepot *x, struct s_optimizepot_inp
 		boltz = exp(-enew/parms->op_T + eold/x->t[ifr] - emax);
 
 		// make the average
-		for (ir=0;ir<in->ndata;ir++)
-         	x->rest_av[ir] +=  x->restrain[ifr][ir] * boltz;
-        
+		for (ir=0;ir<in->ndata;ir++) 
+			x->rest_av[ir] +=  x->restrain[ifr][ir] * boltz;
+                                                                                                                            
 		z += boltz;
 	}
-    
 
-	for (ir=0;ir<in->ndata;ir++)
-        x->rest_av[ir] /= z;
 
+	for (ir=0;ir<in->ndata;ir++) x->rest_av[ir] /= z;
+	
 	chi2 = Chi2(x->rest_av,in->expdata,in->sigma,in->ndata);
 
 	return chi2;
