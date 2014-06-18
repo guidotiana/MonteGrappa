@@ -3,9 +3,9 @@
 
 #ifdef ACTIVE_MPI
 
-/***********************************************
-		MPI Datatypes
-***********************************************/
+
+
+
 
 void Create_vector_datatype(MPI_Datatype *Vectortype)
 {
@@ -339,7 +339,7 @@ struct s_polymer *send_pol(int iproc, int nprocs, int nback, MPI_Datatype Backty
 	char buffer[buffer_max];
 	(startp+npol)->nback = nback;
 	buffer_size=(sizeof(struct s_back)*nback);
-//	fprintf(stderr,"send_pol: BUFFER SIZE IS %d\n",buffer_size);
+
 	if(buffer_size>buffer_max)
         {
         	fprintf(stderr,"Buffer too small\n");
@@ -381,7 +381,7 @@ struct s_polymer *send_pol(int iproc, int nprocs, int nback, MPI_Datatype Backty
 	}
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	if(iproc!=0)
 	{
 		for(i=0; i<nback; i++) ((startp+npol)->vback)[(((startp+npol)->back)+i)->ia ] = &(((((startp+npol)->back)+i)->pos));
@@ -464,21 +464,17 @@ void send_int_matrix(int length1, int length2, int iproc, int **m, int source)
 }
 
 
-/*****************************************************************************
- Copy a polymer structure from a replica to another 
- 
- *****************************************************************************/
 void ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_polymer *oldp, struct s_mc_parms *parms, struct s_potential *u, int iproc, int ntemp, int even, int *ex_count, int *ex_acc, MPI_Datatype Backtype, MPI_Datatype Sidetype, MPI_Datatype Rottype, MPI_Status astatus)
 {
 	int i,j,k,l, position,a=0;
 	int x[ntemp];
-	double delta;
+	double delta,denomT;
 	double E[ntemp];
 	int nback = polymer->nback;
 	int buffer_back_size=sizeof(struct s_back)*nback;
 	char *buffer_back=malloc(buffer_back_size);	
-//	int side_dims[nback];
-//i	int buffer_side_size,buffer_vector_size,sidechains=0;
+
+
 	int nosidechains=parms->nosidechains;
 
 
@@ -494,7 +490,8 @@ void ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_
 		if(iproc==i) //sender		
 		{		
 			delta = -(E[i]-E[i+1]);
-			if(Metropolis(delta,1.,polymer->tables)==1) a=1; 	
+			denomT = (parms->T[i]*parms->T[i+1])/(parms->T[i+1]-parms->T[i]) ;
+			if(Metropolis(delta,denomT,polymer->tables)==1) a=1; 	
 			MPI_Send(&a, 1, MPI_INT, i+1, 1000000+i, MPI_COMM_WORLD); 
 			
 			#ifdef DEBUG
@@ -505,7 +502,7 @@ void ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_
 		MPI_Barrier(MPI_COMM_WORLD); 
 		if(a==1) //confirmed exchange
 		{	
-//			fprintf(stderr,"exchanged\n");
+
 			//backbone	i -> i+1
 			//backbone	i+1 -> 1
 			if(iproc==i)
@@ -556,10 +553,10 @@ void ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_
                 		}
 
 		                buffer_side_size=sizeof(struct s_side)*sidechains;
-//		                buffer_rot_size=sizeof(struct s_rotamers)*rotamersl;
-//				fprintf(stderr,"\nSIZE OF %d ROTs IS %d\n",rotamersl,buffer_rot_size);
+
+
      				char *buffer_side=malloc(buffer_side_size);
-//	        	        char *buffer_rot=malloc(buffer_rot_size);
+
 
 
 				//sidechains	i -> i+1	
@@ -601,8 +598,8 @@ void ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_
 			
 		//}
 				//sidechains	i+i -> i
-	//	if(!nosidechains)
-	//	{	
+
+
 				if(iproc==i+1)
 				{
 					position=0;
