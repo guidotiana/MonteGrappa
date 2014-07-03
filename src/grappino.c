@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 
 	//if you want a file.op to optimize the potential 
 	if(strcmp(p->op_file,""))
-        PrintOpGoFile(p->op_file,cm,polymer,nchain,p->op_kind);
+        PrintOpGoFile(p->op_file,cm,polymer,nchain,p->op_kind,p->imin/3); // imin in aa
 
 	exit(0);
 }

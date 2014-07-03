@@ -334,9 +334,9 @@ void HydrophobicInteraction(struct s_parms *parms, struct s_polymer *p, double *
 /**********************************************
  Create OP file
  **********************************************/
-void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, char *kind)
+void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, char *kind, int imin)
 {
-	int ic,jc,i,j,k,r;
+	int ic,jc,i,j,k,r,nCA;
 	FILE *fp;
 
 	fprintf(stderr,"Write OP file %s for potential optimization (kind=%s)\n",nfile,kind);
@@ -350,196 +350,135 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
         int nrest = 0;
         for (ic=0;ic<nchains;ic++)
 			for (i=0;i<(p+ic)->nback;i++)
-				for (jc=0;jc<nchains;jc++)
-					for (j=0;j<(p+jc)->nback;j++)
-						if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
-                            nrest++;
+                for (jc=0;jc<nchains;jc++) {
+                    // same chain
+                    if (ic == jc) {
+                        nCA = 0;
+                        for (j=i+1;j<(p+jc)->nback;j++) {
+                            // counts CA atoms to check imin condition
+                            if  (!strcmp((((p+jc)->back)+j)->type,"CA") )
+                                nCA++;
+                            if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") && ( nCA >= imin ) )
+                                nrest++;
+                        }
+                    }
+                    // different chains
+                    else {
+                        for (j=0;j<(p+jc)->nback;j++)
+                            if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
+                                nrest++;
+                    }
+                }
+					
 		fprintf(fp,"ndata %d\n",nrest);
         
         for (ic=0;ic<nchains;ic++)
 			for (i=0;i<(p+ic)->nback;i++)	
-				for (jc=0;jc<nchains;jc++)
-					for (j=0;j<(p+jc)->nback;j++)
-						if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
-							fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((p+ic)->back)+i)->ia,(((p+jc)->back)+j)->ia,
-								Dist( (((p+ic)->back)+i)->pos, (((p+jc)->back)+j)->pos ) );
-
+                for (jc=0;jc<nchains;jc++) {
+                    if (ic == jc) {
+                        nCA = 0;
+                        for (j=i+1;j<(p+jc)->nback;j++) {
+                            if  (!strcmp((((p+jc)->back)+j)->type,"CA") )
+                                 nCA++;
+                            if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") && ( nCA >= imin ) )
+                                fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((p+ic)->back)+i)->ia,(((p+jc)->back)+j)->ia,
+                                        Dist( (((p+ic)->back)+i)->pos, (((p+jc)->back)+j)->pos ) );
+                        }
+                    }
+                    else {
+                        for (j=0;j<(p+jc)->nback;j++)
+                            if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
+                                fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((p+ic)->back)+i)->ia,(((p+jc)->back)+j)->ia,
+                                        Dist( (((p+ic)->back)+i)->pos, (((p+jc)->back)+j)->pos ) );
+                    }
+                }
 	}
-
-	// contacts between backbones (numbers are iback, only one chain)
-	if (!strcmp(kind,"GO_DIST_CONT"))
+    //
+	if(!strcmp(kind,"GO_DIST_ALLATOM"))
 	{
         int nrest = 0;
-		for (i=0;i<(p+0)->nback;i++)
-			for (j=i+4;j<(p+0)->nback;j++)
-				for (k=0;k<(((p+0)->back)+i)->ncontacts;k++)
-					if ( *(((((p+0)->back)+i)->contacts)+k) == j )
-                        nrest++;
-		fprintf(fp,"ndata %d\n",nrest);
+        int iaa,jaa,iside,jside;
+        for (ic=0;ic<nchains;ic++)
+            for (i=0;i<(p+ic)->nback;i++) {
+                iaa = i/3 + 1;  //define aminoacid id
+                for (jc=0;jc<nchains;jc++) {
+                    if (ic == jc) {    // same chain
+                        nCA = 0;
+                        for (j=i;j<(p+jc)->nback;j++) {
+                            jaa = j/3 + 1;
+                            if ((jaa-iaa)%2 == 0) { // only counts restraints between even aa and between even aa
+                                if  (!strcmp((((p+jc)->back)+j)->type,"CA") ) // counts CA atoms to check imin condition
+                                    nCA++;
+                                if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") && ( nCA >= imin ) ){
+                                    if( strcmp(((((p+ic)->back)+i)->aa),"GLY") && strcmp(((((p+jc)->back)+j)->aa),"GLY") )
+                                        nrest+=4;   // one for CA-CA, one for sidechain/sidechain and two for CA/sidechain
+                                    if( strcmp(((((p+ic)->back)+i)->aa),"GLY") && !strcmp(((((p+jc)->back)+j)->aa),"GLY") )
+                                        nrest+=2;
+                                    if( !strcmp(((((p+ic)->back)+i)->aa),"GLY") && strcmp(((((p+jc)->back)+j)->aa),"GLY") )
+                                        nrest+=2;
+                                    if( !strcmp(((((p+ic)->back)+i)->aa),"GLY") && !strcmp(((((p+jc)->back)+j)->aa),"GLY") )
+                                        nrest+=1;
+                                }
+                            }
+                        }
+                    }
+            // different chains ---------> TODO
+                    else {
+                        for (j=(i%2);j<(p+jc)->nback;j=j+2)
+                            if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
+                                nrest++;
+                    }
+                }
+            }
         
-        for (i=0;i<(p+0)->nback;i++)
-			for (j=i+4;j<(p+0)->nback;j++)
-				for (k=0;k<(((p+0)->back)+i)->ncontacts;k++)
-					if ( *(((((p+0)->back)+i)->contacts)+k) == j )
-						fprintf(fp,"%d\t%d\t\t0\t1.\t0.2\n",i,j);
-	}
-
+        fprintf(fp,"ndata %d\n",nrest);
+        
+        for (ic=0;ic<nchains;ic++)
+            for (i=0;i<(p+ic)->nback;i++) {
+                iaa = i/3 + 1;  //define aminoacid id
+                for (jc=0;jc<nchains;jc++) {
+                    if (ic == jc) {    // same chain
+                        nCA = 0;
+                        for (j=i;j<(p+jc)->nback;j++) {
+                            jaa = j/3 + 1;
+                            if (abs((iaa-jaa))%2 == 0) { // only counts restraints between even aa and between even aa
+                                if  (!strcmp((((p+jc)->back)+j)->type,"CA") ) // counts CA atoms to check imin condition
+                                    nCA++;
+                                if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") && ( nCA >= imin ) ) {
+                                    fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((p+ic)->back)+i)->ia,(((p+jc)->back)+j)->ia,
+                                            Dist( (((p+ic)->back)+i)->pos, (((p+jc)->back)+j)->pos ) );   // Backbone-Backbone
+                                    iside = ((((p+ic)->back)+i)->nside)-1;
+                                    jside = ((((p+jc)->back)+j)->nside)-1;
+                                    if( !strcmp(((((p+ic)->back)+i)->aa),"GLY") && strcmp(((((p+jc)->back)+j)->aa),"GLY") )
+                                        fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((p+ic)->back)+i)->ia,(((((p+jc)->back)+j)->side)+jside)->ia,
+                                                Dist( (((p+ic)->back)+i)->pos, (((((p+jc)->back)+j)->side)+jside)->pos ) );    // Backbone-Sidechain
+                                    if( strcmp(((((p+ic)->back)+i)->aa),"GLY") && !strcmp(((((p+jc)->back)+j)->aa),"GLY") )
+                                        fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((((p+ic)->back)+i)->side)+iside)->ia,(((p+jc)->back)+j)->ia,
+                                                Dist( (((((p+ic)->back)+i)->side)+iside)->pos, (((p+jc)->back)+j)->pos ) );   // Sidechain-Backbone
+                                    if( strcmp(((((p+ic)->back)+i)->aa),"GLY") && strcmp(((((p+jc)->back)+j)->aa),"GLY") ) {
+                                        fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((p+ic)->back)+i)->ia,(((((p+jc)->back)+j)->side)+jside)->ia,
+                                                Dist( (((p+ic)->back)+i)->pos, (((((p+jc)->back)+j)->side)+jside)->pos ) );    // Backbone-Sidechain
+                                        fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((((p+ic)->back)+i)->side)+iside)->ia,(((p+jc)->back)+j)->ia,
+                                                Dist( (((((p+ic)->back)+i)->side)+iside)->pos, (((p+jc)->back)+j)->pos ) );    // Sidechain-Backbone
+                                        fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((((p+ic)->back)+i)->side)+iside)->ia,(((((p+jc)->back)+j)->side)+jside)->ia,
+                                                Dist( (((((p+ic)->back)+i)->side)+iside)->pos, (((((p+jc)->back)+j)->side)+jside)->pos ) );    // Sidechain-Sidechain
+                                    }
+                                }
+                            }
+                        }
+                    }
+            // different chains ---------> TODO
+            else {
+                for (j=(i%2);j<(p+jc)->nback;j=j+2)
+                    if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
+                        nrest++;
+                }
+            }
+        }
+        
+    }
+    
 	
-		// distances between some native CA (with different sigma)
-	if (!strcmp(kind,"GO_DIST_CA_2"))
-	{
-		int nrest = 0;
-		double **restrains;
-		int maxrest = ((p->nback)*(p->nback)*10);
-		restrains = AlloDoubleMatrix(4,maxrest);
-		
-		for (ic=0;ic<nchains;ic++)
-			for (i=0;i<(p+ic)->nback;i++)	
-				for (jc=0;jc<nchains;jc++)
-					for (j=i;j<(p+jc)->nback;j++)
-						if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
-						{
-							double d = Dist( (((p+ic)->back)+i)->pos, (((p+jc)->back)+j)->pos );
-							//fprintf(stderr, "dist = %lf\n", d);
-							if(Abs(i-j)>=20 && d>0)
-							{
-								restrains[0][nrest]= (double) (((p+ic)->back)+i)->ia;
-								restrains[1][nrest]= (double)(((p+ic)->back)+j)->ia;
-								restrains[2][nrest]= d;
-								restrains[3][nrest]= 1; 
-								nrest++;
-							}
-							/*if(Abs(i-j)>=20){
-
-								restrains[0][nrest]= (double)(((p+ic)->back)+i)->ia;
-								restrains[1][nrest]= (double)(((p+ic)->back)+j)->ia;
-								restrains[2][nrest]= d;
-								restrains[3][nrest]= 1.5; 
-								nrest++;
-							}
-							if(d>10 && Abs(i-j)>4 && Abs(i-j)<20){
-								restrains[0][nrest]= (double)(((p+ic)->back)+i)->ia;
-								restrains[1][nrest]= (double)(((p+ic)->back)+j)->ia;
-								restrains[2][nrest]= d;
-								restrains[3][nrest]= 3; 
-								nrest++;
-							}*/
-							
-						if(nrest>=maxrest) fprintf(stderr, "number of restrains too large\n");
-						}
-		fprintf(fp,"ndata %d\n",nrest);
-		for (r=0;r<nrest;r++)
-			fprintf(fp,"%g\t%g\t\t1\t%lf\t%f\n", restrains[0][r], restrains[1][r], restrains[2][r], restrains[3][r] );
-		free(restrains);
-	}
-
-
-	//distances between some native CA, with restraints chosen from vmd
-	if (!strcmp(kind,"GO_DIST_CA_3"))
-	{
-		int nrest = 0;
-		double **restrains;
-		int maxrest = ((p->nback)*(p->nback)*10);
-		restrains = AlloDoubleMatrix(4,maxrest);
-	
-	
-		for (ic=0;ic<nchains;ic++)
-			for (i=0;i<(p+ic)->nback;i++)	
-				for (jc=0;jc<nchains;jc++)
-					for (j=i;j<(p+jc)->nback;j++)
-						if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
-						{
-							double d = Dist( (((p+ic)->back)+i)->pos, (((p+jc)->back)+j)->pos );
-							//fprintf(stderr, "dist = %lf\n", d);
-							if(Abs(i-j)>=4 && Abs(i-j)<=5 && d>0)
-							{
-								restrains[0][nrest]= (double) (((p+ic)->back)+i)->ia;
-								restrains[1][nrest]= (double)(((p+jc)->back)+j)->ia;
-								restrains[2][nrest]= d;
-								restrains[3][nrest]= 1; 
-								nrest++;
-							}
-							if(Abs(i-j)>5 && d<=10 && d>0)
-							{
-								restrains[0][nrest]= (double)(((p+ic)->back)+i)->ia;
-								restrains[1][nrest]= (double)(((p+jc)->back)+j)->ia;
-								restrains[2][nrest]= d;
-								restrains[3][nrest]= 1; 
-								nrest++;
-							}	
-							if((i==2 && j==14 && d>10)||(i==2 && j==35 && d>10)||(i==2 && j==29 && d>10)||(i==0 && j==25 && d>10)||(i==14 && j==25 && d>10)||(i==14 && j==35 && d>10))
-							{	
-								restrains[0][nrest]= (double)(((p+ic)->back)+i)->ia;
-								restrains[1][nrest]= (double)(((p+jc)->back)+j)->ia;
-								restrains[2][nrest]= d;
-								restrains[3][nrest]= 1; 
-								nrest++;
-							}
-						if(nrest>=maxrest) fprintf(stderr, "number of restrains too large\n");
-						}
-
-		fprintf(fp,"ndata %d\n",nrest);
-		for (r=0;r<nrest;r++)
-			fprintf(fp,"%g\t%g\t\t1\t%lf\t%f\n", restrains[0][r], restrains[1][r], restrains[2][r], restrains[3][r] );
-		free(restrains);
-	}
-
-	if(!strcmp(kind,"GO_DIST_ALLATOM"))		//ATTT! non considero mai l'ossigeno legato a C
-	{
-		int nrest = 0;
-		double **restrains;
-		int maxrest = ((p->nback)*(p->nback)*100);
-		restrains = AlloDoubleMatrix(4,maxrest);
-		int naa= p->nback/3;
-		fprintf(stderr, "naa=%d\n",naa);
-		int a,b;
-
-		//distances between some backbone atoms
-		for (i=0;i<naa;i++)	
-			for (j=i;j<naa;j++)
-				{
-				a=3*i+rand()%3;
-				b=3*j+rand()%3;
-				double d = Dist( (((p)->back)+a)->pos, (((p)->back)+b)->pos );
-				if(Abs(a-b)>8)
-					{
-					restrains[0][nrest]= (double)(((p)->back)+a)->ia;
-					restrains[1][nrest]= (double)(((p)->back)+b)->ia;
-					restrains[2][nrest]= d;
-					restrains[3][nrest]= 0.4; 
-					nrest++;
-					}
-				if(nrest>=maxrest) fprintf(stderr, "number of restrains too large\n");	
-				}
-
-		//distances between sidechain atoms
-		for (i=0;i<naa;i++)	
-			for (j=i+1;j<naa;j++){
-				if(strcmp(((((p)->back)+1+3*i)->aa),"GLY") && strcmp(((((p)->back)+1+3*j)->aa),"GLY"))
-				{
-					a = rand()%((((p)->back)+1+3*i)->nside);
-					b = rand()%((((p)->back)+1+3*j)->nside);
-					double d = Dist( ((((p->back)+1+3*i)->side)+a)->pos, ((((p->back)+1+3*j)->side)+b)->pos );
-					//if(Abs(i-j)<4||Abs(i-j)>15) per O_DIST_ALLATOM isata di solito
-					if(Abs(i-j)<6||Abs(i-j)>20)
-					{
-						restrains[0][nrest]= (double) ((((p->back)+1+3*i)->side)+a)->ia;
-						restrains[1][nrest]= (double) ((((p->back)+1+3*j)->side)+b)->ia;
-						restrains[2][nrest]= d;
-						restrains[3][nrest]= 0.6; 
-						nrest++;
-					}
-				
-				}
-				if(nrest>=maxrest) fprintf(stderr, "number of restrains too large\n");	
-			}
-
-		fprintf(fp,"ndata %d\n",nrest);		
-		for (r=0;r<nrest;r++)
-			fprintf(fp,"%g\t%g\t\t1\t%lf\t%f\n", restrains[0][r], restrains[1][r], restrains[2][r], restrains[3][r] );
-		free(restrains);
-
-	}	
 
 	fclose(fp);
 	

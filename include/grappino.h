@@ -159,7 +159,7 @@ int SetGoTypes(struct s_polymer *p, int nchains, int nat);
 void DisulphideBonds(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02, int nchains, int nat);
 void OP_AddEnergy(struct s_polymer *p, int a1, int a2, double mul);
 int ReadTypes(struct s_polymer *p, int nchains, int nat, char *nfile);
-void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, char *kind);
+void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, char *kind, int imin);
 
 // rotamers.c
 struct rot_input_s *AlloRotamer(int naa, FILE *flog);
