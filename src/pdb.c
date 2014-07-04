@@ -215,6 +215,27 @@ int PDB2CACB(struct atom_s *pdb, struct atom_s *ca, int n)
 
 	return k;
 }
+/*****************************************************************************
+ Turn a full pdb into a NCAC model
+ *****************************************************************************/
+int PDB2NCAC(struct atom_s *pdb, struct atom_s *ca, int n)
+{
+    int i,k=0;
+    
+    for(i=0;i<n;i++)
+    if ( !strcmp( (pdb+i)->atom, "N" ) || !strcmp( (pdb+i)->atom, "CA" ) || \
+        !strcmp( (pdb+i)->atom, "C" ))
+    {
+	    strcpy((ca+k)->aa,(pdb+i)->aa);
+	    strcpy((ca+k)->atom,(pdb+i)->atom);
+	    (ca+k)->chain = (pdb+i)->chain;
+	    (ca+k)->iaa = (pdb+i)->iaa;
+	    (ca+k)->pos = (pdb+i)->pos;
+        k++;
+    }
+    
+	return k;
+}
 
 /****************************************************************************
  Fill an empty polymer file with atom positions and return the total atom number 
@@ -536,7 +557,7 @@ void CopyPDB(struct atom_s *from, struct atom_s *to, int n)
 }
 
 /****************************************************************************
- Generate a CA, CACB, ... model for a pdb
+ Generate a CA, CACB, NCAC model for a pdb
  *****************************************************************************/
 int SimplifyPDB(struct atom_s *x, int n, char *model)
 {
@@ -547,6 +568,7 @@ int SimplifyPDB(struct atom_s *x, int n, char *model)
 
 	if (!strcmp(model,"CA")) m = PDB2CA(x,y,n);
 	else if (!strcmp(model,"CACB")) m = PDB2CACB(x,y,n);
+    else if (!strcmp(model,"NCAC")) m = PDB2NCAC(x,y,n);
 	else Error("Model not defined in SimplifyPDB");
 
 	CopyPDB(y,x,m);

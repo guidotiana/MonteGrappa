@@ -135,6 +135,7 @@ int **AlloIntMatrix(int l, int m);
 // pdb.c
 int PDB2CACB(struct atom_s *pdb, struct atom_s *ca, int n);
 int PDB2CA(struct atom_s *pdb, struct atom_s *ca, int n);
+int PDB2NCAC(struct atom_s *pdb, struct atom_s *ca, int n);
 int ReadPDB(struct atom_s *x, char *pdbfile, int hydrogens, int *nchain, int *nbackmax, struct s_parms *p);
 int IsBackbone(char *atom, struct s_parms *p);
 void CreateTopology(struct atom_s *a, int n, int **top, double thresh, int debug);

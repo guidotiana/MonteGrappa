@@ -72,7 +72,8 @@ int main(int argc, char *argv[])
 	if (!strcmp(p->atomtypes,"go")) ntypes = SetGoTypes(polymer,nchain,npdb);
 	else ntypes = ReadTypes(polymer,nchain,npdb,p->atomtypes);
 	
-	cm = ContactMap(p,polymer,nchain,nat,p->debug);
+    
+	cm = ContactMap(p,polymer,nchain,ntypes,p->debug);
 
 	u = AlloPotential(npdb,ntypes,0,0,0);
 	u->splice=0;
@@ -92,7 +93,6 @@ int main(int argc, char *argv[])
 	}
 
 	// cysteine bridge
-    // NON E' POSSIBLE LEGGERLO DAL PDB, NELLA PARTE "BONDS" IN FONDO?
 	if (p->cys<-EPSILON || p->cys>EPSILON)
 		DisulphideBonds(p,polymer,u->e,u->r_2,u->r0_2,nchain,ntypes);
 
