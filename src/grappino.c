@@ -41,15 +41,19 @@ int main(int argc, char *argv[])
 	pdb = AlloAtoms(NATOMMAX);
 	npdb = ReadPDB(pdb,p->pdbfile,p->hydrogens,&nchain,&nbackmax,p);
 
+    // if needed, simplify the pdb (e.g. CA, CACB, NCAC)
+	if (!strcmp(p->model,"CA") || !strcmp(p->model,"CACB") || !strcmp(p->model,"NCAC"))
+            npdb = SimplifyPDB(pdb,npdb,p->model);
+    
 	// load rotamers
+    
 	if (p->rotamers)
 	{
 		rotamers = AlloRotamer(AAKINDMAX,stderr);
 		nrot_kinds = ReadRotamers(p->rotfile,rotamers,p->debug);
 	}
 
-	// if needed, simplify the pdb (e.g. CA, CACB, ...)
-	if (!strcmp(p->model,"CA") || !strcmp(p->model,"CACB")) npdb = SimplifyPDB(pdb,npdb,p->model);
+	
 
 	///////////////
 	// POLYMER FILE
