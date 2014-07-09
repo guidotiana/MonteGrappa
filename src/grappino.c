@@ -177,10 +177,10 @@ void Parse(FILE *fp, struct s_parms *p)
     
 	p->dih_ram = 0;
 	p->e_dihram =1.00;
-	p->sig_a_phi = 40.;
-	p->sig_b_phi = 40.;
-	p->sig_a_psi = 20.;
-	p->sig_b_psi = 40.;
+	p->sig_a_phi = 25.;
+	p->sig_b_phi = 30.;
+	p->sig_a_psi = 30.;
+	p->sig_b_psi = 35.;
 	p->phi_0_a = -57;
 	p->phi_0_b = -129;
 	p->psi_0_a = -47;
