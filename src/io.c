@@ -548,7 +548,7 @@ int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, 
 {
 	int i,j,k=0,chapt=0,ab,dihtype,iaa,dih0;
 	double e,r,r0,k0,d1,d3,d01,d03,kr_splice,r0vec[ntype],pa,pb,sigma;
-	char aux[500],keyword[100],ccc;
+	char aux[500],keyword[100],ccc,c_ab,c_dihtype;
 	FILE *fp;
 	int c_d=0,c_a=0;
 	u->splice = 0;
@@ -837,8 +837,20 @@ int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, 
 	    if (chapt==9)
 	    {
 		u->dih_ram = 1;
-	    	if (sscanf(aux,"%d %d %lf %d",&ab,&dihtype,&sigma,&dih0)==4)   //first int is 0  if ALFA and 1 if BETA, second int is 0 if phi (ia CA) and 1 if psi (ia C)	
+	    	if (sscanf(aux,"%c %c %lf %d",&c_ab,&c_dihtype,&sigma,&dih0)==4)
 	    	{
+                        //int is 0  if ALPHA and 1 if BETA
+                        if (c_ab == 'a' ) ab = 0;
+                        else {
+                            if (c_ab == 'b' ) ab = 1;
+                            else Error("Wrong name for secondary structure in dihedral potential");
+                        }
+                
+                        if (c_dihtype == 'f' ) dihtype = 0;
+                        else {
+                            if (c_dihtype == 'p' ) dihtype = 1;
+                            else Error("Wrong name for dihedral name in dihedral potential");
+                        }
 	    	    		(u->sigma)[ab][dihtype] = sigma;
 	    	    		(u->dih0)[ab][dihtype] = dih0;
 	       	}	    	
@@ -1005,14 +1017,25 @@ void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, 
 		if(u->dih_ram!=0)
 		{
 			fprintf(fout,"[ Ramachandran_Dihedrals ]\n");
+            fprintf(fout,"a/b\tpsi/phi\tstdev\tpsi0/phi0\n");
 			//stampo: 1. alfa=0/beta=1
 			//	  2. phi=0/psi=1
 			//	  3. sigma
 			//	  4. dih0
-			for(i=0; i<2; i++)
-				for(j=0;j<2;j++)
-					fprintf(fout,"%d\t%d\t%f\t%d\n", i,j,u->sigma[i][j],u->dih0[i][j]);
+			for(i=0; i<2; i++) {
+				for(j=0;j<2;j++) {
+                    if (i == 0) {
+                        if (j == 0) fprintf(fout,"a\tf\t%f\t%d\n",u->sigma[i][j],u->dih0[i][j]);
+                        else fprintf(fout,"a\tp\t%f\t%d\n",u->sigma[i][j],u->dih0[i][j]);
+                    }
+                    else{
+                        if (j == 0) fprintf(fout,"b\tf\t%f\t%d\n",u->sigma[i][j],u->dih0[i][j]);
+                        else fprintf(fout,"b\tp\t%f\t%d\n",u->sigma[i][j],u->dih0[i][j]);
+                    }
+                }
+            }
 			fprintf(fout,"[ Alfa/Beta_propensity ]\n");
+            fprintf(fout,"ia\tp_a\tp_b\n");
 			//stampo:	iaa	prop_a[iaa]	prop_b[iaa]
 			for(i=0;i<NAAMAX;i++)
 				if(u->ab_propensity[0][i]<2)
