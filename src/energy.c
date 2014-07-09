@@ -350,7 +350,7 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
         int nrest = 0;
         for (ic=0;ic<nchains;ic++)
 			for (i=0;i<(p+ic)->nback;i++)
-                for (jc=0;jc<nchains;jc++) {
+                for (jc=ic;jc<nchains;jc++) {
                     // same chain
                     if (ic == jc) {
                         nCA = 0;
@@ -364,9 +364,10 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
                     }
                     // different chains
                     else {
-                        for (j=0;j<(p+jc)->nback;j++)
+                        for (j=0;j<(p+jc)->nback;j++) {
                             if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
                                 nrest++;
+                        }
                     }
                 }
 					
@@ -374,7 +375,7 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
         
         for (ic=0;ic<nchains;ic++)
 			for (i=0;i<(p+ic)->nback;i++)	
-                for (jc=0;jc<nchains;jc++) {
+                for (jc=ic;jc<nchains;jc++) {
                     if (ic == jc) {
                         nCA = 0;
                         for (j=i+1;j<(p+jc)->nback;j++) {
@@ -386,10 +387,11 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
                         }
                     }
                     else {
-                        for (j=0;j<(p+jc)->nback;j++)
+                        for (j=0;j<(p+jc)->nback;j++) {
                             if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
                                 fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((p+ic)->back)+i)->ia,(((p+jc)->back)+j)->ia,
                                         Dist( (((p+ic)->back)+i)->pos, (((p+jc)->back)+j)->pos ) );
+                        }
                     }
                 }
 	}
@@ -401,7 +403,7 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
         for (ic=0;ic<nchains;ic++)
             for (i=0;i<(p+ic)->nback;i++) {
                 iaa = i/3 + 1;  //define aminoacid id
-                for (jc=0;jc<nchains;jc++) {
+                for (jc=ic;jc<nchains;jc++) {
                     if (ic == jc) {    // same chain
                         nCA = 0;
                         for (j=i;j<(p+jc)->nback;j++) {
@@ -422,11 +424,23 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
                             }
                         }
                     }
-            // different chains ---------> TODO
+            // different chains
                     else {
-                        for (j=(i%2);j<(p+jc)->nback;j=j+2)
-                            if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
-                                nrest++;
+                        for (j=0;j<(p+jc)->nback;j++) {
+                            jaa = j/3 + 1;
+                            if ((jaa-iaa)%2 == 0) { // only counts restraints between even aa and between even aa
+                                if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") ) {
+                                    if( strcmp(((((p+ic)->back)+i)->aa),"GLY") && strcmp(((((p+jc)->back)+j)->aa),"GLY") )
+                                        nrest+=4;   // one for CA-CA, one for sidechain/sidechain and two for CA/sidechain
+                                    if( strcmp(((((p+ic)->back)+i)->aa),"GLY") && !strcmp(((((p+jc)->back)+j)->aa),"GLY") )
+                                        nrest+=2;
+                                    if( !strcmp(((((p+ic)->back)+i)->aa),"GLY") && strcmp(((((p+jc)->back)+j)->aa),"GLY") )
+                                        nrest+=2;
+                                    if( !strcmp(((((p+ic)->back)+i)->aa),"GLY") && !strcmp(((((p+jc)->back)+j)->aa),"GLY") )
+                                        nrest+=1;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -436,7 +450,7 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
         for (ic=0;ic<nchains;ic++)
             for (i=0;i<(p+ic)->nback;i++) {
                 iaa = i/3 + 1;  //define aminoacid id
-                for (jc=0;jc<nchains;jc++) {
+                for (jc=ic;jc<nchains;jc++) {
                     if (ic == jc) {    // same chain
                         nCA = 0;
                         for (j=i;j<(p+jc)->nback;j++) {
@@ -467,14 +481,36 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
                             }
                         }
                     }
-            // different chains ---------> TODO
-            else {
-                for (j=(i%2);j<(p+jc)->nback;j=j+2)
-                    if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
-                        nrest++;
+            // different chains
+                    else {
+                        for (j=0;j<(p+jc)->nback;j++) {
+                            jaa = j/3 + 1;
+                            if (abs((iaa-jaa))%2 == 0) { // only counts restraints between even aa and between odd aa
+                                if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") ) {
+                                    fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((p+ic)->back)+i)->ia,(((p+jc)->back)+j)->ia,
+                                            Dist( (((p+ic)->back)+i)->pos, (((p+jc)->back)+j)->pos ) );   // Backbone-Backbone
+                                    iside = ((((p+ic)->back)+i)->nside)-1;
+                                    jside = ((((p+jc)->back)+j)->nside)-1;
+                                    if( !strcmp(((((p+ic)->back)+i)->aa),"GLY") && strcmp(((((p+jc)->back)+j)->aa),"GLY") )
+                                        fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((p+ic)->back)+i)->ia,(((((p+jc)->back)+j)->side)+jside)->ia,
+                                                Dist( (((p+ic)->back)+i)->pos, (((((p+jc)->back)+j)->side)+jside)->pos ) );    // Backbone-Sidechain
+                                    if( strcmp(((((p+ic)->back)+i)->aa),"GLY") && !strcmp(((((p+jc)->back)+j)->aa),"GLY") )
+                                        fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((((p+ic)->back)+i)->side)+iside)->ia,(((p+jc)->back)+j)->ia,
+                                                Dist( (((((p+ic)->back)+i)->side)+iside)->pos, (((p+jc)->back)+j)->pos ) );   // Sidechain-Backbone
+                                    if( strcmp(((((p+ic)->back)+i)->aa),"GLY") && strcmp(((((p+jc)->back)+j)->aa),"GLY") ) {
+                                        fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((p+ic)->back)+i)->ia,(((((p+jc)->back)+j)->side)+jside)->ia,
+                                                Dist( (((p+ic)->back)+i)->pos, (((((p+jc)->back)+j)->side)+jside)->pos ) );    // Backbone-Sidechain
+                                        fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((((p+ic)->back)+i)->side)+iside)->ia,(((p+jc)->back)+j)->ia,
+                                                Dist( (((((p+ic)->back)+i)->side)+iside)->pos, (((p+jc)->back)+j)->pos ) );    // Sidechain-Backbone
+                                        fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((((p+ic)->back)+i)->side)+iside)->ia,(((((p+jc)->back)+j)->side)+jside)->ia,
+                                                Dist( (((((p+ic)->back)+i)->side)+iside)->pos, (((((p+jc)->back)+j)->side)+jside)->pos ) );    // Sidechain-Sidechain
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
-        }
         
     }
     
