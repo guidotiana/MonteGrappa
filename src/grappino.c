@@ -117,6 +117,8 @@ int main(int argc, char *argv[])
     if (p->dih_ram)
 	{
 		Ram_Dihedrals(p,u);
+        fprintf(stderr,"Opening propensity file %s...\n",p->ab_propensityfile);
+        fflush(stderr);
 		ReadPropensity(p->ab_propensityfile,u);
 	}
 
@@ -191,6 +193,7 @@ void Parse(FILE *fp, struct s_parms *p)
 		ReadParS(aux,"polfile",p->poutfile);
 		ReadParS(aux,"potfile",p->eoutfile);
 		ReadParS(aux,"contactfile",p->cntfile);
+        ReadParS(aux,"propensityfile",p->ab_propensityfile);
 		ReadParS(aux,"model",p->model);
 		ReadParN(aux,"hydrogens",&(p->hydrogens));
 		ReadParF(aux,"r_hardcore",&(p->rhard));
