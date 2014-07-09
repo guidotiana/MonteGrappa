@@ -112,6 +112,13 @@ int main(int argc, char *argv[])
         Go_Dihedrals(p,polymer,nchain,u->dih01,u->dih03,u);
 	if (p->go_ang)
         Go_Angles(p,polymer,nchain,u->ang0,u);
+    
+    // ramachandran dihedrals
+    if (p->dih_ram)
+	{
+		Ram_Dihedrals(p,u);
+		ReadPropensity(p->ab_propensityfile,u);
+	}
 
 
 
@@ -166,6 +173,17 @@ void Parse(FILE *fp, struct s_parms *p)
 	strcpy(p->op_file,"");
 	strcpy(p->op_kind,"GO_DIST_CA");
     
+	p->dih_ram = 0;
+	p->e_dihram =1.00;
+	p->sig_a_phi = 40.;
+	p->sig_b_phi = 40.;
+	p->sig_a_psi = 20.;
+	p->sig_b_psi = 40.;
+	p->phi_0_a = -57;
+	p->phi_0_b = -129;
+	p->psi_0_a = -47;
+	p->psi_0_b = 124;
+    
     // read parameters file
 	while(fgets(aux,500,fp)!=NULL)
     {
@@ -206,6 +224,17 @@ void Parse(FILE *fp, struct s_parms *p)
 
 		ReadParS(aux,"op_file",p->op_file);
 		ReadParS(aux,"op_kind",p->op_kind);
+        
+        ReadParN(aux,"dih_ram",&(p->dih_ram));
+		ReadParF(aux,"e_dihram",&(p->e_dihram));
+		ReadParF(aux,"sig_a_phi",&(p->sig_a_phi));
+		ReadParF(aux,"sig_b_phi",&(p->sig_b_phi));
+		ReadParF(aux,"sig_a_psi",&(p->sig_a_psi));
+		ReadParF(aux,"sig_b_psi",&(p->sig_b_psi));
+		ReadParD(aux,"phi_0_a",&(p->phi_0_a));
+		ReadParD(aux,"phi_0_b",&(p->phi_0_b));
+		ReadParD(aux,"psi_0_a",&(p->psi_0_a));
+		ReadParD(aux,"psi_0_b",&(p->psi_0_b));
 
         // read explicitly declared backbone atoms
 		if (!strncmp(aux,"backbone_atoms",14)) {
@@ -302,6 +331,7 @@ void AppendPotentialComments(struct s_parms *p, char *eoutfile)
 
 		fprintf(fout,"# potential type %s\n",p->potential);
 		if(p->go_dih) fprintf(fout,"# energy of dihedral e_dih1 = %lf\te_dih3 = %lf\n",p->e_dih1,p->e_dih3);
+        if(p->dih_ram) fprintf(fout,"# energy of ramachandran dihedrals e_dihram = %lf\n",p->e_dihram);
 		if(p->go_ang) fprintf(fout,"# energy of angles e_ang = %lf\n",p->e_ang);
 		fprintf(fout,"# energy of global hohomopolymeric interaction e_homo = %lf\t and its radius r_homo = %lf\n",p->e_homo,p->r_homo);
 		fprintf(fout,"# threshold to define a bonded interaction = %lf\n",p->tthresh);

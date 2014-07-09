@@ -108,6 +108,23 @@ void Go_Angles(struct s_parms *parms, struct s_polymer *p, int nc, double *ang, 
 		}
 }
 
+void Ram_Dihedrals(struct s_parms *p, struct s_potential *u)
+{
+	if(p->dih_ram!=0)
+	{
+		u->dih_ram = p->dih_ram;
+		u->e_dihram = p->e_dihram;
+		u->sigma[0][0] = p->sig_a_phi;
+		u->sigma[1][0] = p->sig_b_phi;
+		u->sigma[0][1] = p->sig_a_psi;
+		u->sigma[1][1] = p->sig_b_psi;
+		u->dih0[0][0] = p->phi_0_a;
+		u->dih0[1][0] = p->phi_0_b;
+		u->dih0[0][1] = p->psi_0_a;
+		u->dih0[1][1] = p->psi_0_b;
+	}
+}
+
 
 /*****************************************************************************
  Contact map between atoms sticking out of different backbone atoms

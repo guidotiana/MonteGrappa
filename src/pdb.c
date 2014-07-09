@@ -576,3 +576,32 @@ int SimplifyPDB(struct atom_s *x, int n, char *model)
 	free(y);
 	return m;
 }
+
+/****************************************************************************
+ Read the file of the propensity alfa/beta
+ *****************************************************************************/
+
+void ReadPropensity(char *fname, struct s_potential *u)
+{
+    FILE *fp;
+    fp = fopen(fname,"r");
+    if (!fp) Error("Cannot open propensity file");
+    fprintf(stderr,"Reading Propensity File....\n");
+    
+    int naa=0, i;
+    char n[5], t[5], aux[50];
+    float coil, alfa, beta;
+    
+    while(fgets(aux,500,fp)!=NULL)
+    {
+        if(fscanf(fp,"%d %s %s %f %f %f",&i,n,t,&coil,&alfa,&beta)==6)
+    	{
+            u->ab_propensity[0][naa]=alfa;
+            u->ab_propensity[1][naa]=beta;
+            naa++;
+    	}
+    }
+    fclose(fp);
+    
+    return;
+}

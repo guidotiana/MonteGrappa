@@ -24,6 +24,7 @@ struct s_parms
 	char poutfile[200];
 	char eoutfile[200];
 	char cntfile[200];
+	char ab_propensityfile[200];
 
 	char potential[50];
 	char atomtypes[50];
@@ -68,6 +69,17 @@ struct s_parms
 	double hydro_e;
 	double hydro_r;
 	char typesfile[100];
+    
+    int dih_ram;				//energy dihedrals with minimum in Ramachandran dihedrals
+	double e_dihram;
+	double sig_a_phi;
+	double sig_b_phi;
+	double sig_a_psi;
+	double sig_b_psi;
+	int phi_0_a;
+	int phi_0_b;
+	int psi_0_a;
+	int psi_0_b;
 
 
 };
@@ -149,6 +161,7 @@ double DumbRMSD2(struct vector *a, struct vector *b, int n);
 void SetRotamersSimilarToPDB(int nc, struct s_polymer *p, struct atom_s *a, int napdb);
 void CopyPDB(struct atom_s *from, struct atom_s *to, int n);
 int SimplifyPDB(struct atom_s *x, int n, char *model);
+void ReadPropensity(char *fname, struct s_potential *u);
 
 
 // energy.c
@@ -156,6 +169,7 @@ double **ContactMap(struct s_parms *parms, struct s_polymer *p, int nchains, int
 void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r, double **r0, int nchains, int natoms, double **cm);
 void Go_Dihedrals(struct s_parms *parms, struct s_polymer *p, int nc, double *dih01, double *dih03, struct s_potential *u);
 void Go_Angles(struct s_parms *parms, struct s_polymer *p, int nc, double *ang, struct s_potential *u);
+void Ram_Dihedrals(struct s_parms *p, struct s_potential *u);
 int SetGoTypes(struct s_polymer *p, int nchains, int nat);
 void DisulphideBonds(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02, int nchains, int nat);
 void OP_AddEnergy(struct s_polymer *p, int a1, int a2, double mul);
