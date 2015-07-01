@@ -1,0 +1,45 @@
+nchains		1
+nrun		2
+Temp		1.5
+nstep		400000000
+nprinttrj	100000
+nprinte		100000
+nprintlog	100000
+flip		1
+pivot		10
+traj		chr13
+nosidechain
+nodihpot
+noangpot
+op_minim	sample
+op_file		dna.op
+op_deltat	100000
+op_itermax	4000
+op_step		0.1
+op_T		1.5
+seed	42
+stempering
+
+#stempering input
+st_method		adaptive
+st_nstep		1000
+st_nprint		1000
+st_preamble	100000
+st_nsadj		20000000
+st_emin		-500
+st_emax		50
+st_ebin		0.5
+st_anneal		prob
+st_lp_new		-1.
+st_lpthresh	9
+st_keepall
+st_sumoldhisto	1
+st_debug		1
+st_hthresh		0.1
+
+st_ntemp		1
+st_temperatures
+5.0
+
+st_ttarget		1.5
+st_printpdb	100000

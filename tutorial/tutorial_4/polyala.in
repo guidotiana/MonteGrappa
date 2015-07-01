@@ -1,0 +1,59 @@
+##############################
+# Grappino input file sample #
+##############################
+
+#########
+# Input #
+#########
+
+pdbfile         polyala.pdb          
+
+
+###########
+# Polymer #
+###########
+
+#nosidechain
+rotamers
+rotfile	/home/fran/MonteGrappa-1.0/MonteGrappa-alpha/lib/rotamers.lib
+pdb_rot                           
+
+atomtypes	/home/fran/MonteGrappa-1.0/MonteGrappa-alpha/lib/atomtypes.1.lib       
+
+
+#############
+# Potential #
+#############
+
+backbone_atoms  3 N CA C	# number and name of backbone file
+locked_atoms    N		# locked atomtype in backbone
+
+imin            4
+
+r_hardcore      2.0             
+r_native        4.0          
+
+potential       go          
+go-energy       -0.2        
+
+go_dihedrals 
+e_dih1		1.2        
+e_dih3		0.4        
+
+
+################
+# Optimization #
+################
+
+op_file		polyala.op	# path of restrains file
+op_kind 	GO_DIST_CA 
+
+
+
+##########
+# Output #
+##########
+
+debug		1		# set the verbosity level
+polfile		polyala.pol	# polymer file
+potfile		polyala.pot	# potential file

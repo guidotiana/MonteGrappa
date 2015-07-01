@@ -1,0 +1,64 @@
+
+/**********************************************************************\
+| TUTORIAL N. 4: parallel tempering with optimization of the potential |
+\**********************************************************************/
+
+
+Finally, we will learn how to optimize a potential using the parallel 
+tempering technique on a polyalanine helix made of 15 residues.  
+
+
+Before running
+	/path/where/is/grappino polyala.in
+
+
+have a look at the input file: we commented the previously used keyword 
+"nosidechain", thus we handle sidechains by using "rotamers". 
+"atomtypes" now links to a library used to deal with atoms in a slightly 
+different way than a classical GO model: modify the path to let grappino 
+find the library. For further information about "nosidechain", "rotamers", 
+"rot_file", "pdb_rot" and "atomtypes" please refer to the manual. 
+
+
+To optimize the potential, we need to calculate some restraints. There are a 
+couple of possible choices about the kind of restraint we can impose; now we 
+use GO_DIST_CA to consider only the distances between CA atoms. 
+These restraints will be written in "op_file". 
+
+
+After the creation of polyala.pol and polyala.pot, open polyala.par:
+we will perform 5 runs of optimization, 3 millions MC steps each, with the 
+following parameters: 
+
+op_file         polyala.op	is the path of the restraints file
+op_T            1.0		the temperature we want to optimize at
+op_wait         200000		neglect the first 200000 MC steps
+
+(for the other parameters, please refer to the manual).
+
+
+Now run
+	mpirun -np 8 /path/where/is/montegrappa_mpi polyala.pol polyala.pot polyala.par 
+
+
+At the end of the simulation, you should have lots of files in your directory: 
+- energy_runM_procN.ene
+- last_runM_procN.pol
+- traj_runM_procN.pdb
+where M is the number of the run and N is the index of the replica. 
+
+
+Now let's visualize the chi2 to check that it is actually decreasing: 
+	gnuplot
+	gnuplot> p "chi2.dat" w l
+
+
+Finally, to calculate the rmsd to the .pdb structure create the .pdb reference 
+file:
+	sed -n -e '1,77p' traj_run4_proc7.pdb > check.pdb
+
+and do
+        echo 3 3 | g_rms -f traj_run4_procN.pdb -s check.pdb -o rmsd_procN.xvg 
+
+for each replica. The output files should be equal to those stored in the 
+subdirectory "results".

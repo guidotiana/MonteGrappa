@@ -1,0 +1,134 @@
+
+/****************************************************************************\
+| TUTORIAL N. 1: single-replica simulation w/o optimization of the potential |
+\****************************************************************************/
+
+
+In this short tutorial we will use MonteGrappa to make unfold and refold a
+small peptide of 64 aminoacids, namely a small domain of chymotrypsin
+inhibitor 2.
+
+
+MonteGrappa needs three input files: 
+
+- ".pol" file, which contains the topology of the polymer
+- ".pot" file, which contains the details of the potential
+- ".par" file, which contains all the other parameters
+
+
+A couple of .par files can be found in this directory, while the two other
+.pol and .pot files must be created using the utility Grappino.
+
+
+Grappino needs a single input file (.in) and a reference structure (.pdb): you
+can find both them in this same directory. 
+
+
+Now have a look at 1YPC-CA.in, the input file for Grappino:
+
+- "pdbfile" is the path (relative or absolute) to the .pdb file, here
+  1YPC.pdb. 
+
+- then, there are two keywords ("backbone_atoms" and "nosidechain") about the
+  model of polymer we want to use. In this tutorial we will make a simple
+  C-alpha model of the peptide, thus neglecting the sidechains and all the
+  other atoms in the backbone.
+- "atomtypes" relates to the way atoms are dealt with in the code. For a
+  complete description of this keyword, please refer the manual.
+
+- "imin" is used to exclude interactions between atoms being too close in the
+  sequence. In this particular case, interactions are neglected if the
+  distance on the sequence is lesser than 4. 
+- the potential we use is a go-model with a hardcore distance interaction of
+  4.0 Angstrom and a maximum distance of 6.0 Angstrom. If present, each
+  interaction between two atoms has a negative energy of -1.5.
+- there is also a potential on the dihedrals. Please refer to the manual for a
+  complete description of these keywords.
+
+- "debug" sets the verbosity of the output.
+
+- "polfile" and "potfile" are the names of .pol and .pot files, respectively.
+
+
+Run Grappino with the syntax
+	/path/where/is/grappino 1YPC-CA.in
+
+
+You should see 1YPC-CA.pol and 1YPC-CA.pot in this directory.
+
+
+Now open 1YPC-CA.unf.par: 
+- "nchains" is the number of polymers in our simulation.
+- "nsteps" is the number of MonteCarlo steps we want to perform.
+- "seed" is the seed of the random-numbers' generator in the code. If this
+  keyword is neglected, MonteGrappa uses by default the system's clock. We
+  used 42 to produce the results you can find in the subdirectory "results".
+
+- "pivot" and "mpivot" are the two kind of moves we want to perform on our 
+  polymer, the former each MC step, the latter every four MC steps. For a 
+  better explanation of what these (and the other ones!) actually do, please 
+  refer to the manual. 
+
+- Temp is the temperature. In MonteGrappa fictitious temperatures are not easily 
+  referable to the real ones. Here, the values of the potential are tuned in 
+  order to let the protein be stable at T=1 and unfold at T=1.6. 
+
+- "nprinttrj", "nprintlog" and "nprinte N" print the trajectory, the log and 
+  the energy files respectively. 
+
+
+Now run MonteGrappa 
+	/path/where/is/montegrappa 1YPC-CA.pol 1YPC-CA.pot 1YPC-CA.unf.par 
+
+
+with all the arguments in this exact order. After 5 millions MC steps, you 
+should have in your directory some files: 
+- traj.pdb
+- last.pol
+- energy.ene
+- montegrappa.log
+
+traj.pdb is the trajectory in the common .pdb format: it can be visualized 
+by using softwares like VMD. 
+
+last.pol is the last-known conformation, in MonteGrappa format: it can be used 
+as an input for other simulations. In this version of the code, the last 
+conformation is saved only in .pol format, thus if you really need to visualize 
+it via VMD you should refer to the last frame of the trajectory.
+
+energy.ene contains total and partial energies for every MC step you chose to 
+print at.
+
+montegrappa.log contains some information about the simulated system, the
+energy at chosen MC steps and the acceptance of the move
+ 
+
+Plotting the energy vs time in energy.ene file, you can easily check that 
+energy indeed increases during the simulation. Furthermore, you can calculate 
+the rmsd between the whole .pdb trajectory and the reference structure 
+contained in the .pdb file.
+
+
+NB: if you want to perform such a test, use the first frame of .pdb file as 
+reference's file, not the original .pdb structure file (here 1YPC.pdb). 
+This is mandatory, because in the .pdb trajectory atoms are sorted and 
+renouned in a particular way, while some of the originally-present atoms in 
+the starting .pdb are missing (e.g. nitrogen or oxygen, this depending on 
+the particular model used in the simulation). 
+
+
+You can find in the subdirectory "results" the output of Gromacs 4.5.5 routine 
+	echo 3 3 | g_rms -f traj.pdb -s check.pdb -o unfolded.xvg 
+where check.pdb is exactly the first frame of traj.pdb, cut and pasted in a 
+new file.
+
+
+Finally, run 
+	/path/where/is/montegrappa last.pol 1YPC-CA.pot 1YPC-CA.fold.par
+
+
+to take the last, unfolded conformation of the polymer (output of a simulation 
+at T=1.6) and make it fold with T=1 (see 1YPC-CA.fold.par). You can check 
+that the energy.ene file now contains much lower energies, while the rmsd, 
+calculated with the very same file check.pdb used before, now starts from 
+high values but soon decreases to some few Angstroms.

@@ -1,0 +1,43 @@
+/****************************************************************************\
+| TUTORIAL N. 6: adaptive simulated tempering + optimization simulation      |
+\****************************************************************************/
+
+
+In this short tutorial we will use MonteGrappa to find the interaction matrix
+of 4 types of atoms in order to have the correct end to end contact probability.
+The system is a segment (20 bases) of DNA
+
+MonteGrappa needs three input files: 
+- a .pol file, which contains the topology of the polymer
+- a .pot file, which contains the details of the potential
+- a .par file, which contains all the other parameters
+
+You should see dna.pol, dna.pot, dna.par in this directory. Further in this directory
+there is a file named dna.op containing the restrain for the optimization process.
+
+More information about contents of these files, please refer to the manual.
+
+
+Now run MonteGrappa (the single-core, stempering version!) 
+	/path/where/is/montegrappa dna.pol dna.pot dna.par 
+
+
+with all the arguments in this exact order. After 2 MC runs, you 
+should have in your directory some files: 
+
+Plot columns 1:2 of chi2.dat to see the X^2 minimization.
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+

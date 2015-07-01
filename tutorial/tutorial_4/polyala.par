@@ -1,0 +1,48 @@
+nchains         1
+nstep           3000000
+nrun            5
+
+
+
+seed            42
+
+nprinttrj       100000
+nprintlog       10000
+nprinte         100000
+
+
+
+mpivot           1
+pivot	4
+
+always_restart
+record_native
+
+op_file         polyala.op
+op_minim        sample
+op_itermax      200
+op_step         0.2
+op_T            1.0
+op_deltat       5000
+
+
+
+step_exchange 1000
+
+op_wait		200000
+
+op_rw           3.5
+op_r0           1.0
+
+#T		1
+
+ntemp	8
+temperatures	
+1.0
+1.2
+1.4
+1.6
+1.8
+2.0
+2.2
+2.4

@@ -1,0 +1,53 @@
+nchains         1
+nstep           10000000
+#nrun            3
+
+
+
+
+
+
+
+seed            42
+
+nprinttrj       10000
+nprintlog       10000
+nprinte         10000
+
+
+
+mpivot           1
+pivot	4
+
+
+#always_restart
+#record_native
+
+#op_file         op_file-CA-NOCHEM.par
+#op_minim        sample
+#op_itermax      200
+#op_step         0.2
+#op_T            1.0
+#op_deltat       5000
+
+
+
+step_exchange 1000
+
+#op_wait	500000
+
+#op_rw           6
+#op_r0           4.0
+
+#T		1
+
+ntemp	8
+temperatures	
+0.4
+0.6
+0.8
+1.0
+1.2
+1.4
+1.6
+1.8

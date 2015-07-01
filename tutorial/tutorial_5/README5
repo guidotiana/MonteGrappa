@@ -1,0 +1,45 @@
+/****************************************************************************\
+| TUTORIAL N. 5: adaptive simulated tempering simulation                     |
+\****************************************************************************/
+
+
+In this short tutorial we will use MonteGrappa to study thermodynamics of a
+small random energy polymer of 20 atoms.
+
+
+MonteGrappa needs three input files: 
+
+- a .pol file, which contains the topology of the polymer
+- a .pot file, which contains the details of the potential
+- a .par file, which contains all the other parameters
+
+You should see random_polymer.pol, random_polymer.pot, random_polymer.par in
+this directory
+
+More information about contents of these files, please refer to the manual
+
+
+Now run MonteGrappa (the single-core, stempering version!) 
+	/path/where/is/montegrappa random_polymer.pol random_polymer.pot random_polymer.par 
+
+
+with all the arguments in this exact order. After 1 billions MC steps, you 
+should have in your directory some files: 
+
+Plot columns 1:2 of files dumb.dat and thermdodyn.dat to see energy vs temperature
+behaviour
+
+Plot columns 1:4 of file thermdodyn.dat to see the Cv vs temperature 
+
+
+
+
+
+
+
+
+
+
+
+
+

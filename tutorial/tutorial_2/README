@@ -1,0 +1,44 @@
+The file expdata.dat contains data of the kind obtained from a 5C/highC experiment. It is
+in the format
+bead1 bead2 average_count stdev_count
+
+To generate the file.pol, file.pot and a typical file.par execute
+
+./generate_5C.sh
+
+answering to the questions it puts similarly to this:
+
+Filename of the 5C/HiC data?
+expdata.dat
+Number of beads?
+20
+Normalization constant?
+100
+Rootname for output files?
+test
+Energy scale for initial interaction matrix (in temperature units)?
+0.2
+Interaction range (in units of interbeads distance)?
+1.5
+Hardcore radius  (in units of interbeads distance)?
+0.6
+
+It will generate four files, namely test.pol, test.pot, test.par and test.op
+(and an additional file tmp.op with the list of bead pairs).
+The file test.par contains typical parameters for the simulation, and can
+be edited manually according to the needs. To launch the optimization just 
+execute
+
+nohup ../../bin/montegrappa test.pol test.pot test.par >& log &
+
+You can follow the simulation inspecting the file log (e.g. tail -f log). After
+each iteration a file restraints_%d.dat is generated, containing a comparison
+between the input and the back-calculated data. They can be visualized, for
+example with gnuplot, executing
+
+gnuplot>  plot restraints_0.dat' u 2:3
+
+The value of the back-calculated contact probability for each pair of beads
+can be listed using
+
+paste tmp.op restraints_0.dat | awk '{ print $1,$2,$7; }' > prob.dat

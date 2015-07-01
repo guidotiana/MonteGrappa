@@ -1,0 +1,40 @@
+nchains		1
+nrun		1
+nstep		1000000000
+nprinttrj	2000000
+nprinte		2000000
+nprintlog	100000
+flip		1
+pivot		10
+seed		42
+traj		random_polymer
+nosidechain
+nodihpot
+noangpot
+Temp		1.0
+stempering
+
+#stempering input
+st_method		adaptive
+st_nstep		1000
+st_nprint		1000
+st_preamble	100000
+st_nsadj		20000000
+st_emin		-500
+st_emax		50
+st_ebin		0.5
+st_anneal		prob
+st_lp_new		-1.
+st_lpthresh	9
+st_keepall
+st_sumoldhisto	1
+st_debug		1
+st_hthresh		0.1
+
+st_ntemp		1
+st_temperatures
+2.0
+
+st_ttarget		0.6
+st_printpdb	10000
+#end stempering input

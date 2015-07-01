@@ -1,0 +1,26 @@
+#################################
+# Montegrappa input file sample #
+#################################
+
+##############
+# Parameters #
+##############
+
+nchains         1		# there is only a chain in our model
+nstep           5000000		# we perform 5M MonteCarlo steps
+
+seed            42		# the seed of the random numbers generator, 
+				# if not defined MonteGrappa uses system's clock
+
+mpivot		1		# perform a multiple pivot move every step
+pivot		4		# perform a pivot move every four steps
+
+Temp		1.6		# temperature of the system
+
+##########
+# Output #
+##########
+
+nprinttrj       10000		# print the trajectory in .pdb format every nprinttrj MC steps
+nprintlog       10000		# same for log file
+nprinte         10000		# and for energy file

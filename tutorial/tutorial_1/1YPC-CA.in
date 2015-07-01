@@ -1,0 +1,56 @@
+##############################
+# Grappino input file sample #
+##############################
+
+#########
+# Input #
+#########
+
+pdbfile		1YPC.pdb	# path of pdb file
+
+
+###########
+# Polymer #
+###########
+
+backbone_atoms	1 CA		# number of backbone atoms to be considered.        
+nosidechain			# neglect sidechains
+#hydrogen			# hydrogens are neglected by default. uncomment it 
+				# to keep them
+atomtypes	go		# each atom has a unique label
+
+
+#############
+# Potential #
+#############
+
+#locked_atoms    N		# in a CA model, there's no need for it. it locks 
+				# atoms in the backbone
+				
+imin            4		# minimum distance between backbone atoms
+				# to define a native interaction
+	
+potential       go		# we use a go-type potential
+r_hardcore      4.0		# hardcore distance (in angstrom)
+r_native        6.0		# native threshold distance (in angstrom)
+go-energy       -1.5            # potential depth
+
+				# that means: considering our protein to be made only 
+				# of CA atoms, if the distance on the sequence 
+				# between two of them is >=4 and if their distance 
+				# in real space is between 4 and 6 Angstrom, then it 
+				# sets a potential well with energy -1.5
+
+go_dihedrals			# set a potential on dihedrals
+e_dih1		2.7		# energy factor for go dihedral potential
+e_dih3		0.9		# energy factor for go dihedral potential
+
+
+##########
+# Output #
+##########
+
+debug		1		# set the verbosity level
+
+polfile         1YPC-CA.pol	# polymer file, input file for montegrappa
+potfile         1YPC-CA.pot	# potential file, input file for montegrappa
