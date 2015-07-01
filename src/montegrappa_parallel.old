@@ -1,8 +1,0 @@
-#include "montegrappa_parallel.h"
-
-void printparallel()
-{
-
-fprintf(stderr,"You are running the MPI version");
-
-}
