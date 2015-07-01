@@ -1,4 +1,0 @@
-#define ACTIVE_MPI
-
-
-void printparallel();
