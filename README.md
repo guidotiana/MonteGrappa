@@ -54,8 +54,8 @@ and set the environment variable
 	$ export OMP_NUM_THREADS=N
 
 where N is the number of threads you want to use. N=1 means
-no OpenMP parallelization. Since performances are system and parameters
-dependent, always test your configuration before to run long simulations.  
+no OpenMP parallelization. Performances are system and parameters
+dependent: always test your configuration before to run long simulations.  
 
 ================ CUSTOM INSTALLATION ====================================
 
