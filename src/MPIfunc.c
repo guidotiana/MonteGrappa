@@ -350,6 +350,30 @@ struct s_mc_parms *send_parms(int iproc, int nprocs, MPI_Datatype Parmstype, str
 }
 
 
+
+
+void send_model_names(int iproc,int nprocs,struct s_mc_parms *parms,MPI_Status astatus)
+{
+	int jproc;
+	if(iproc==0)
+	{
+		for(jproc=0;jproc<nprocs;jproc++)
+		{
+			//fprintf(stderr,"rank %d : sending %s to %d\n",iproc,parms->input_names[jproc],jproc);
+			MPI_Send(&parms->input_names[jproc],30,MPI_CHAR,jproc,6*jproc,MPI_COMM_WORLD);
+		}
+	}
+	if(iproc!=0)
+	{
+		
+		MPI_Recv(&parms->input_names[iproc],30,MPI_CHAR,0,6*iproc,MPI_COMM_WORLD,&astatus);
+		//fprintf(stderr,"rank %d : received %s from 0\n",iproc,parms->input_names[iproc]);
+	}
+	
+
+}
+
+
 //number of atoms, types and backbone atoms
 void send_struct(int *nback, int iproc, int nprocs, int *nat, int *ntypes, MPI_Status astatus)
 {

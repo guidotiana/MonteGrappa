@@ -174,12 +174,14 @@ int main(int argc, char *argv[])
 	for (i=0;i<parms->npol;i++) (replica+i)->tables = startp->tables; // tables of all polymers point to same address
 	for (i=1;i<parms->npol;i++) (startp+i)->tables = startp->tables;  // tables of all polymers point to same address
 
-        //MPI_Barrier(MPI_COMM_WORLD);
+        
 
-	// Read polymer stuff from file
+	/* Read polymer stuff from file
+	   if nreplicas==1,     send polymer from rank 0 to all replicas 
+	   if nreplicas==ntemp, read different polymers */ 
 	if(parms->nreplicas==1)
 	{
-		//fprintf(stderr,"rank %d !!!!! \n",my_rank);		
+		
 		if(my_rank==0)
         	{
         		ReadPolymer(polname,startp,parms->flog,parms->npol, parms->debug, &nat, &ntypes);
@@ -202,44 +204,27 @@ int main(int argc, char *argv[])
 	}//end of if nreplicas==1
         
 
-/*
-	else if(parms->nreplicas==parms->ntemp)
+	#ifdef ACTIVE_MPI
+	else if (parms->nreplicas==parms->ntemp)
 	{
-		fprintf(stderr,"BBBBBB");
-		#ifdef ACTIVE_MPI
 
-			int poly;
-			for(poly=parms->ntemp-1;poly>0;poly--)
-			{
-                		if(my_rank==0)
-				{
-		        		ReadPolymer(parms->input_names[poly],startp,parms->flog,parms->npol, parms->debug, &nat, &ntypes);
-                        		ComputeIAPDB(startp,parms);
-		                }
-			
+		send_model_names(my_rank,parms->ntemp,parms,astatus);
 
-				for(i=0;i<parms->npol;i++)
-				{
-					send_struct_to_proc(&((startp+i)->nback),mpiparms-> my_rank,poly, nprocs, &nat, &ntypes, astatus);
-        			        startp = send_pol_to_proc(mpiparms->my_rank,poly,nprocs, (startp+i)->nback, mpiparms->Back_mpi, mpiparms->Side_mpi, mpiparms->Rot_mpi, startp, astatus, i, parms->nshell, parms->nosidechains);
-
-
-				}	
-		                MPI_Barrier(MPI_COMM_WORLD);
-
-			}
-
-		ReadPolymer(parms->input_names[0],startp,parms->flog,parms->npol, parms->debug, &nat, &ntypes);
-                ComputeIAPDB(startp,parms);
-	
+		MPI_Barrier(MPI_COMM_WORLD);
+		//just a workaround...
+		FILE *flogread;
+		flogread=fopen("readpolymer.log","w");		
 		
+		ReadPolymer(parms->input_names[my_rank],startp,flogread,parms->npol,parms->debug,&nat,&ntypes);
+		//end of workaround
+		fclose(flogread);	
 
-		#endif
-	}
-	MPI_Barrier(MPI_COMM_WORLD);	
+		ComputeIAPDB(startp,parms);
+		MPI_Barrier(MPI_COMM_WORLD);
+	}//end of if nreplicas==ntemp
+	#endif
 
-*/
-
+	
 	for (i=0;i<parms->npol;i++)
             if(!AddSidechain(startp,0,startp->nback,i))
                   Error("Cannot add sidechain in starting chain");
@@ -255,7 +240,7 @@ int main(int argc, char *argv[])
 	#ifdef ACTIVE_MPI
 	u = send_pot(nat,ntypes,parms->noangpot,parms->nodihpot,parms->hb, my_rank, nprocs,mpiparms-> Pot_mpi, u, astatus);
 	
-	//POTENZIALE SUI DIEDRI 
+	//Dihedral potential 
 	if(u->dih_ram)
 	{
         	for(i=0;i<2;i++)
@@ -356,13 +341,25 @@ int main(int argc, char *argv[])
 		#ifdef ACTIVE_MPI
 		replica->etot = TotalEnergy(replica,u,parms,parms->npol,1,parms->nosidechains,parms->debug,my_rank);
 		#endif
-		if(my_rank==0)
+
+		if(parms->nreplicas==1)
+			if(my_rank==0)
+			{
+                		fprintf(stderr,"\nPolymer energy=%lf\tstep=%d\n",polymer->etot,irun);
+                		#ifdef ACTIVE_MPI
+				fprintf(stderr,"Replica energy=%lf\tstep=%d\n\n",replica->etot,irun);
+				#endif
+            		}
+		#ifdef ACTIVE_MPI
+		if (parms->nreplicas==parms->ntemp)
 		{
-                	fprintf(stderr,"\nPolymer energy=%lf\tstep=%d\n",polymer->etot,irun);
-                	#ifdef ACTIVE_MPI
-			fprintf(stderr,"Replica energy=%lf\tstep=%d\n\n",replica->etot,irun);
-			#endif
-            	}
+			fprintf(stderr,"| rank %d\tPolymer energy=%lf\tstep=%d\n",my_rank,polymer->etot,irun);
+			fprintf(stderr,"| rank %d\tReplica energy=%lf\tstep=%d\n",my_rank,replica->etot,irun);
+
+
+		}
+		#endif
+
 
 		if (parms->shell==1)
 		{
@@ -380,8 +377,8 @@ int main(int argc, char *argv[])
 		#endif
 		#ifdef ACTIVE_MPI
 		MPI_Barrier(MPI_COMM_WORLD);
-		if(my_rank==0)
-			fprintf(stderr,"Initial energy = %lf\n",polymer->etot);
+		//if(my_rank==0)
+		//	fprintf(stderr,"Initial energy = %lf\n",polymer->etot);
 
 		#endif
 		
@@ -422,11 +419,11 @@ int main(int argc, char *argv[])
 			PrintEnergies(fe,parms->npol,0,polymer);
 		}
 
-		//if(parms->npol>1)
-		//{
+		/*if(parms->npol>1)
+		{
 			//fprintf(stderr,"\nChecking number of Contacts\tstep=0\n");
 			//CountContacts(stderr,polymer,parms,0);
-		//}
+		} */
 		fprintf(stderr,"\n");
 		
 
@@ -451,7 +448,7 @@ int main(int argc, char *argv[])
 
 		#endif
 
-		//fprintf(stderr,"STARTING MC\n");
+		
 		// MAKE MONTE CARLO
 		#ifdef ACTIVE_MPI		
 		Do_MC(polymer,fragment,replica,startp,u,parms,ftrj,fe,oldp,fproc,irun,mpiparms);	
@@ -509,11 +506,11 @@ int main(int argc, char *argv[])
 
 
            	PrintPolymer(fname,polymer,parms->npol);
-  //		#ifdef DEBUG
+		//#ifdef DEBUG
 	       	fprintf(fproc,"Final: Etot=%lf\tEtot(true)=%lf\n",polymer->etot,TotalEnergy(polymer,u,parms,parms->npol,0,parms->nosidechains,parms->debug,my_rank));
-//		#else
-//		fprintf(fproc,"Final: Etot=%lf\n",polymer->etot);
-//		#endif
+		//#else
+		//fprintf(fproc,"Final: Etot=%lf\n",polymer->etot);
+		//#endif
 
 		// close files
 		if (strcmp(parms->fntrj,"")) fclose(ftrj);
@@ -544,7 +541,7 @@ int main(int argc, char *argv[])
 	FreePolymer(polymer,parms->npol, NRESMAX, NSIDEMAX, parms->shell, parms->nosidechains);
 	FreePolymer(oldp,parms->npol, NRESMAX, NSIDEMAX, parms->shell, parms->nosidechains);	
 	
-	//FreeOpt(startp->op,parms,startp->op->ndata);	// commentato da bob
+	//FreeOpt(startp->op,parms,startp->op->ndata);
 	if (strcmp(parms->op_minim,"none"))
 	FreeOpt(startp->op,parms,parms->op_input->ndata);
 	else free(startp->op);
@@ -588,13 +585,13 @@ int main(int argc, char *argv[])
 
 void Welcome(FILE *fp)
 {
-/*
+	/*
       fprintf(fp,"\n\n***************************************\n");
       fprintf(fp,"*        MonteGrappa v. %d.%d           *\n",NVER,NSUBVER);
       fprintf(fp,"***************************************\n");
       fprintf(fp,"  G. Tiana, 2010\n");
       fprintf(fp,"pid = %d\n",getpid());
-*/
+	*/
 
 	time_t t = time(NULL);
 	struct tm *tm = localtime(&t);

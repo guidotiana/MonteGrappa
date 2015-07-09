@@ -285,12 +285,14 @@ int Pdb2Polymer(struct atom_s *a, int nchains, int na, struct s_polymer *polymer
 		// or just using rotamer library
 		if (parms->sidescratch)
 		{
+			fprintf(stderr,"create sidechain just using rotamers library\n");
 			iamax = Rot2PolymerScratch(nrot_kinds,nchains,polymer,rotamers,parms,iamax);
 			SetRotamersSimilarToPDB(nchains,polymer,a,na);
 		}
 		// create sidechain from pdb
 		else 	
 		{
+			fprintf(stderr,"create sidechain from PDB ... \n ");
 			iamax = CreateSidechainFromPDB(a,nchains,na,polymer,parms,iamax);
 			if (parms->rotamers) Rot2Polymer(nrot_kinds,nchains,polymer,rotamers,parms);
 			if (!parms->pdb_rot) SetRotamersSimilarToPDB(nchains,polymer,a,na);
@@ -371,14 +373,21 @@ int CreateSidechainFromPDB(struct atom_s *a, int nchains, int na, struct s_polym
 		ib = (polymer+ic)->nback;
 		for(i=0;i<(polymer+ic)->nback;i++)
 		{
+			if(ic==2&&i==25) {
 			if (parms->debug>1) fprintf(stderr,"\tside of chain=%d back=%d atom=%d\n",ic,i,(((polymer+ic)->back)+i)->ia);
 
-			if (i>0 && i<ib-1)  	// the reference system for the first sidechain (usually CB) is (i+1),(i-1),i
+			}
+			if (i>0 && i<ib-1)
+			{  	// the reference system for the first sidechain (usually CB) is (i+1),(i-1),i
 				FindSidechain(a,na,ic,i,(((polymer+ic)->back)+i)->ia,top,polymer,parms,(((polymer+ic)->back)+i+1)->ia,
 						(((polymer+ic)->back)+i-1)->ia,(((polymer+ic)->back)+i)->ia);
-			else if (i<ib-1)	 	// for the first is (i+2),(i+1),i
+
+			}	
+			else if (i<ib-1)
+			{	 	// for the first is (i+2),(i+1),i
 				FindSidechain(a,na,ic,i,(((polymer+ic)->back)+i)->ia,top,polymer,parms,(((polymer+ic)->back)+i+2)->ia,
 						(((polymer+ic)->back)+i+1)->ia,(((polymer+ic)->back)+i)->ia);
+			}
 			else if (i==ib-1)	// for the last is (nback-3),(nback-2),(nback-1)
 				FindSidechain(a,na,ic,i,(((polymer+ic)->back)+i)->ia,top,polymer,parms,(((polymer+ic)->back)+ ib-3 )->ia,
 						(((polymer+ic)->back)+ ib-2 )->ia, (((polymer+ic)->back)+ ib-1 )->ia);
@@ -515,17 +524,23 @@ void SetRotamersSimilarToPDB(int nc, struct s_polymer *p, struct atom_s *a, int 
 	struct vector pdb[ROT_ATMAX],cpol[ROT_ATMAX];
 	double rmsd2min=99999.,x;
 
-	fprintf(stderr,"Set rotamers close to those of PDB\n");
+	fprintf(stderr,"Set rotamers close to those of PDB ... ");
 
 	for(ic=0;ic<nc;ic++)
+	{
+		//fprintf(stderr,"\tchain %d",ic);
 		for(i=0;i<(p+ic)->nback;i++)
+		{
+			//fprintf(stderr,"iback= %d\n",i);
 			if (!strcmp( (((p+ic)->back)+i)->type , "CA" ) && (((p+ic)->back)+i)->nside>0)		// loop on all CA atoms
 			{
 				iaa = (((p+ic)->back)+i)->iaa;
-
+				//fprintf(stderr,"iaa= %d\n",iaa);
 				// find positions in the pdb
+				//fprintf(stderr,"nside = %d\n",(((p+ic)->back)+i)->nside);
 				for(is=1;is< (((p+ic)->back)+i)->nside; is++)				// loop on sides of polymer, except CB
 				{
+					//fprintf(stderr,"iside= %d\n",is);
 					found=0;
 					for(ipdb=0;ipdb<napdb;ipdb++)
 					{
@@ -550,10 +565,12 @@ void SetRotamersSimilarToPDB(int nc, struct s_polymer *p, struct atom_s *a, int 
 				}	
 				// set rotamer and cartesian coordinates
 				(((p+ic)->back)+i)->irot = irotmin;	
-				fprintf(stderr,"%d %d irotmin=%d/%d\n",ic,i,irotmin,(((p+ic)->back)+i)->nrot);
+				//fprintf(stderr,"%d %d irotmin=%d/%d\n",ic,i,irotmin,(((p+ic)->back)+i)->nrot);
 				AddSidechain(p,i,i,ic);
-			}
-
+			}//end of if CA
+		}//end of back loop
+	}//end of chain loop
+	fprintf(stderr," ...DONE \n");
 }
 
 /****************************************************************************

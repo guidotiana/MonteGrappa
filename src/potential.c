@@ -542,7 +542,7 @@ void ResetContactsMonomer(struct s_polymer *p, int i, int ci)
 	int k,neigh,l,cn;
 
 	// remove i from its neighbours
-	//#pragma omp parallel for private(neigh,cn,l)
+	//i#pragma omp parallel for private(neigh,cn,l)
 	for (k=0;k<(((p+ci)->back)+i)->ncontacts;k++)
 	{
 		neigh = ((((p+ci)->back)+i)->contacts)[k];					// neigh is the k-th contact of i
@@ -597,7 +597,7 @@ double GetEnergyMonomerRange(struct s_polymer *p, int from, int to, int ip)
 {
 	double e=0;
 	int i,iw,j,cj;
-	
+	#pragma omp parallel for private(i,j,cj) reduction(+:e)	
 	for (iw=from;iw<=to;iw++)
 		if (iw>=0 && iw<(p+ip)->nback)
 			for (i=0;i<(((p+ip)->back)+iw)->ncontacts;i++)
@@ -687,7 +687,7 @@ void UpdateShell(struct s_polymer *p, struct s_mc_parms *parms)
 
 
 	//  double loop
-	#pragma omp parallel for private(cj,i,j,r2,js,is)
+	#pragma omp parallel for private(i,j,r2,js,is,cj)
 	for (ci=0;ci<parms->npol;ci++)
 		for (cj=ci;cj<parms->npol;cj++)  
 			for (i=0;i<(p+ci)->nback;i++)
@@ -761,6 +761,8 @@ void CopyShell(struct s_polymer *from,struct s_polymer *to,struct s_mc_parms *pa
 
 	int i,ci,cs;
 	for (ci=0;ci<parms->npol;ci++)
+	{
+		#pragma omp parallel for private(cs)
 	        for (i=0;i<(from+ci)->nback;i++)
 		{
                         (((to+ci)->back)+i)->nshell = (((from+ci)->back)+i)->nshell ;
@@ -772,7 +774,7 @@ void CopyShell(struct s_polymer *from,struct s_polymer *to,struct s_mc_parms *pa
 		}
 
 
-
+	}
 
 
 
@@ -892,7 +894,7 @@ void PrintEnergies_Parallel(FILE *fp, int nc, unsigned long long step, struct s_
                         edih += (((p+i)->back)+j)->e_dih;
                 }
 	
-     //   fprintf(fp,"%d\t%llu\t%9lf\t%9lf\t%9lf\t%9lf\n",my_rank,step,epair+eang+edih,epair,eang,edih);
+     	//fprintf(fp,"%d\t%llu\t%9lf\t%9lf\t%9lf\t%9lf\n",my_rank,step,epair+eang+edih,epair,eang,edih);
 	fprintf(fp,"%d\t%llu\t%9lf\n",my_rank,step,epair+eang+edih);
 
 }
@@ -1107,7 +1109,6 @@ int EnergyBoxPolymer(struct s_polymer *p, struct s_potential *u, int ic)
 
 	for (i=0;i<(p+ic)->nback;i++)
 		if (EnergyBox(p,u,i,ic)==1) return 1;
-
 	return 0;
 
 }

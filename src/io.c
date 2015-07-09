@@ -457,6 +457,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
 	#ifdef ACTIVE_MPI
 	x->nstep_exchange = 10000;
 	#endif
+	
 	x->nreplicas=1;
 //ASTEMPERING	
 	x->nconf=-1;
@@ -717,6 +718,8 @@ struct s_mc_parms *ReadMcParms(char *fname)
 			fprintf(stderr,"\n");
       		}
 
+		x->iT_bias=x->ntemp;
+		
 		 if (!strncmp(aux,"replicas",8)&& x->nreplicas!=1)
                 {
                         if (x->ntemp==0) Error("You must specify ntemp before listing the replicas");
@@ -726,9 +729,9 @@ struct s_mc_parms *ReadMcParms(char *fname)
                         fprintf(stderr, "- PT Replicas:\n");
                         for(i=0;i<x->ntemp;i++)
                         {
-                                r=fscanf(fp,"%s",&( x->input_names[i]));
+                                r=fscanf(fp,"%30s",( x->input_names[i]));
                                 if(r!=1) Error("Cannot read replica");
-                                fprintf(stderr,"  rank %d\t%s\t",i,(x->input_names[i]));
+                                fprintf(stderr,"  rank %d\t%s\n",i,(x->input_names[i]));
                         }
                         fprintf(stderr,"\n");
                 }

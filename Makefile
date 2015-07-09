@@ -1,7 +1,7 @@
-#CC=gcc
-CC=gcc -fopenmp
-#CCMP=/usr/lib64/openmpi/bin/mpicc
-CCMP=/usr/lib64/openmpi/bin/mpicc -fopenmp
+CC=gcc
+#CC=gcc -fopenmp
+CCMP=/usr/lib64/openmpi/bin/mpicc
+#CCMP=/usr/lib64/openmpi/bin/mpicc -fopenmp
 #cc
 #LFLAGS -pg
 LFLAGS= -Wall -pg -fopenmp -lm -L/usr/local/lib
