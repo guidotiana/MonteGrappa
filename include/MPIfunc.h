@@ -62,7 +62,7 @@ struct s_polymer *send_pol_to_proc(int iproc,int jproc, int nprocs, int nback, M
 struct s_potential *send_pot(int nat, int ntypes, int noangpot, int nodihpot, int hb, int iproc, int nprocs, MPI_Datatype Pottype, struct s_potential *u, MPI_Status astatus);
 void send_double_matrix(int length1, int length2, int iproc, double **m, int source);
 void send_int_matrix(int length1, int length2, int iproc, int **m, int source);
-
+void send_model_names(int iproc,int nprocs,struct s_mc_parms *parms,MPI_Status astatus);
 //exchange
 int ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_polymer *oldp, struct s_mc_parms *parms, struct s_potential *u, int iproc, int ntemp, int even, int *ex_count, int *ex_acc, MPI_Datatype Backtype, MPI_Datatype Sidetype, MPI_Datatype Rottype, MPI_Status astatus,unsigned long long istep,FILE *fexchange);
 //Potential-related
