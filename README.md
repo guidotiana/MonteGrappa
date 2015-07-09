@@ -49,7 +49,7 @@ in the Makefile
 	#CCMP=/usr/lib64/openmpi/bin/mpicc
 	CCMP=/usr/lib64/openmpi/bin/mpicc -fopenmp
 
-and set the environment variable
+and set the environmental variable
 
 	$ export OMP_NUM_THREADS=N
 
