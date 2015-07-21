@@ -80,6 +80,12 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 	
 	int ptempering_count=0;
 	int ex_count[(parms->ntemp)-1],ex_acc[(parms->ntemp)-1];
+	for(i=0;i<(parms->ntemp)-1;i++)
+	{
+		ex_count[i]=0;
+		ex_acc[i]=0;
+
+	}
         t=parms->T[my_rank];
         
 	FILE *fexchange=fopen("exchange.dat","w");	
@@ -600,6 +606,17 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 
 
 	fprintf(stderr,"\n");
+	#ifdef ACTIVE_MPI
+	MPI_Barrier(MPI_COMM_WORLD);
+	if(my_rank==0) fprintf(stderr,"~MPI-PT: exchanges\n");
+	MPI_Barrier(MPI_COMM_WORLD);
+	if(my_rank<parms->ntemp-1)
+	fprintf(stderr," %d\t%d\t\t%lf\n",my_rank,my_rank+1,(double)ex_acc[my_rank]/ex_count[my_rank]);
+	MPI_Barrier(MPI_COMM_WORLD);
+	#endif
+
+
+
 	sprintf(p->title,"final");
 	PrintPDBStream(p,parms->npol,ftrj);
 
