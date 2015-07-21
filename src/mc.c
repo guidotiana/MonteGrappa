@@ -482,10 +482,10 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
                                         fclose(fp);
                                         #endif
                                         op->record = 0;
-					fprintf(stderr,"DEBUG: AAA\n");
+					
                                         for(i=0;i<parms->npol;i++)
 					OP_GetRestrain(op->nframes,p,0,parms->op_input);            // record restrains
-                                        fprintf(stderr,"DEBUG: BBB\n");
+                                        
 					#ifdef ACTIVE_MPI       
                                         op->t[op->nframes] = parms->T[my_rank];
                                         #else
