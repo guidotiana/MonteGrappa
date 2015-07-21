@@ -520,13 +520,13 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
                         if(parms->debug>2) 
 				if(my_rank==0)
 					fprintf(stderr,"\nstep=%llu\n",istep);
-                	if(my_rank==0)
-				fprintf(stderr,"~MPI: PT ...\n");
+//                	if(my_rank==0)
+//				fprintf(stderr,"~MPI: PT ...\n");
 			
 			ExchangePol(p,replica,oldp,parms,pot,my_rank,parms->ntemp,0,ex_count,ex_acc,Backtype,Sidetype,Rottype,astatus,istep,fexchange);	
 			
-			if(my_rank==0)
-				fprintf(stderr,"\n");
+//			if(my_rank==0)
+//				fprintf(stderr,"\n");
 			//fflush(fexchange);	
 
 		}	
@@ -545,11 +545,6 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
                 
 		ptempering_count++;
 		#endif
-
-		
-                
-
-
 
 
 		// advance counters
@@ -574,8 +569,9 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 		
 	// print summary
 	#ifdef ACTIVE_MPI	
-	fclose(fexchange);	
-	fprintf(stderr,"\nRank %d Acceptance:\t%d / %d = %lf\n",my_rank,parms->acc,parms->mov,(double)parms->acc/parms->mov);
+	fclose(fexchange);
+	
+	fprintf(stderr,"\nRank %d\tAcceptance:\t%d / %d = %lf\n",my_rank,parms->acc,parms->mov,(double)parms->acc/parms->mov);
 	#else
 	fprintf(stderr,"\nAcceptance:\t%d / %d = %lf\n",parms->acc,parms->mov,(double)parms->acc/parms->mov);
 	#endif
@@ -606,12 +602,14 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 
 
 	fprintf(stderr,"\n");
+	
+
 	#ifdef ACTIVE_MPI
-	MPI_Barrier(MPI_COMM_WORLD);
-	if(my_rank==0) fprintf(stderr,"~MPI-PT: exchanges\n");
+	
+
 	MPI_Barrier(MPI_COMM_WORLD);
 	if(my_rank<parms->ntemp-1)
-	fprintf(stderr," %d\t%d\t\t%lf\n",my_rank,my_rank+1,(double)ex_acc[my_rank]/ex_count[my_rank]);
+	fprintf(stderr,"PT EX\t%d <-> %d\t\t%lf\n",my_rank,my_rank+1,(double)ex_acc[my_rank]/ex_count[my_rank]);
 	MPI_Barrier(MPI_COMM_WORLD);
 	#endif
 
