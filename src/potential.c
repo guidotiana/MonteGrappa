@@ -815,7 +815,7 @@ double EnergyDihedrals(struct s_polymer *p, struct s_potential *u, int iw, int i
 	double e=0,dih01,dih03,dih;
 
 	if (iw<2 || iw>(p+ic)->nback-2) return 0;			// dihedrals are not defined for the first and last two backbone atoms
-
+        
 	ia = (((p+ic)->back)+iw)->ia;
         iaa = (((p+ic)->back)+iw)->iaa - (((p+ic)->back))->iaa;
 
