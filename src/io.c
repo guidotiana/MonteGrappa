@@ -305,12 +305,12 @@ void PrintPDBStream(struct s_polymer *p, int npol, FILE *fp)
 			  if (npol<24) cc = ch+65;
 			  else cc=' ';
 
-	          fprintf(fp,"ATOM  %5d  %-4s%3s %c%4d    %8.3lf%8.3lf%8.3lf\n",(((p+ch)->back)+i)->ia,(((p+ch)->back)+i)->type,
+	          fprintf(fp,"ATOM  %5d %-4s%3s %c%4d    %8.3lf%8.3lf%8.3lf\n",(((p+ch)->back)+i)->ia,(((p+ch)->back)+i)->type,
 	        		  (((p+ch)->back)+i)->aa,cc,(((p+ch)->back)+i)->iaa,((((p+ch)->back)+i)->pos).x,((((p+ch)->back)+i)->pos).y,
 	        		  ((((p+ch)->back)+i)->pos).z );
 
 	          for (j=0;j<(((p+ch)->back)+i)->nside;j++)
-	        	  fprintf(fp,"ATOM  %5d  %-4s%3s %c%4d    %8.3lf%8.3lf%8.3lf\n", (((((p+ch)->back)+i)->side)+j)->ia,
+	        	  fprintf(fp,"ATOM %5d  %-4s%3s %c%4d    %8.3lf%8.3lf%8.3lf\n", (((((p+ch)->back)+i)->side)+j)->ia,
 	        			  (((((p+ch)->back)+i)->side)+j)->type, (((p+ch)->back)+i)->aa,cc,(((p+ch)->back)+i)->iaa,
 	        			  ((((((p+ch)->back)+i)->side)+j)->pos).x,((((((p+ch)->back)+i)->side)+j)->pos).y,
 	        			  ((((((p+ch)->back)+i)->side)+j)->pos).z);
