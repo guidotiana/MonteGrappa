@@ -845,10 +845,10 @@ double EnergyDihedrals(struct s_polymer *p, struct s_potential *u, int iw, int i
 	if(u->dih_ram)
         {
 
-	if((ia-1)%3==0)   //di tipo phi
+	if((iw-1)%3==0)   //di tipo phi
                   for(i=0;i<2;i++)
                         e += - (u->e_dihram) * ( (u->ab_propensity[i][iaa]/u->sigma[i][0]) * exp(-0.5*(((dih - u->dih0[i][0])/u->sigma[i][0])*((dih - u->dih0[i][0])/u->sigma[i][0]))) );
-        if((ia+1)%3==0) //di tipo psi
+        if((iw+1)%3==0) //di tipo psi
                  for(i=0;i<2;i++)
                         e += - (u->e_dihram) * (u->ab_propensity[i][iaa]/u->sigma[i][1]) * exp(-0.5*(((dih - u->dih0[i][1])/u->sigma[i][1])*((dih - u->dih0[i][1])/u->sigma[i][1])));
 
