@@ -8,12 +8,12 @@
 
 
                  WELCOME TO
-               MONTEGRAPPA 1.4 
+               MONTEGRAPPA 1.3 
 
 ===============================================
 
 
-This file will help you to compile and install Montegrappa v1.4 .
+This file will help you to compile and install Montegrappa v1.3 .
 The package contains three programs:
 
 	- "montegrappa", the main Monte Carlo engine 

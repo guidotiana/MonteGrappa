@@ -24,6 +24,7 @@ struct s_parms
 	char poutfile[200];
 	char eoutfile[200];
 	char cntfile[200];
+	char coevofile[200];
 	char ab_propensityfile[200];
 	char h_fieldsfile[200];
 

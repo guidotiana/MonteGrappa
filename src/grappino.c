@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 		Go_Pairs(p,polymer,u->e,u->r_2,u->r0_2,nchain,ntypes,cm);
 		u->g_r0hard = p->rhard;
 	}
-	else if (!strcmp(p->potential,"contactfile"))
+	else if (!strcmp(p->potential,"coevo"))
 	{
 		Ext_Pairs(p,polymer,u->e,u->r_2,u->r0_2);
 		u->g_r0hard = p->rhard;
@@ -171,6 +171,7 @@ void Parse(FILE *fp, struct s_parms *p)
 	strcpy(p->poutfile,"polymer.pol");
 	strcpy(p->eoutfile,"potential.pot");
 	strcpy(p->cntfile,"");
+	strcpy(p->coevofile,"");
 	p->n_back_a = 3;
 	strcpy(p->back_a[0],"N");
     strcpy(p->back_a[1],"CA");
@@ -211,6 +212,7 @@ void Parse(FILE *fp, struct s_parms *p)
 		ReadParS(aux,"polfile",p->poutfile);
 		ReadParS(aux,"potfile",p->eoutfile);
 		ReadParS(aux,"contactfile",p->cntfile);
+		ReadParS(aux,"coevofile",p->coevofile);
         ReadParS(aux,"propensityfile",p->ab_propensityfile);
 		ReadParS(aux,"h_fieldsfile",p->h_fieldsfile);
 		ReadParS(aux,"model",p->model);

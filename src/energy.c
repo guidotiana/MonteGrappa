@@ -118,7 +118,9 @@ void Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **
 	char aux[500],aa1[3],aa2[3];
 	FILE *fp;
 	
-	fp = fopen(parms->cntfile,"r");
+	fprintf(stderr,"Reading coevolutionary contact file\n");
+	
+	fp = fopen(parms->coevofile,"r");
 	
 	while(fgets(aux,500,fp)!=NULL)
 	{
@@ -132,6 +134,8 @@ void Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **
 					  ( (!strcmp(((p->back)+i)->type,"CA")) && (!strcmp(((p->back)+j)->type,"CA")) ) &&
 					   (strcmp(aa1,"GLY")) && (strcmp(aa2,"GLY"))  )
 					{
+						//DEBUG
+						//fprintf(stderr,"%d %s %d %s %lf\n",iaa1,aa1,iaa2,aa2,energy);
 						itype1 = (((p->back)+i)->side)->itype;
 						itype2 = (((p->back)+j)->side)->itype;
 						k++;

@@ -44,8 +44,8 @@
 
 
 
-        #define NVER		0
-        #define NSUBVER	 	11	
+        #define NVER		1
+        #define NSUBVER	 	3	
 
         #define NRESMAX		3000		// maximum number of backbone atoms
         #define NATOMMAX	60000		// maximum number of atoms

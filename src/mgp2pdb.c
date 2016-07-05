@@ -9,6 +9,8 @@
 #include <ctype.h>
 #include <unistd.h>
 
+void mgp2pdbHeader();
+int polymercounter(char* filename);
 
 int main(int argc, char *argv[])
 {
@@ -20,12 +22,15 @@ int main(int argc, char *argv[])
 	
 	FILE *logfile=NULL, *pdbout=NULL;
 	
+	mgp2pdbHeader();
+	
 	logfile = fopen("mgp2pdb.log","w");
 	if (argc == 1)
 	{
 		fprintf(stderr,"usage: mgp2pdb -i polfile -o pdbfile\n");
 		return 1;
 	}
+	
 	
 	
 	// Options handling
@@ -96,6 +101,19 @@ int main(int argc, char *argv[])
 	
 	
 	return 0;
+}
+
+void mgp2pdbHeader(){
+	fprintf(stderr,"\n\n");
+	fprintf(stderr,"                       ___            _ _ \n");
+	fprintf(stderr,"                      |__ \\          | | |    \n");
+	fprintf(stderr,"  _ __ ___   __ _ _ __   ) |_ __   __| | |__  \n");
+	fprintf(stderr," | '_ ` _ \\ / _` | '_ \\ / /| '_ \\ / _` | '_ \\ \n");
+	fprintf(stderr," | | | | | | (_| | |_) / /_| |_) | (_| | |_) |\n");
+	fprintf(stderr," |_| |_| |_|\\__, | .__/____| .__/ \\__,_|_.__/\n");
+	fprintf(stderr,"             __/ | |       | |\n");
+	fprintf(stderr,"            |___/|_|       |_|\n\n\n");
+	fprintf(stderr,"\t R. Capelli, 2016\n\n");
 }
 
 int polymercounter(char* filename){
