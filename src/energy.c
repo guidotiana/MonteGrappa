@@ -53,6 +53,9 @@ void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r
 	}
 	if (parms->debug>1)  fprintf(stderr,"\n\nGo contacts:\n");
 
+	fprintf(stderr,"SONO IN GO PAIRS\n");
+
+	
 	for (i=0;i<nat;i++)
 		for (j=i;j<nat;j++)
 		{
@@ -105,6 +108,56 @@ void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r
 		fclose (fout);
 	}
 	if (parms->debug>0) fprintf(stderr,"Found %d Go contacts\n",k);
+
+}
+
+void Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02)
+{
+	int i,j,k=0,iaa1,iaa2,itype1,itype2;
+	double energy,r;
+	char aux[500],aa1[3],aa2[3];
+	FILE *fp;
+	
+	fp = fopen(parms->cntfile,"r");
+	
+	while(fgets(aux,500,fp)!=NULL)
+	{
+		if ( sscanf(aux,"%d %s %d %s %lf",&iaa1,aa1,&iaa2,aa2,&energy) == 5);
+		{
+			for(i=0;i<p->nback;i++)
+			{
+				for(j=i;j<p->nback;j++)
+				{
+					if( ( (((p->back)+i)->iaa == iaa1) && (((p->back)+j)->iaa == iaa2) ) &&
+					  ( (!strcmp(((p->back)+i)->type,"CA")) && (!strcmp(((p->back)+j)->type,"CA")) ) &&
+					   (strcmp(aa1,"GLY")) && (strcmp(aa2,"GLY"))  )
+					{
+						itype1 = (((p->back)+i)->side)->itype;
+						itype2 = (((p->back)+j)->side)->itype;
+						k++;
+						
+						// set the interaction distance
+						r = parms->rnat * parms->rnat;
+						r2[itype1][itype2] = r;
+						r2[itype2][itype1] = r2[itype1][itype2];
+						
+						// set the hardcore distance
+						r = parms->rhard * parms->rhard;
+						r02[itype1][itype2] = r;
+						r02[itype2][itype1] = r02[itype1][itype2];
+						
+						// set the interaction energy
+						e[itype1][itype2] = energy;
+						e[itype2][itype1] = e[itype1][itype2];
+					}
+				}
+			}
+		}
+	}
+	fclose(fp);
+	
+	if (parms->debug>0) fprintf(stderr,"Found %d contacts in contactfile\n",k);
+	
 
 }
 
@@ -252,6 +305,29 @@ int SetGoTypes(struct s_polymer *p, int nchains, int nat)
 }
 
 /*****************************************************************************
+ Assign as atom types an incremental number (backbone excluded)
+ *****************************************************************************/
+int SetGoBackTypes(struct s_polymer *p, int nchains, int nat)
+{
+	int ic,i,j,k=1;
+	
+	fprintf(stderr,"Set Go types (backbone excluded)\n");
+	
+	for (ic=0;ic<nchains;ic++)
+	for (i=0;i<(p+ic)->nback;i++)
+	{
+		(((p+ic)->back)+i)->itype = 0;
+		for (j=0;j<(((p+ic)->back)+i)->nside;j++)
+		{
+			(((((p+ic)->back)+i)->side)+j)->itype = k;
+			k++;
+		}
+	}
+	
+	return k;
+}
+
+/*****************************************************************************
  Read atom types from a library file
  *****************************************************************************/
 int ReadTypes(struct s_polymer *p, int nchains, int nat, char *nfile)
@@ -263,7 +339,7 @@ int ReadTypes(struct s_polymer *p, int nchains, int nat, char *nfile)
 	// read from file
 	fprintf(stderr,"Reading atom types from file %s\n",nfile);
 
-	fp = fopen(nfile,"r");
+        fp = fopen(nfile,"r");
 	if (!fp) Error("Cannot open file for reading atom types, check atomtypes directive");
 
 	while(fgets(aux,500,fp)!=NULL)

@@ -167,7 +167,7 @@ void Create_pot_datatype(MPI_Datatype *Pottype)
 	x = calloc(1,sizeof(struct s_potential));
 	if (!x) Error("Cannot allocate struct potential");
 
-	MPI_Aint adress[24];
+	MPI_Aint adress[25];
 	MPI_Get_address(x, &adress[0]);
 	MPI_Get_address(&(*x).dih_periodic, &adress[1]);
 	MPI_Get_address(&(*x).dih_tabled, &adress[2]);
@@ -192,16 +192,21 @@ void Create_pot_datatype(MPI_Datatype *Pottype)
 	MPI_Get_address(&(*x).hc_number, &adress[21]);	
 	MPI_Get_address(&(*x).dih_ram, &adress[22]);	
 	MPI_Get_address(&(*x).e_dihram, &adress[23]);	
+	MPI_Get_address(&(*x).h_fields, &adress[24]);
 
-	MPI_Datatype type[23]={MPI_INT, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_CHAR, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE};
-	int blocklen[23]={1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-	MPI_Aint disp[23];
+	MPI_Datatype type[24]={MPI_INT, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, //10
+		MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_CHAR, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, //20
+		MPI_INT, MPI_INT, MPI_DOUBLE, MPI_INT};
+	int blocklen[24]={1,1,1,1,1,1,1,1,1,1, //10
+		1,1,1,1,1,1,1,1,1,1, //20
+		1,1,1,1};
+	MPI_Aint disp[24];
 	
 	int i;
-	for(i=0; i<23; i++)
+	for(i=0; i<24; i++)
 		disp[i]=adress[i+1]-adress[0];
 	
-	MPI_Type_create_struct(23,blocklen,disp,type,Pottype);
+	MPI_Type_create_struct(24,blocklen,disp,type,Pottype);
 	MPI_Type_commit(Pottype);
 	free(x);
 
@@ -212,10 +217,10 @@ void Create_pot_datatype(MPI_Datatype *Pottype)
 void Create_parms_datatype(MPI_Datatype *Parmstype){
 
 	struct s_mc_parms *x;
-	x = calloc(1,sizeof(struct s_mc_parms));
+	x = malloc(1 * sizeof(struct s_mc_parms));
 	if (!x) Error("Cannot allocate mc_parms");
 
-	MPI_Aint adress[69];
+	MPI_Aint adress[70];
 	MPI_Get_address(x, &adress[0]);
 	MPI_Get_address(&(*x).npol, &adress[1]);
 	MPI_Get_address(&(*x).nstep, &adress[2]);
@@ -246,76 +251,99 @@ void Create_parms_datatype(MPI_Datatype *Parmstype){
 	MPI_Get_address(&(*x).nosidechains, &adress[27]);
 	MPI_Get_address(&(*x).noangpot, &adress[28]);
 	MPI_Get_address(&(*x).nodihpot, &adress[29]);
-	MPI_Get_address(&(*x).nrun, &adress[30]);
-	MPI_Get_address(&(*x).always_restart, &adress[31]);
-	MPI_Get_address(&(*x).record_native, &adress[32]);
-	MPI_Get_address(&(*x).acc, &adress[33]);
-	MPI_Get_address(&(*x).mov, &adress[34]);
-	MPI_Get_address(&(*x).disentangle, &adress[35]);
-	MPI_Get_address(&(*x).stempering, &adress[36]);
-	MPI_Get_address(&(*x).dx_com, &adress[37]);
-	MPI_Get_address(&(*x).dx_clm, &adress[38]);
-	MPI_Get_address(&(*x).r_cloose, &adress[39]);
-	MPI_Get_address(&(*x).a_cloose, &adress[40]);
-	MPI_Get_address(&(*x).d_cloose, &adress[41]);
-	MPI_Get_address(&(*x).hb, &adress[42]);
-	MPI_Get_address(&(*x).anneal, &adress[43]);
-	MPI_Get_address(&(*x).anneal_often, &adress[44]);
-	MPI_Get_address(&(*x).anneal_step, &adress[45]);
-	MPI_Get_address(&(*x).anneal_t, &adress[46]);
-	MPI_Get_address(&(*x).anneal_recov, &adress[47]);
+	MPI_Get_address(&(*x).nohfields, &adress[30]);
+	MPI_Get_address(&(*x).nrun, &adress[31]);
+	MPI_Get_address(&(*x).always_restart, &adress[32]);
+	MPI_Get_address(&(*x).record_native, &adress[33]);
+	MPI_Get_address(&(*x).acc, &adress[34]);
+	MPI_Get_address(&(*x).mov, &adress[35]);
+	MPI_Get_address(&(*x).disentangle, &adress[36]);
+	MPI_Get_address(&(*x).stempering, &adress[37]);
+	MPI_Get_address(&(*x).dx_com, &adress[38]);
+	MPI_Get_address(&(*x).dx_clm, &adress[39]);
+	MPI_Get_address(&(*x).r_cloose, &adress[40]);
+	MPI_Get_address(&(*x).a_cloose, &adress[41]);
+	MPI_Get_address(&(*x).d_cloose, &adress[42]);
+	MPI_Get_address(&(*x).hb, &adress[43]);
+	MPI_Get_address(&(*x).anneal, &adress[44]);
+	MPI_Get_address(&(*x).anneal_often, &adress[45]);
+	MPI_Get_address(&(*x).anneal_step, &adress[46]);
+	MPI_Get_address(&(*x).anneal_t, &adress[47]);
+	MPI_Get_address(&(*x).anneal_recov, &adress[48]);
+	MPI_Get_address(&(*x).r_contact, &adress[49]);
 	#ifdef OPTIMIZEPOT
-	MPI_Get_address(&(*x).op_minim, &adress[48]);
-	MPI_Get_address(&(*x).op_itermax, &adress[49]);
-	MPI_Get_address(&(*x).op_step, &adress[50]);
-	MPI_Get_address(&(*x).op_T, &adress[51]);
-	MPI_Get_address(&(*x).op_deltat, &adress[52]);
-	MPI_Get_address(&(*x).op_stop, &adress[53]);
-	MPI_Get_address(&(*x).op_print, &adress[54]);
-	MPI_Get_address(&(*x).op_emin, &adress[55]);
-	MPI_Get_address(&(*x).op_emax, &adress[56]);
-	MPI_Get_address(&(*x).op_wait, &adress[57]);
-	MPI_Get_address(&(*x).op_r, &adress[58]);	
-	MPI_Get_address(&(*x).op_r0, &adress[59]);
-	MPI_Get_address(&(*x).nstep_exchange, &adress[60]);
-	MPI_Get_address(&(*x).nmul_local,&adress[61]);
-	MPI_Get_address(&(*x).chi2start,&adress[62]);
-	MPI_Get_address(&(*x).ishell,&adress[63]);
-	MPI_Get_address(&(*x).bgs_a,&adress[64]);
-	MPI_Get_address(&(*x).bgs_b,&adress[65]);
-	MPI_Get_address(&(*x).dtheta,&adress[66]);
+	MPI_Get_address(&(*x).op_minim, &adress[50]);
+	MPI_Get_address(&(*x).op_itermax, &adress[51]);
+	MPI_Get_address(&(*x).op_step, &adress[52]);
+	MPI_Get_address(&(*x).op_T, &adress[53]);
+	MPI_Get_address(&(*x).op_deltat, &adress[54]);
+	MPI_Get_address(&(*x).op_stop, &adress[55]);
+	MPI_Get_address(&(*x).op_print, &adress[56]);
+	MPI_Get_address(&(*x).op_emin, &adress[57]);
+	MPI_Get_address(&(*x).op_emax, &adress[58]);
+	MPI_Get_address(&(*x).op_wait, &adress[59]);
+	MPI_Get_address(&(*x).op_r, &adress[60]);
+	MPI_Get_address(&(*x).op_r0, &adress[61]);
+	MPI_Get_address(&(*x).nstep_exchange, &adress[62]);
+	MPI_Get_address(&(*x).nmul_local,&adress[63]);
+	MPI_Get_address(&(*x).chi2start,&adress[64]);
+	MPI_Get_address(&(*x).ishell,&adress[65]);
+	MPI_Get_address(&(*x).bgs_a,&adress[66]);
+	MPI_Get_address(&(*x).bgs_b,&adress[67]);
+	MPI_Get_address(&(*x).dtheta,&adress[68]);
 
-	MPI_Get_address(&(*x).iT_bias,&adress[67]);
-	MPI_Get_address(&(*x).nreplicas,&adress[68]);
+	MPI_Get_address(&(*x).iT_bias,&adress[69]);
+	MPI_Get_address(&(*x).nreplicas,&adress[70]);
 
 
 	#else
-	MPI_Get_address(&(*x).nstep_exchange, &adress[48]);
+	MPI_Get_address(&(*x).nstep_exchange, &adress[50]);
 	#endif
 	
 
 	
 	#ifdef OPTIMIZEPOT
-	MPI_Datatype type[68]={MPI_INT, MPI_INT, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_CHAR, MPI_CHAR, MPI_CHAR, MPI_CHAR, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_INT, MPI_INT, MPI_INT,MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT,  MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT,  MPI_DOUBLE,  MPI_DOUBLE,  MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_INT,  MPI_INT,  MPI_INT,  MPI_INT, MPI_DOUBLE, MPI_INT, MPI_CHAR, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_INT,MPI_INT,MPI_INT,MPI_DOUBLE,MPI_DOUBLE,MPI_DOUBLE,MPI_INT,MPI_INT};	int blocklen[68]={1,1,1,1,1,1,1,1,50,50,50,50,1,1,1,1,1,1,1,NREPMAX,1,1,NMOVES,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,50,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-	MPI_Aint disp[68];
+	MPI_Datatype type[70]={MPI_INT, MPI_INT, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_CHAR, MPI_CHAR, //10
+		MPI_CHAR, MPI_CHAR, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, //20
+		MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT,  MPI_INT, //30
+		MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE,  MPI_DOUBLE,  MPI_DOUBLE, //40
+		MPI_DOUBLE, MPI_DOUBLE, MPI_INT,  MPI_INT,  MPI_INT,  MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_CHAR, //50
+		MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, //60
+		 MPI_DOUBLE, MPI_INT, MPI_INT,MPI_INT,MPI_INT,MPI_DOUBLE,MPI_DOUBLE,MPI_DOUBLE,MPI_INT,MPI_INT};
+	int blocklen[70]={1,1,1,1,1,1,1,1,50,50,//10
+		50,50,1,1,1,1,1,1,1,NREPMAX, //20
+		1,1,NMOVES,1,1,1,1,1,1,1, //30
+		1,1,1,1,1,1,1,1,1,1, //40
+		1,1,1,1,1,1,1,1,1,50,//50
+		1,1,1,1,1,1,1,1,1,1, //60
+		1,1,1,1,1,1,1,1,1,1}; //70
+	MPI_Aint disp[70];
 	
 	int i;
-	for(i=0; i<68; i++)
+	for(i=0; i<70; i++)
 		disp[i]=adress[i+1]-adress[0];
 	
-	MPI_Type_create_struct(68,blocklen,disp,type,Parmstype);
+	MPI_Type_create_struct(70,blocklen,disp,type,Parmstype);
 	MPI_Type_commit(Parmstype);
-	free(x);
+	//free(x);
 	#else
-	MPI_Datatype type[48]={MPI_INT, MPI_INT, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_CHAR, MPI_CHAR, MPI_CHAR, MPI_CHAR, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_INT, MPI_INT, MPI_INT,MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT,  MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT,  MPI_DOUBLE,  MPI_DOUBLE,  MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_INT,  MPI_INT,  MPI_INT,  MPI_INT, MPI_DOUBLE, MPI_INT, MPI_INT};
-	int blocklen[48]={1,1,1,1,1,1,1,1,50,50,50,50,1,1,1,1,1,1,1,NREPMAX,1,1,NMOVES,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-	MPI_Aint disp[48];
+	MPI_Datatype type[50]={MPI_INT, MPI_INT, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_CHAR, MPI_CHAR, //10
+		MPI_CHAR, MPI_CHAR, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, //20
+		MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, //30
+		MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE,  MPI_DOUBLE,  MPI_DOUBLE, //40
+		MPI_DOUBLE, MPI_DOUBLE, MPI_INT,  MPI_INT,  MPI_INT,  MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_INT};
+	int blocklen[50]={1,1,1,1,1,1,1,1,50,50,//10
+		50,50,1,1,1,1,1,1,1,NREPMAX, //20
+		1,1,NMOVES,1,1,1,1,1,1,1, //30
+		1,1,1,1,1,1,1,1,1,1, //40
+		1,1,1,1,1,1,1,1,1,1};
+	MPI_Aint disp[50];
 	
 	int i;
-	for(i=0; i<48; i++)
+	for(i=0; i<50; i++)
 		disp[i]=adress[i+1]-adress[0];
 	
-	MPI_Type_create_struct(48,blocklen,disp,type,Parmstype);
+	MPI_Type_create_struct(50,blocklen,disp,type,Parmstype);
 	MPI_Type_commit(Parmstype);
 	free(x);
 	#endif
@@ -340,37 +368,15 @@ struct s_mc_parms *send_parms(int iproc, int nprocs, MPI_Datatype Parmstype, str
 	}
 	
 	if(iproc==0)
-		for(i=1; i<nprocs; i++)
+		for(i=1; i<nprocs; i++){
 			MPI_Send(parms, 1, Parmstype, i, 100+i, MPI_COMM_WORLD);
+		}
+	
 
 	if(iproc!=0)
 		MPI_Recv(parms, 1, Parmstype, 0, 100+iproc, MPI_COMM_WORLD, &astatus);
 
 	return parms;
-}
-
-
-
-
-void send_model_names(int iproc,int nprocs,struct s_mc_parms *parms,MPI_Status astatus)
-{
-	int jproc;
-	if(iproc==0)
-	{
-		for(jproc=0;jproc<nprocs;jproc++)
-		{
-			//fprintf(stderr,"rank %d : sending %s to %d\n",iproc,parms->input_names[jproc],jproc);
-			MPI_Send(&parms->input_names[jproc],30,MPI_CHAR,jproc,6*jproc,MPI_COMM_WORLD);
-		}
-	}
-	if(iproc!=0)
-	{
-		
-		MPI_Recv(&parms->input_names[iproc],30,MPI_CHAR,0,6*iproc,MPI_COMM_WORLD,&astatus);
-		//fprintf(stderr,"rank %d : received %s from 0\n",iproc,parms->input_names[iproc]);
-	}
-	
-
 }
 
 
@@ -564,16 +570,24 @@ struct s_polymer *send_pol_to_proc(int iproc,int jproc, int nprocs, int nback, M
 
 
 //potential
-struct s_potential *send_pot(int nat, int ntypes, int noangpot, int nodihpot, int hb, int iproc, int nprocs, MPI_Datatype Pottype, struct s_potential *u, MPI_Status astatus)
+struct s_potential *send_pot(int nat, int ntypes, int noangpot, int nodihpot, int nohfields, int hb, int iproc, int nprocs, MPI_Datatype Pottype, struct s_potential *u, MPI_Status astatus)
 {
 	int i;
 	
 	if(iproc==0)
+	{
 		for(i=1; i<nprocs; i++)
-			MPI_Send(u, 1, Pottype, i, 30000+i, MPI_COMM_WORLD);	
+		{
+			MPI_Send(u, 1, Pottype, i, 30000+i, MPI_COMM_WORLD);
+		}
+	}
+
+	MPI_Barrier(MPI_COMM_WORLD);
 
 	if(iproc!=0)
-		MPI_Recv(u, 1, Pottype, 0, 30000+iproc, MPI_COMM_WORLD, &astatus);	
+	{
+		MPI_Recv(u, 1, Pottype, 0, 30000+iproc, MPI_COMM_WORLD, &astatus);
+	}
 	
 	send_double_matrix(ntypes, ntypes, iproc, u->e, 0);
 	send_double_matrix(ntypes, ntypes, iproc, u->r_2, 0);
@@ -582,24 +596,31 @@ struct s_potential *send_pot(int nat, int ntypes, int noangpot, int nodihpot, in
 	send_double_matrix(2, 2, iproc, u->sigma, 0);
 	send_int_matrix(2, 2, iproc, u->dih0, 0);
 	send_double_matrix(2, NAAMAX, iproc, u->ab_propensity, 0);
-	}	
+	}
 
-	MPI_Bcast((u->e_ang),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast((u->ang0),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast((u->e_ang),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast((u->ang0),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	if(!nodihpot){
-	MPI_Bcast((u->e_dih1),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast((u->dih01),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast((u->e_dih3),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast((u->dih03),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast((u->dih_which),nat,MPI_INT,0,MPI_COMM_WORLD);
-	MPI_Bcast((u->dih_pa),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast((u->dih_pb),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast((u->dih_f_psi_a),NDIHFMAX,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast((u->dih_f_psi_b),NDIHFMAX,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast((u->dih_f_phi_a),NDIHFMAX,MPI_DOUBLE,0,MPI_COMM_WORLD);
-	MPI_Bcast((u->dih_f_phi_b),NDIHFMAX,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	if(!noangpot)
+	{
+		MPI_Bcast((u->e_ang),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		MPI_Bcast((u->ang0),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		MPI_Bcast((u->e_ang),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		MPI_Bcast((u->ang0),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
+	if(!nodihpot)
+	{
+		MPI_Bcast((u->e_dih1),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		MPI_Bcast((u->dih01),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		MPI_Bcast((u->e_dih3),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		MPI_Bcast((u->dih03),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		MPI_Bcast((u->dih_which),nat,MPI_INT,0,MPI_COMM_WORLD);
+		MPI_Bcast((u->dih_pa),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		MPI_Bcast((u->dih_pb),nat,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		MPI_Bcast((u->dih_f_psi_a),NDIHFMAX,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		MPI_Bcast((u->dih_f_psi_b),NDIHFMAX,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		MPI_Bcast((u->dih_f_phi_a),NDIHFMAX,MPI_DOUBLE,0,MPI_COMM_WORLD);
+		MPI_Bcast((u->dih_f_phi_b),NDIHFMAX,MPI_DOUBLE,0,MPI_COMM_WORLD);
+	}
+	if(!nohfields){
+	MPI_Bcast((u->h_values),ntypes,MPI_DOUBLE,0,MPI_COMM_WORLD);
 	}
 	MPI_Bcast((u->hc_type),ntypes,MPI_INT,0,MPI_COMM_WORLD);
 	MPI_Bcast((u->hc_r0),ntypes,MPI_DOUBLE,0,MPI_COMM_WORLD);
@@ -650,6 +671,22 @@ void send_int_matrix(int length1, int length2, int iproc, int **m, int source)
 	return;
 }
 
+void send_double_array(int length, int iproc, double *m, int source)
+{
+	int i;
+	double mm[length];
+	
+	if(iproc==source)
+		for(i=0; i<length; i++)
+			mm[i]=m[i];
+	
+	MPI_Bcast(&mm,length,MPI_DOUBLE,source,MPI_COMM_WORLD);
+	
+	if(iproc!=source)
+		for(i=0; i<length; i++)
+			m[i]=mm[i];
+	return;
+}
 
 /*****************************************************************************
  Copy a polymer structure from a replica to another 
@@ -707,51 +744,49 @@ int ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_p
 			{
 				position=0;
 				for(j=0;j<nback;j++)
-        		                MPI_Pack(((polymer+ipolymer)->back)+j,1,Backtype,buffer_back,buffer_back_size,&position,MPI_COMM_WORLD);
-	                         MPI_Send(buffer_back,position,MPI_PACKED,i+1, 10000+100*i, MPI_COMM_WORLD);
+					MPI_Pack(((polymer+ipolymer)->back)+j,1,Backtype,buffer_back,buffer_back_size,&position,MPI_COMM_WORLD);
+					MPI_Send(buffer_back,position,MPI_PACKED,i+1, 10000+100*i, MPI_COMM_WORLD);
 			}
 			if(iproc==i+1)
 			{
 				MPI_Recv(buffer_back,buffer_back_size,MPI_PACKED,i,10000+100*i, MPI_COMM_WORLD, &astatus);
 		                position=0;
-                		for(j=0;j<nback;j++)
-	               	        	MPI_Unpack(buffer_back,buffer_back_size,&position,((replica+ipolymer)->back)+j,1,Backtype,MPI_COMM_WORLD);
+				for(j=0;j<nback;j++)
+					MPI_Unpack(buffer_back,buffer_back_size,&position,((replica+ipolymer)->back)+j,1,Backtype,MPI_COMM_WORLD);
 
 				position=0;
 			
 				for(j=0;j<nback;j++)
-                                        MPI_Pack(((polymer+ipolymer)->back)+j,1,Backtype,buffer_back,buffer_back_size,&position,MPI_COMM_WORLD);
-	                        MPI_Send(buffer_back,position,MPI_PACKED,i, 20000+100*i, MPI_COMM_WORLD);
+					MPI_Pack(((polymer+ipolymer)->back)+j,1,Backtype,buffer_back,buffer_back_size,&position,MPI_COMM_WORLD);
+				MPI_Send(buffer_back,position,MPI_PACKED,i, 20000+100*i, MPI_COMM_WORLD);
 
 			}
 			
 			if(iproc==i)
 			{
-			        MPI_Recv(buffer_back,buffer_back_size,MPI_PACKED,i+1, 20000+100*i, MPI_COMM_WORLD, &astatus);
-                                position=0;
-                                for(j=0;j<nback;j++)
-                                        MPI_Unpack(buffer_back,buffer_back_size,&position,((replica+ipolymer)->back)+j,1,Backtype,MPI_COMM_WORLD);
-
+				MPI_Recv(buffer_back,buffer_back_size,MPI_PACKED,i+1, 20000+100*i, MPI_COMM_WORLD, &astatus);
+				position=0;
+				for(j=0;j<nback;j++)
+					MPI_Unpack(buffer_back,buffer_back_size,&position,((replica+ipolymer)->back)+j,1,Backtype,MPI_COMM_WORLD);
 
 			}
 			
 			if(!nosidechains)
 			{
-
 				int side_dims[nback];
 				int rot_dims[nback];
-               			int buffer_side_size,sidechains=0;
+				int buffer_side_size,sidechains=0;
 				int rotamersl=0;	
-			        for(j=0;j<nback;j++)
-                		{
-                        		side_dims[j]=(((polymer+ipolymer)->back)+j)->nside;
+				for(j=0;j<nback;j++)
+				{
+					side_dims[j]=(((polymer+ipolymer)->back)+j)->nside;
 					rot_dims[j]=(((polymer+ipolymer)->back)+j)->nrot;
 					sidechains+=side_dims[j];
 					rotamersl+=rot_dims[j];
-                		}
+				}
 
-		                buffer_side_size=sizeof(struct s_side)*sidechains;
-    				char *buffer_side=malloc(buffer_side_size);
+				buffer_side_size=sizeof(struct s_side)*sidechains;
+				char *buffer_side=malloc(buffer_side_size);
 				if(iproc==i)
 				{
 					position=0;
@@ -763,8 +798,9 @@ int ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_p
 				{
 					MPI_Recv(buffer_side,buffer_side_size,MPI_PACKED,i,1000000+100*i, MPI_COMM_WORLD, &astatus);
 					position=0;
-					for(j=0; j<nback;j++) for(k=0; k<side_dims[j];k++) 
-						MPI_Unpack(buffer_side,buffer_side_size,&position,((((replica+ipolymer)->back)+j)->side)+k,1,Sidetype,MPI_COMM_WORLD);
+					for(j=0; j<nback;j++)
+						for(k=0; k<side_dims[j];k++)
+							MPI_Unpack(buffer_side,buffer_side_size,&position,((((replica+ipolymer)->back)+j)->side)+k,1,Sidetype,MPI_COMM_WORLD);
 				}
 
 
@@ -773,9 +809,9 @@ int ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_p
 				{
 //					position=0;
 					for(j=0; j<nback;j++) for(k=0; k<side_dims[j];k++) for(l=0; l<rot_dims[j]; l++)
-//								MPI_Pack((((((polymer->back)+j)->side)+k)->rot)+l,1,Rottype,buffer_rot,buffer_rot_size,&position,MPI_COMM_WORLD);
+//					MPI_Pack((((((polymer->back)+j)->side)+k)->rot)+l,1,Rottype,buffer_rot,buffer_rot_size,&position,MPI_COMM_WORLD);
 //					MPI_Send(buffer_rot,position,MPI_PACKED,i+1, 2000000+1000*i, MPI_COMM_WORLD);
-						MPI_Send(((((((polymer+ipolymer)->back)+j)->side)+k)->rot)+l, 1, Rottype, i+1, 2000000+1000*i+100*j+10*k+l, MPI_COMM_WORLD);
+					MPI_Send(((((((polymer+ipolymer)->back)+j)->side)+k)->rot)+l, 1, Rottype, i+1, 2000000+1000*i+100*j+10*k+l, MPI_COMM_WORLD);
 				}
 
 				if(iproc==i+1)
@@ -791,19 +827,19 @@ int ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_p
 				if(iproc==i+1)
 				{
 					position=0;
-                                        for(j=0; j<nback;j++) for(k=0; k<side_dims[j];k++)
-                                               MPI_Pack(((((polymer+ipolymer)->back)+j)->side)+k,1,Sidetype,buffer_side,buffer_side_size,&position,MPI_COMM_WORLD);
-                                        MPI_Send(buffer_side,position,MPI_PACKED,i, 3000000+100*i, MPI_COMM_WORLD);
+					for(j=0; j<nback;j++) for(k=0; k<side_dims[j];k++)
+						MPI_Pack(((((polymer+ipolymer)->back)+j)->side)+k,1,Sidetype,buffer_side,buffer_side_size,&position,MPI_COMM_WORLD);
+					MPI_Send(buffer_side,position,MPI_PACKED,i, 3000000+100*i, MPI_COMM_WORLD);
 
 					//for(j=0; j<nback;j++) for(k=0; k<((polymer->back)+j)->nside;k++) 
 					//MPI_Send((((polymer->back)+j)->side)+k, 1, Sidetype, i, 3000000+100*i+10*j+k, MPI_COMM_WORLD);
 				}
 				if(iproc==i)
 				{
-	  		              	MPI_Recv(buffer_side,buffer_side_size,MPI_PACKED,i+1,3000000+100*i, MPI_COMM_WORLD, &astatus);
-                                      	position=0;
-                                        for(j=0; j<nback;j++) for(k=0; k<side_dims[j];k++)
-                                                MPI_Unpack(buffer_side,buffer_side_size,&position,((((replica+ipolymer)->back)+j)->side)+k,1,Sidetype,MPI_COMM_WORLD);
+					MPI_Recv(buffer_side,buffer_side_size,MPI_PACKED,i+1,3000000+100*i, MPI_COMM_WORLD, &astatus);
+					position=0;
+					for(j=0; j<nback;j++) for(k=0; k<side_dims[j];k++)
+						MPI_Unpack(buffer_side,buffer_side_size,&position,((((replica+ipolymer)->back)+j)->side)+k,1,Sidetype,MPI_COMM_WORLD);
 					//for(j=0; j<nback;j++) for(k=0; k<((replica->back)+j)->nside;k++)
 					//MPI_Recv((((replica->back)+j)->side)+k, 1, Sidetype, i+1, 3000000+100*i+10*j+k, MPI_COMM_WORLD, &astatus);
 				}

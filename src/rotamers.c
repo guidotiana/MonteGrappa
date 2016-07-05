@@ -378,10 +378,8 @@ int Rot2Polymer(int nrot_kinds, int nchains, struct s_polymer *p, struct rot_inp
 	if (!parms->cb_pdb) SubstituteDefaultCB(p,nchains);
 
 	// if required, keep the sidechain of the pdb as rotamer 0
-	if (parms->pdb_rot) {
-				fprintf(stderr,"keep pdb sidechains as rotamer 0...\n");			
-				keeppdb=1;
-	}
+	if (parms->pdb_rot) keeppdb=1;
+
 	// add sidechain atoms other than CB
 	fprintf(stderr,"Adding the rotamers of the atoms other than CB\n");
 	for (ic=0;ic<nchains;ic++)

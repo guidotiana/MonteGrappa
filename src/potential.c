@@ -40,11 +40,11 @@
 double TotalEnergy(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms, int npol, int update, int nosidechains, int debug, int iproc)
 {
       int i,j,ci,cj,tooclose;
-      double etot=0,eang=0,edih=0,ebox=0;
-      if (update)
-      	      #pragma omp parallel for private(i,j)
-	      for (ci=0;ci<npol;ci++)
-                  for (i=0;i<(p+ci)->nback;i++)
+      double etot=0,eang=0,edih=0,ehfs=0,ebox=0;
+	  if (update)
+		#pragma omp parallel for private(i,j)
+		  for (ci=0;ci<npol;ci++)
+			for (i=0;i<(p+ci)->nback;i++)
                   {
                         for (j=0;j<(((p+ci)->back)+i)->ncontacts;j++)  ((((p+ci)->back)+i)->e)[j] = 0;
                         (((p+ci)->back)+i)->ncontacts = 0;
@@ -78,51 +78,64 @@ double TotalEnergy(struct s_polymer *p, struct s_potential *u, struct s_mc_parms
                                     etot += EnergyPair(p,u,i,j,ci,cj,update,nosidechains,parms->disentangle,tooclose,parms->hb);
                              }
 	}
+	if (debug>0 && iproc==0) fprintf(parms->flog," Epairs = %lf\n",etot);
 
-      if (debug>0 && iproc==0) fprintf(parms->flog," Epairs = %lf\n",etot);
-
-      if (!parms->noangpot || !parms->nodihpot){
-    
-      if(update)
-      { 
-      for (ci=0;ci<npol;ci++)           
-            for (i=0;i<(p+ci)->nback;i++)
-            {
-                  if (!parms->noangpot)   eang += EnergyAngles(p,u,i,ci,update);                      // angular potential
-                  if (!parms->nodihpot)   edih += EnergyDihedrals(p,u,i,ci,update);             // dihedral potential
-                  if (u->boxtype != 'n')                                                  // box potential
-                        if (EnergyBox(p,u,i,ci) == 1) ebox = LARGE;
-            }
-
-	}
-      
-
-	else
+	if (!parms->noangpot || !parms->nodihpot || !parms->nohfields)
 	{
-	 #pragma omp parallel for shared(ebox) private(i) reduction(+:eang,edih)
-      for (ci=0;ci<npol;ci++)
-            for (i=0;i<(p+ci)->nback;i++)
-            {
-                  if (!parms->noangpot)   eang += EnergyAngles(p,u,i,ci,update);                      // angular potential
-                  if (!parms->nodihpot)   edih += EnergyDihedrals(p,u,i,ci,update);             // dihedral potential
-                  if (u->boxtype != 'n')                                                  // box potential
-                        if (EnergyBox(p,u,i,ci) == 1) ebox = LARGE;
-            }
+		if(update)
+		{
+			if (!parms->nohfields){	// only the first time, to update aa contacts
+				ResetAAContacts(p,u,parms);
+			}
+			for (ci=0;ci<npol;ci++)
+				for (i=0;i<(p+ci)->nback;i++)
+				{
+					if (!parms->noangpot){
+   
+					eang += EnergyAngles(p,u,i,ci,update);                      // angular potential
 
-        }
+					}
+					if (!parms->nodihpot){
+						edih += EnergyDihedrals(p,u,i,ci,update);					// dihedral potential
+ 					}
+					if ( (!parms->nohfields) && (!strcmp("CA",(((p+ci)->back)+i)->type)) ){
+					
+						ResetAAContacts(p,u,parms);
+						ehfs += EnergyHFields(p,u,parms,i,ci,update,0);					// H fields potential
+					}
+					if (u->boxtype != 'n')                                                  // box potential
+						if (EnergyBox(p,u,i,ci) == 1) ebox = LARGE;
+				}
 
-	}//end of if(noangpot||nodihpot	)
+		}
+		else
+		{
+		#pragma omp parallel for shared(ebox) private(i) reduction(+:eang,edih)
+			for (ci=0;ci<npol;ci++)
+				for (i=0;i<(p+ci)->nback;i++)
+				{
+					if (!parms->noangpot)
+						eang += EnergyAngles(p,u,i,ci,update);                  // angular potential
+					if (!parms->nodihpot)
+						edih += EnergyDihedrals(p,u,i,ci,update);				// dihedral potential
+					if ( (!parms->nohfields) && (!strcmp("CA",(((p+ci)->back)+i)->type)) )
+						ehfs += EnergyHFields(p,u,parms,i,ci,update,0);					// H fields potential
+					if (u->boxtype != 'n')
+						if (EnergyBox(p,u,i,ci) == 1) ebox = LARGE;				// box potential
+				}
+			}
+		}
 
-      etot += (eang + edih + ebox);
+	etot += (eang + edih + ebox + ehfs);
 
-      if (debug>0 && iproc==0) fprintf(parms->flog," Eang  = %lf\n Edih  = %lf\n Etot  = %lf\n",eang,edih,etot);
+	if (debug>0 && iproc==0) fprintf(parms->flog," Eang  = %lf\n Edih  = %lf\n Ehfs  = %lf\n Etot  = %lf\n",eang,edih,ehfs,etot);
 
 
       #ifdef OPTIMIZEPOT
        if (strcmp(parms->op_minim,"none"))
        {
             p->op->eold[ p->op->nframes ] = etot;
-            p->op->efix[ p->op->nframes ] = eang + edih + ebox;
+            p->op->efix[ p->op->nframes ] = eang + edih + ebox + ehfs;
        }
       #endif
 
@@ -428,6 +441,7 @@ double EnergyMonomerRange(struct s_polymer *p, struct s_potential *u, int from, 
 	// if shell
 	else
 	{
+              
 		//slow #pragma omp parallel for private(k,i,j,cj,tooclose,e) reduction(+:etot)		
 		for (i=from;i<=to;i++)
 			for (k=0;k<(((p+ip)->back)+i)->nshell;k++)
@@ -542,7 +556,7 @@ void ResetContactsMonomer(struct s_polymer *p, int i, int ci)
 	int k,neigh,l,cn;
 
 	// remove i from its neighbours
-	//i#pragma omp parallel for private(neigh,cn,l)
+	//#pragma omp parallel for private(neigh,cn,l)
 	for (k=0;k<(((p+ci)->back)+i)->ncontacts;k++)
 	{
 		neigh = ((((p+ci)->back)+i)->contacts)[k];					// neigh is the k-th contact of i
@@ -572,6 +586,189 @@ void ResetContactsMonomer(struct s_polymer *p, int i, int ci)
 
 }
 
+/********************************************************************
+ Reset and recompute the contacts of CA with other residues
+ ********************************************************************/
+void ResetAAContacts(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms)
+{
+	int i,j,js,is,ci,cj,cont,ctrl,ncac,refcont;
+	int ida,idb;
+	double r2;
+	
+	// reset the neighbour list of i
+	for (ci=0;ci<parms->npol;ci++)
+		for (i=0;i<(p+ci)->nback;i++)
+		{
+			for (cont=0;cont<(((p+ci)->back)+i)->naacontacts;cont++)
+			{
+				(((p+ci)->back)+i)->aacontacts[cont] = 0;
+				(((p+ci)->back)+i)->aacontacts_p[cont] = 0;
+			}
+			(((p+ci)->back)+i)->naacontacts = 0;
+		}
+	
+	// recompute the neighbour lists
+	for (ci=0;ci<parms->npol;ci++)
+		for (cj=ci;cj<parms->npol;cj++)
+			for (i=0;i<(p+ci)->nback;i++)
+				for (j=0;j<(p+cj)->nback;j++)
+				{
+					if ( (ci!=cj) ||
+						  ( ( ((((p+ci)->back)+i)->iaa >= (((p+cj)->back)+j)->iaa)+3 ) ||
+						  ( ((((p+ci)->back)+i)->iaa <= (((p+cj)->back)+j)->iaa)-3 )) )
+					{
+						// contact backbone-backbone (i-j)
+						r2 = Dist2( (((p+ci)->back)+i)->pos, (((p+cj)->back)+j)->pos );
+						if ( r2 < parms->r_contact )
+						{
+							ida = (((p+ci)->back)+i)->iaa;	// first amino acid
+							idb = (((p+cj)->back)+j)->iaa;	// second amino acid
+							ncac = 0;						// variable for the position on the backbone
+							ctrl = 0;						// check for the presence of the same contact
+							// retrieve the contact list (is on the CA)
+							if (!strcmp((((p+ci)->back)+i)->type,"N"))
+								ncac = 1;
+							else if (!strcmp((((p+ci)->back)+i)->type,"CA"))
+								ncac = 0;
+							else if (!strcmp((((p+ci)->back)+i)->type,"C"))
+								ncac = -1;
+							
+							refcont = (((p+ci)->back)+i+ncac)->naacontacts;
+							// check if the contact is already in the list
+							for(cont=0;cont<refcont;cont++)
+							{
+								// if the contacts is in the list, change the control variable
+								if ((idb == (((p+ci)->back)+i+ncac)->aacontacts[cont]) &&
+									(cj == (((p+ci)->back)+i+ncac)->aacontacts_p[cont]) )
+								{
+									ctrl = 1;
+									break;
+								}
+							}
+							// if it is not in the list, add the contact on the CA
+							if (ctrl == 0)
+							{
+								(((p+ci)->back)+i+ncac)->aacontacts[refcont] = idb;
+								(((p+ci)->back)+i+ncac)->aacontacts_p[refcont] = cj;
+								(((p+ci)->back)+i+ncac)->naacontacts++;
+							}
+						}
+						
+						for (js=0;js<(((p+cj)->back)+j)->nside;js++)
+						{
+							// interaction backbone-sidechain (i-js)
+							r2 = Dist2( (((p+ci)->back)+i)->pos, (((((p+cj)->back)+j)->side)+js)->pos );
+							if ( r2 < parms->r_contact )
+							{
+								ida = (((p+ci)->back)+i)->iaa;	// first amino acid
+								idb = (((p+cj)->back)+j)->iaa;	// second amino acid
+								ncac = 0;						// variable for the position on the backbone
+								ctrl = 0;						// check for the presence of the same contact
+								// retrieve the contact list (is on the CA)
+								if (!strcmp((((p+ci)->back)+i)->type,"N"))
+									ncac = 1;
+								else if (!strcmp((((p+ci)->back)+i)->type,"CA"))
+									ncac = 0;
+								else if (!strcmp((((p+ci)->back)+i)->type,"C"))
+									ncac = -1;
+								
+								refcont = (((p+ci)->back)+i+ncac)->naacontacts;
+								// check if the contact is already in the list
+								for(cont=0;cont<refcont;cont++)
+								{
+									// if the contacts is in the list, change the control variable
+									if ((idb == (((p+ci)->back)+i+ncac)->aacontacts[cont]) &&
+										(cj == (((p+ci)->back)+i+ncac)->aacontacts_p[cont]) )
+									{
+										ctrl = 1;
+										break;
+									}
+								}
+								// if it is not in the list, add the contact on the CA
+								if (ctrl == 0)
+								{
+									(((p+ci)->back)+i+ncac)->aacontacts[refcont] = idb;
+									(((p+ci)->back)+i+ncac)->aacontacts_p[refcont] = cj;
+									(((p+ci)->back)+i+ncac)->naacontacts++;
+								}
+							}
+							
+							for (is=0;is< (((p+ci)->back)+i)->nside;is++)
+							{
+								// interaction sidechain-sidechain (is-js)
+								r2 = Dist2( (((((p+ci)->back)+i)->side)+is)->pos, (((((p+cj)->back)+j)->side)+js)->pos );
+						
+								if ( r2 < parms->r_contact )
+								{
+									ida = (((p+ci)->back)+i)->iaa;	// first amino acid
+									idb = (((p+cj)->back)+j)->iaa;	// second amino acid
+									ctrl = 0;						// check for the presence of the same contact
+									// WARNING! here we dont have the ncac variable, because the sidechain are
+									// ONLY on CA atoms (the sidechains)
+									
+									refcont = (((p+ci)->back)+i)->naacontacts;
+									// check if the contact is already in the list
+									for(cont=0;cont<refcont;cont++)
+									{
+										// if the contacts is in the list, change the control variable
+										if ((idb == (((p+ci)->back)+i)->aacontacts[cont]) &&
+											(cj == (((p+ci)->back)+i)->aacontacts_p[cont]) )
+										{
+											ctrl = 1;
+											break;
+											// magari aggiungi un break
+										}
+									}
+									// if it is not in the list, add the contact on the CA
+									if (ctrl == 0)
+									{
+										(((p+ci)->back)+i)->aacontacts[refcont] = idb;
+										(((p+ci)->back)+i)->aacontacts_p[refcont] = cj;
+										(((p+ci)->back)+i)->naacontacts++;
+									}
+								}
+							}
+						}
+						
+						// interaction sidechain-backbone (is-j)
+						for (is=0;is< (((p+ci)->back)+i)->nside;is++)
+						{
+							r2 = Dist2( (((p+cj)->back)+j)->pos, (((((p+ci)->back)+i)->side)+is)->pos );
+							if ( r2 < parms->r_contact )
+							{
+								ida = (((p+ci)->back)+i)->iaa;	// first amino acid
+								idb = (((p+cj)->back)+j)->iaa;	// second amino acid
+								ctrl = 0;						// check for the presence of the same contact
+								// WARNING! here we dont have the ncac variable, because the sidechain are
+								// ONLY on CA atoms (the sidechains)
+								
+								refcont = (((p+ci)->back)+i)->naacontacts;
+								// check if the contact is already in the list
+								for(cont=0;cont<refcont;cont++)
+								{
+									// if the contacts is in the list, change the control variable
+									if ((idb == (((p+ci)->back)+i)->aacontacts[cont]) &&
+										(cj == (((p+ci)->back)+i)->aacontacts_p[cont]) )
+									{
+										ctrl = 1;
+										break;
+									}
+								}
+								// if it is not in the list, add the contact on the CA
+								if (ctrl == 0)
+								{
+									(((p+ci)->back)+i)->aacontacts[refcont] = idb;
+									(((p+ci)->back)+i)->aacontacts_p[refcont] = cj;
+									(((p+ci)->back)+i)->naacontacts++;
+								}
+							}
+						}
+					}
+				}
+	
+	return;
+}
+
 
 /********************************************************************
  Read the total interaction energy of a monomer with the others
@@ -597,7 +794,7 @@ double GetEnergyMonomerRange(struct s_polymer *p, int from, int to, int ip)
 {
 	double e=0;
 	int i,iw,j,cj;
-	#pragma omp parallel for private(i,j,cj) reduction(+:e)	
+	
 	for (iw=from;iw<=to;iw++)
 		if (iw>=0 && iw<(p+ip)->nback)
 			for (i=0;i<(((p+ip)->back)+iw)->ncontacts;i++)
@@ -607,6 +804,21 @@ double GetEnergyMonomerRange(struct s_polymer *p, int from, int to, int ip)
 				if (ip!=cj || j<from || j>to || iw<j)				// count only once contacts in [from,to] of the same chain
 					e += ((((p+ip)->back)+iw)->e)[i];
 			}
+	return e;
+}
+
+/********************************************************************
+ Read the H Fields interaction energy
+ from its energy structure
+ ********************************************************************/
+double GetHFields(struct s_polymer *p, int ip)
+{
+	double e=0.;
+	int iw;
+	
+	for (iw=0;iw<(p+ip)->nback;iw++)
+		e += (((p+ip)->back)+iw)->e_hfs;
+	
 	return e;
 }
 
@@ -640,29 +852,27 @@ void PrintContacts(FILE *fp, struct s_polymer *p,int ip, unsigned long long step
 
 void CountContacts(FILE *fp,struct s_polymer *polymer,struct s_mc_parms *parms,unsigned long long step)
 {
-                int i,tempncontacts,iback,ipol,icont,matcont[parms->npol];
-                for(i=0;i<parms->npol;i++)
-                {
-				for(ipol=0;ipol<parms->npol;ipol++)
-                                        matcont[ipol]=0;
-                                tempncontacts=0;
-                                fprintf(fp,"> Chain %d\n  %d backbone atoms\n",i,(polymer+i)->nback);
-                                for(iback=0;iback<(polymer+i)->nback;iback++)
-                                {
-                                        tempncontacts+=((polymer+i)->back+iback)->ncontacts;
-					for(icont=0;icont<((polymer+i)->back+iback)->ncontacts;icont++)
-						matcont[ ((polymer+i)->back+iback)->contacts_p[icont] ]++;
+	int i,tempncontacts,iback,ipol,icont,matcont[parms->npol];
+    for(i=0;i<parms->npol;i++)
+	{
+		for(ipol=0;ipol<parms->npol;ipol++)
+			matcont[ipol]=0;
+		tempncontacts=0;
+		fprintf(fp,"> Chain %d\n  %d backbone atoms\n",i,(polymer+i)->nback);
+		for(iback=0;iback<(polymer+i)->nback;iback++)
+		{
+			tempncontacts+=((polymer+i)->back+iback)->ncontacts;
+			for(icont=0;icont<((polymer+i)->back+iback)->ncontacts;icont++)
+				matcont[ ((polymer+i)->back+iback)->contacts_p[icont] ]++;
                             
                                 
-                                }
-     
-                                fprintf(fp,"  %d contacts ( ",tempncontacts);
-				for(ipol=0;ipol<parms->npol;ipol++)
-					fprintf(fp," %d ",matcont[ipol]);
-				fprintf(fp,")\n");
 		}
-		
-
+     
+		fprintf(fp,"  %d contacts ( ",tempncontacts);
+		for(ipol=0;ipol<parms->npol;ipol++)
+			fprintf(fp," %d ",matcont[ipol]);
+		fprintf(fp,")\n");
+	}
 }
 
 /********************************************************************
@@ -687,12 +897,12 @@ void UpdateShell(struct s_polymer *p, struct s_mc_parms *parms)
 
 
 	//  double loop
-	#pragma omp parallel for private(i,j,r2,js,is,cj)
+	#pragma omp parallel for private(cj,i,j,r2,js,is)
 	for (ci=0;ci<parms->npol;ci++)
 		for (cj=ci;cj<parms->npol;cj++)  
 			for (i=0;i<(p+ci)->nback;i++)
-                                for (j=0;j<(p+cj)->nback;j++)
-		{
+				for (j=0;j<(p+cj)->nback;j++)
+				{
 			
 					if (ci!=cj || i<j)
 					{
@@ -723,7 +933,7 @@ void UpdateShell(struct s_polymer *p, struct s_mc_parms *parms)
 								if ( r2 < parms->r2shell ) AddShell(p,i,j,ci,cj);			// add to shell
 						}
 					}
-		}
+				}
 	/*
 	#ifdef DEBUG_SHELL
         for (ci=0;ci<parms->npol;ci++)
@@ -761,8 +971,6 @@ void CopyShell(struct s_polymer *from,struct s_polymer *to,struct s_mc_parms *pa
 
 	int i,ci,cs;
 	for (ci=0;ci<parms->npol;ci++)
-	{
-		#pragma omp parallel for private(cs)
 	        for (i=0;i<(from+ci)->nback;i++)
 		{
                         (((to+ci)->back)+i)->nshell = (((from+ci)->back)+i)->nshell ;
@@ -774,7 +982,7 @@ void CopyShell(struct s_polymer *from,struct s_polymer *to,struct s_mc_parms *pa
 		}
 
 
-	}
+
 
 
 
@@ -815,7 +1023,7 @@ double EnergyDihedrals(struct s_polymer *p, struct s_potential *u, int iw, int i
 	double e=0,dih01,dih03,dih;
 
 	if (iw<2 || iw>(p+ic)->nback-2) return 0;			// dihedrals are not defined for the first and last two backbone atoms
-        
+
 	ia = (((p+ic)->back)+iw)->ia;
         iaa = (((p+ic)->back)+iw)->iaa - (((p+ic)->back))->iaa;
 
@@ -842,23 +1050,78 @@ double EnergyDihedrals(struct s_polymer *p, struct s_potential *u, int iw, int i
 			e += u->g_dihe * (u->dih_pa)[ia] * (u->dih_f_psi_a)[i] + u->g_dihe * (u->dih_pb)[ia] * (u->dih_f_psi_b)[i];
 	}
 
-	if(u->dih_ram)
-        {
-
-	if((iw-1)%3==0)   //di tipo phi
-                  for(i=0;i<2;i++)
-                        e += - (u->e_dihram) * ( (u->ab_propensity[i][iaa]/u->sigma[i][0]) * exp(-0.5*(((dih - u->dih0[i][0])/u->sigma[i][0])*((dih - u->dih0[i][0])/u->sigma[i][0]))) );
+    //potenziale gaussiano sui diedri
+	
+    if(u->dih_ram)
+    {
         if((iw+1)%3==0) //di tipo psi
-                 for(i=0;i<2;i++)
-                        e += - (u->e_dihram) * (u->ab_propensity[i][iaa]/u->sigma[i][1]) * exp(-0.5*(((dih - u->dih0[i][1])/u->sigma[i][1])*((dih - u->dih0[i][1])/u->sigma[i][1])));
+            for(i=0;i<2;i++)
+            { 
+                e += - (u->e_dihram) * (u->ab_propensity[i][iaa]/u->sigma[i][1]) * exp(-0.5*(((dih - u->dih0[i][1])/u->sigma[i][1])*((dih - u->dih0[i][1])/u->sigma[i][1])));
+            }
+        if((iw-1)%3==0)   //di tipo phi
+            for(i=0;i<2;i++)
+             {
+                e += - (u->e_dihram) * ( (u->ab_propensity[i][iaa]/u->sigma[i][0]) * exp(-0.5*(((dih - u->dih0[i][0])/u->sigma[i][0])*((dih - u->dih0[i][0])/u->sigma[i][0]))) );
+             }
+        
+        
+    }
+    /*
+    //buca infinita sui diedri
+    if(u->dih_ram)
+    {
+        if((iw+1)%3==0) {   //di tipo psi
+            for(i=0;i<2;i++) {
+                if ( u->ab_propensity[i][iaa] != 0) {
+                    //fprintf(stderr,"iaa: %d\t propensity: %lf\tdihpsi: %d\tsigmapsi: %lf\tdih %lf  \n",iaa+1,u->ab_propensity[i][iaa],u->dih0[i][1],u->sigma[i][1],dih);
+                    if ( dih >= (u->dih0[i][1]-u->sigma[i][1]) && dih <= (u->dih0[i][1]+u->sigma[i][1])) e+=0;
+                    else e+= LARGE;
+                }
+            }
+        }
+        if((iw-1)%3==0) {   //di tipo phi
+            for(i=0;i<2;i++) {
+                if ( u->ab_propensity[i][iaa] != 0) {
+                    //fprintf(stderr,"iaa: %d\t propensity: %lf\tdihphi: %d\tsigmaphi: %lf\tdih %lf  \n",iaa+1,u->ab_propensity[i][iaa],u->dih0[i][0],u->sigma[i][0],dih);
+                    if ( dih >= (u->dih0[i][0]-u->sigma[i][0]) && dih <= (u->dih0[i][0]+u->sigma[i][0])) e+=0;
+                    else e+= LARGE;
+                }
+            }
+        }
+        
+    }*/
 
 
-
-
-	}
 
 	if (update)  (((p+ic)->back)+iw)->e_dih = e;
 
+	return e;
+}
+
+/***********************************************
+ H fields potential
+ ***********************************************/
+
+double EnergyHFields(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms, int iw, int ic, int update, int update_contacts){
+
+	double e=0.;
+	
+	// Reset contacts
+	if (update_contacts) {
+		ResetAAContacts(p,u,parms);
+	}
+	
+	// ignore glycines
+	if ( !strcmp((((p+ic)->back)+iw)->aa,"GLY") )
+		return 0;
+	else if ( !strcmp((((p+ic)->back)+iw)->type,"CA") ){
+		e += (double)(((p+ic)->back)+iw)->naacontacts * u->h_values[((((p+ic)->back)+iw)->side)->itype];
+	}
+		
+	if (update)
+		(((p+ic)->back)+iw)->e_hfs = e;
+	
 	return e;
 }
 
@@ -868,7 +1131,7 @@ double EnergyDihedrals(struct s_polymer *p, struct s_potential *u, int iw, int i
 void PrintEnergies(FILE *fp, int nc, unsigned long long step, struct s_polymer *p)
 {
 	int i,j;
-	double epair=0,eang=0,edih=0;
+	double epair=0,eang=0,edih=0,ehfs=0;
 	
 	for (i=0;i<nc;i++)
 		for (j=0;j<(p+i)->nback;j++)
@@ -876,26 +1139,28 @@ void PrintEnergies(FILE *fp, int nc, unsigned long long step, struct s_polymer *
 			epair += GetEnergyMonomer(p,i,j) / 2.;
 			eang += (((p+i)->back)+j)->e_ang;
 			edih += (((p+i)->back)+j)->e_dih;
+			ehfs += (((p+i)->back)+j)->e_hfs;
 		}
 
-	fprintf(fp,"%llu\t%9lf\t%9lf\t%9lf\t%9lf\n",step,epair+eang+edih,epair,eang,edih);
+	fprintf(fp,"%llu\t%9lf\t%9lf\t%9lf\t%9lf\t%9lf\n",step,epair+eang+edih+ehfs,epair,eang,edih,ehfs);
 }
 
 void PrintEnergies_Parallel(FILE *fp, int nc, unsigned long long step, struct s_polymer *p,int my_rank)
 {
         int i,j;
-        double epair=0,eang=0,edih=0;
+        double epair=0,eang=0,edih=0,ehfs=0;
 
         for (i=0;i<nc;i++)
                 for (j=0;j<(p+i)->nback;j++)
                 {
-                        epair += GetEnergyMonomer(p,i,j)/2.;
-                        eang += (((p+i)->back)+j)->e_ang;
-                        edih += (((p+i)->back)+j)->e_dih;
+					epair += GetEnergyMonomer(p,i,j)/2.;
+					eang += (((p+i)->back)+j)->e_ang;
+					edih += (((p+i)->back)+j)->e_dih;
+					ehfs += (((p+i)->back)+j)->e_hfs;
                 }
 	
-     	//fprintf(fp,"%d\t%llu\t%9lf\t%9lf\t%9lf\t%9lf\n",my_rank,step,epair+eang+edih,epair,eang,edih);
-	fprintf(fp,"%d\t%llu\t%9lf\n",my_rank,step,epair+eang+edih);
+	fprintf(fp,"%d\t%llu\t%9lf\t%9lf\t%9lf\t%9lf\t%9lf\n",my_rank,step,epair+eang+edih+ehfs,epair,eang,edih,ehfs);
+	//fprintf(fp,"%d\t%llu\t%9lf\n",my_rank,step,epair+eang+edih);
 
 }
 
@@ -1109,6 +1374,7 @@ int EnergyBoxPolymer(struct s_polymer *p, struct s_potential *u, int ic)
 
 	for (i=0;i<(p+ic)->nback;i++)
 		if (EnergyBox(p,u,i,ic)==1) return 1;
+
 	return 0;
 
 }

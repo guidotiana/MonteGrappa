@@ -1,5 +1,5 @@
 nchains         1
-nstep           10000000
+nstep           1000000
 #nrun            3
 
 

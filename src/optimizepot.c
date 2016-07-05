@@ -245,11 +245,11 @@ void OP_GetRestrain(int it, struct s_polymer *p, int ipol, struct s_optimizepot_
 {
 	int i,k,l,m,i1,i2,i3,i4;
 	double xraw,d;
-	ipol=0;
+
 	// loop on all restrains 
 	for (i=0;i<opi->ndata;i++)
 	{
-			
+		
 		i1 = opi->i1[i];
 		i2 = opi->i2[i];
 		xraw = 0.;

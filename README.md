@@ -8,16 +8,17 @@
 
 
                  WELCOME TO
-               MONTEGRAPPA 1.2 
+               MONTEGRAPPA 1.4 
 
 ===============================================
 
 
-This file will help you to compile and install Montegrappa v1.2 .
+This file will help you to compile and install Montegrappa v1.4 .
 The package contains three programs:
 
 	- "montegrappa", the main Monte Carlo engine 
 	- "grappino", a tool to create the input files for montegrappa.
+	- "mgp2pdb", a tool to convert .pol files to pdb format
 	- "mhistogram", a data analysis tool
 
 The code needs GSL libraries and the MPI environment to be correctly 
@@ -49,13 +50,13 @@ in the Makefile
 	#CCMP=/usr/lib64/openmpi/bin/mpicc
 	CCMP=/usr/lib64/openmpi/bin/mpicc -fopenmp
 
-and set the variable
+and set the environment variable
 
 	$ export OMP_NUM_THREADS=N
 
 where N is the number of threads you want to use. N=1 means
-no OpenMP parallelization. Performances are system and parameters
-dependent: always test your configuration before to run long simulations.  
+no OpenMP parallelization. Since performances are system and parameters
+dependent, always test your configuration before to run long simulations.  
 
 ================ CUSTOM INSTALLATION ====================================
 
@@ -88,11 +89,12 @@ As well as the (1) version, an executable called "montegrappa" will be created i
 An executable called "montegrappa_mpi" will be created in the ./bin directory.
 
 
-(3) grappino and mhistogram --------------------------------------------------
+(3) grappino, mgp2pdb, and mhistogram --------------------------------------------------
  
 The tools can be compiled alone, with the commands
 
       $ make grappino
+      $ make mgp2pdb
       $ make mhistogram
 
-The executables "grappino" and "mhistogram" will be created in the ./bin directory.
+The executables "grappino", "mgp2pdb", and "mhistogram" will be created in the ./bin directory.

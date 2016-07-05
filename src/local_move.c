@@ -205,30 +205,34 @@ void Cholesky_2( double **L, double **A, int dim)
       return;
 }
       
-
-int CopyFragment(struct s_polymer *p,struct s_polymer *f,int iw,int nmul,int natom_fragment,int ip)
-{
-        int ok=1;
-        int i;
-
-	for(i=0;i<natom_fragment;i++)
-        {
-        	CopyResidueCoordinates( (((p+ip)->back)+iw+i), (((f+ip)->back)+i));
-        }
-
-        return ok;
-}
-
-
-void CopyResidueCoordinates(struct s_back *from, struct s_back *to)
+void CopyBack(struct s_back *from, struct s_back *to)
 {
       (to)->nside=(from)->nside;
+      
       (to->pos).x = (from->pos).x;
       (to->pos).y = (from->pos).y;
       (to->pos).z = (from->pos).z;
+
       (to)->move=(from)->move;
+
       strncpy(to->type,from->type,5);
+
+  
 }
+
+
+void CopyFragment(struct s_polymer *p,struct s_polymer *f,int iw,int natom_fragment,int ip)
+{
+      
+        int i;
+
+	for(i=0;i<natom_fragment;i++)
+        	CopyBack((((p+ip)->back)+iw+i), (((f+ip)->back)+i));
+        
+}
+
+
+
 
 
 int B_Metropolis(double deltaE,double temp,double WN,double WD,struct s_tables *t)
@@ -256,7 +260,9 @@ int B_Metropolis(double deltaE,double temp,double WN,double WD,struct s_tables *
       
 int Compute_G(struct s_polymer *fragment,struct s_polymer *p,int ip,int iw,int nmul,int nang,struct s_mc_parms *parms)
 {
-	int ok=1;
+
+  /*
+    int ok=1;
 	int natom_fragment=nmul+3;
         int i,j,l,i_ang;
 
@@ -269,7 +275,7 @@ int Compute_G(struct s_polymer *fragment,struct s_polymer *p,int ip,int iw,int n
       	double fact=(1./(LM_DELTAA));
 
 
-      	CopyFragment(p,fragment,iw,nmul,natom_fragment,ip);
+      	CopyFragment(p,fragment,iw,natom_fragment,ip);
 
 
       	k1=nmul-2;
@@ -346,144 +352,380 @@ int Compute_G(struct s_polymer *fragment,struct s_polymer *p,int ip,int iw,int n
 
 //	}
 
+*/
+      return 0;
+      
+}
 
-      return ok;
+
+int PivotForwardOnFragment(struct s_polymer *p,struct s_polymer *fragment, int iw, double dw, int n, struct s_mc_parms *parms)
+{
+	
+	int i,ifrag;
+	struct vector C,V,U,W;
+	double norm,inv_norm,M[3][3],cw,sw,ocw;
+
+	#ifdef DEBUG
+	if (iw+n+1 >= p->nback) Error("attempting to pivot beyond the end of the chain");
+	#endif
+
+	// the pivoting atom
+	C.x = (((p->back)+iw)->pos).x;
+	C.y = (((p->back)+iw)->pos).y;
+	C.z = (((p->back)+iw)->pos).z;
+
+	// the normalized vector around which to pivot
+	V.x = (((p->back)+iw+1)->pos).x - C.x;
+	V.y = (((p->back)+iw+1)->pos).y - C.y;
+	V.z = (((p->back)+iw+1)->pos).z - C.z;
+
+	norm = FastSqrt(Norm2(V),p->tables);
+	if (norm<EPSILON) return 0; 		//PARANOID
+	inv_norm = 1. / norm;
+	if (inv_norm<EPSILON) return 0; 	//PARANOID
+	V.x *= inv_norm;
+	V.y *= inv_norm;
+	V.z *= inv_norm;
+
+
+	// the rotation matrix
+	cw = FastCos(dw,p->tables);
+	sw = FastSin(dw,p->tables);
+	ocw = 1. - cw;
+
+	M[0][0] = V.x * V.x * ocw + cw;
+	M[0][1] = V.x * V.y * ocw + V.z * sw;
+	M[0][2] = V.x * V.z * ocw - V.y * sw;
+
+	M[1][0] = V.x * V.y * ocw - V.z * sw;
+	M[1][1] = V.y * V.y * ocw + cw;
+	M[1][2] = V.y * V.z * ocw + V.x * sw;
+
+	M[2][0] = V.x * V.z * ocw + V.y * sw;
+	M[2][1] = V.y * V.z * ocw - V.x * sw;
+	M[2][2] = V.z * V.z * ocw + cw;
+	
+	
+	// move n atoms from iw+2 to iw+2+n
+
+        ifrag=0;
+	fprintf(stdout,"pivot forward on fragment, move %d atoms from %d to %d \n",n,iw+2,iw+1+n);
+	for (i=iw+2;i<iw+2+n;i++)
+     // for(i=iw;i<iw+n;i++)
+	{
+//		fprintf(stderr,"\ni = %d \n",i);
+            // shift each to be centred in C
+		U.x = (((p->back)+i)->pos).x - C.x;
+		U.y = (((p->back)+i)->pos).y - C.y;
+		U.z = (((p->back)+i)->pos).z - C.z;
+
+		// rotate
+		W.x = M[0][0] * U.x + M[1][0] * U.y + M[2][0] * U.z;
+		W.y = M[0][1] * U.x + M[1][1] * U.y + M[2][1] * U.z;
+		W.z = M[0][2] * U.x + M[1][2] * U.y + M[2][2] * U.z;
+
+		// shift back
+		fprintf(stdout,"DEBUG shift back backbone atom %d of fragment\n",ifrag);
+		(((fragment)->back)+ifrag)->pos.x = W.x + C.x;
+		(((fragment)->back)+ifrag)->pos.y = W.y + C.y;
+		(((fragment)->back)+ifrag)->pos.z = W.z + C.z;
+   
+		ifrag++;
+	  
+	}
+	for (i=iw+2;i<iw+2+n;i++)
+	{
+	fprintf(stdout,"DEBUG polymer coordinates backbone %d\t%lf\t%f\t%f\n",i,(((p)->back)+i)->pos.x,(((p)->back)+i)->pos.y,(((p)->back)+i)->pos.z);
+	}
+	
+	
+	for(i=0;i<ifrag;i++)
+	{
+	fprintf(stdout,"DEBUG fragment coordinates backbone %d\t%lf\t%f\t%f\n",i,(((fragment)->back)+i)->pos.x,(((fragment)->back)+i)->pos.y,(((fragment)->back)+i)->pos.z);
+	}
+
+	return 1;
+}
+
+
+int G_Matrix(struct s_polymer *fragment,struct s_polymer *p,int ip,int iw,int nmul,int nang,struct s_mc_parms *parms)
+{
+  int i,j,l;
+  
+  double x1,y1,z1,x2,y2,z2,x3,y3,z3;
+  double deriv1[nang][3],deriv2[nang][3],deriv3[nang][3];
+  double fact;
+  
+  for(i=iw;i<iw+parms->nmul_local;i++)
+  {
+    fprintf(stdout,"DEBUG before copy polymer coordinates backbone %d\t%lf\t%f\t%f\n",i,(((p+ip)->back)+i)->pos.x,(((p+ip)->back)+i)->pos.y,(((p+ip)->back)+i)->pos.z);
+  }
+  
+  CopyFragment(p,fragment,iw,parms->nmul_local,ip);
+  
+  
+  for(i=0;i<parms->nmul_local;i++)
+  {
+    fprintf(stdout,"DEBUG after copy fragment coordinates backbone %d\t%lf\t%f\t%f\n",i,(((fragment+ip)->back)+i)->pos.x,(((fragment+ip)->back)+i)->pos.y,(((fragment+ip)->back)+i)->pos.z);
+  }
+  
+  x1=(((fragment+ip)->back)+parms->nmul_local-3)->pos.x;
+  y1=(((fragment+ip)->back)+parms->nmul_local-3)->pos.y;
+  z1=(((fragment+ip)->back)+parms->nmul_local-3)->pos.z;
+  
+  x2=(((fragment+ip)->back)+parms->nmul_local-2)->pos.x;
+  y2=(((fragment+ip)->back)+parms->nmul_local-2)->pos.y;
+  z2=(((fragment+ip)->back)+parms->nmul_local-2)->pos.z;
+  
+  x3=(((fragment+ip)->back)+parms->nmul_local-1)->pos.x;
+  y3=(((fragment+ip)->back)+parms->nmul_local-1)->pos.y;
+  z3=(((fragment+ip)->back)+parms->nmul_local-1)->pos.z;
+  
+  fprintf(stdout,"DEBUG last x y z = %lf %lf %lf\n",x1,y1,z1);
+  fprintf(stdout,"DEBUG last x y z = %lf %lf %lf\n",x2,y2,z2);
+  fprintf(stdout,"DEBUG last x y z = %lf %lf %lf\n",x3,y3,z3);
+
+  double dw;
+  dw=parms->dw_pivot * (0.5 - frand());
+  fact=1./dw;
+  fprintf(stdout,"dw=%lf\n",dw);
+  j=0;
+  
+  for(i=iw;i<iw+nmul;i++)
+  {
+    if ( (((p+ip)->back)+i)->move == 0 ) continue;
+    PivotForwardOnFragment((p+ip),(fragment+ip),i,dw,nmul-2-j,parms);
+    deriv1[j][0]=(((( (fragment+ip)->back)+parms->nmul_local-3-j)->pos.x )-x1)*fact;
+    deriv1[j][1]=(((( (fragment+ip)->back)+parms->nmul_local-3-j)->pos.x )-y1)*fact;
+    deriv1[j][2]=(((( (fragment+ip)->back)+parms->nmul_local-3-j)->pos.x )-z1)*fact;
+    deriv2[j][0]=(((( (fragment+ip)->back)+parms->nmul_local-2-j)->pos.x )-x2)*fact;
+    deriv2[j][1]=(((( (fragment+ip)->back)+parms->nmul_local-2-j)->pos.x )-y1)*fact;
+    deriv2[j][2]=(((( (fragment+ip)->back)+parms->nmul_local-2-j)->pos.x )-z2)*fact;
+    deriv3[j][0]=(((( (fragment+ip)->back)+parms->nmul_local-1-j)->pos.x )-x3)*fact;
+    deriv3[j][1]=(((( (fragment+ip)->back)+parms->nmul_local-1-j)->pos.x )-y3)*fact;
+    deriv3[j][2]=(((( (fragment+ip)->back)+parms->nmul_local-1-j)->pos.x )-z3)*fact;    
+        
+    j++;
+    
+  }
+  
+  for(i=0;i<j;i++)
+  {
+     fprintf(stdout,"DEBUG deriv1 %d = %lf %lf %lf\n",i,deriv1[i][0],deriv1[i][1],deriv1[i][2]);
+     fprintf(stdout,"DEBUG deriv2 %d = %lf %lf %lf\n",i,deriv2[i][0],deriv2[i][1],deriv2[i][2]);
+     fprintf(stdout,"DEBUG deriv3 %d = %lf %lf %lf\n",i,deriv3[i][0],deriv3[i][1],deriv3[i][2]);
+
+    
+     
+  }
+  fprintf(stdout,"DEBUG we performed %d pivots\n",j);
+
+  for(i=0;i<nang;i++)
+    for(j=0;j<nang;j++)
+      for(l=0;l<3;l++)      			                  
+        (fragment+ip)->G[i][j]+=(deriv1[i][l]*deriv1[j][l])+(deriv2[i][l]*deriv2[j][l])+(deriv3[i][l]*deriv3[j][l]);
+
+			
+  
+  
+ return 0; 
 }
 
 
 
-int LocalMove(struct s_polymer *p, struct s_polymer *oldp,struct s_polymer *fragment,struct s_potential *pot,int nmul,struct s_mc_parms *parms, double t)
+
+int localbackward(int ip,int iw,struct s_polymer *p, struct s_polymer *oldp,struct s_polymer *fragment,struct s_potential *pot,int nmul,struct s_mc_parms *parms, double t)
 {
-	int ok=1,nang=0;
-	int iw,ip,iapdbtocheck,i,m;
-	double deltaE;
-	double detL1,detL2,detA1,detA2,W1,W2,psisquared,e;
+  
+  double deltaE;
+  int nang,i;
+  
+  if ( iw < nmul)
+  {
+    
+    // just pivot backward with small angle
+    fprintf(stdout,"small backward\n");
+    fprintf(stdout,"DEBUG get energy between 0 and %d\n",iw);
+    deltaE=-GetEnergyMonomerRange(p,0,iw,ip);
+    fprintf(stdout,"DEBUG energy is %lf\n",deltaE);
 
+    nang=0;
+    
+    for(i=0;i<iw;i++)
+    {
+        fprintf(stdout,"get move of backbone %d=%d\n",iw-i-1,(((p+ip)->back)+(iw-i-1))->move);
+	nang+=(((p+ip)->back)+(iw-i-1))->move;
+    }
 
-	ip=irand(parms->npol);
+    fprintf(stdout,"DEBUG nang = %d\n",nang);
+    
+    
+  }
+  
+  else
+  {
+   // do a backward local move 
+        fprintf(stdout,"DEBUG local backward\n");
+	fprintf(stdout,"DEBUG get energy between %d and %d\n",iw-nmul,iw);
+    	deltaE=-GetEnergyMonomerRange(p,iw-nmul,iw,ip);
+	fprintf(stdout,"DEBUG energy is %lf\n",deltaE);
 
-	iw=(nmul-1)+irand( (p+ip)->nback-nmul+1   );
-
-	for(i=0;i<nmul;i++)
+	nang=0;
+    
+        for(i=0;i<nmul;i++)
 	{
-		nang+=((((p+ip)->back)+iw-nmul+i)+1)->move;
+                fprintf(stdout,"get move of backbone %d=%d\n",iw-i-1,(((p+ip)->back)+(iw-i-1))->move);
+		nang+=(((p+ip)->back)+(iw-i-1))->move;
 	}
 
-	deltaE = -GetEnergyMonomerRange(p,iw-nmul+1,iw+1,ip);
+        fprintf(stdout,"DEBUG nang = %d\n",nang);  
+    
+  }
+  
+  return 0; 
+}
+	  
+int localforward(int ip,int iw,struct s_polymer *p, struct s_polymer *oldp,struct s_polymer *fragment,struct s_potential *pot,int nmul,struct s_mc_parms *parms, double t)
+{
+  double deltaE,e,psisquared,detA1,detL1,W1,rc2;
+  rc2=parms->r_cloose*parms->r_cloose;
+  int nang,i,m,j;
+  
+  if ( iw > ( (p+ip)->nback - nmul)-1 )
+  {
+     // just pivot forward with small angle
+      fprintf(stdout,"small forward\n");
+      fprintf(stdout,"DEBUG get energy between %d and %d\n",iw,(p+ip)->nback-1);
+      deltaE=-GetEnergyMonomerRange(p,iw,(p+ip)->nback-1,ip);
+      fprintf(stdout,"DEBUG energy is %lf\n",deltaE);
+
+      nang=0;
+   
+      for(i=iw;i<((p+ip)->nback)-1;i++)
+      {
+                fprintf(stdout,"get move of backbone %d=%d\n",i+1,(((p+ip)->back)+(i+1))->move);
+
+		nang+= (((p+ip)->back)+(i+1))->move;
+	}
+
+    fprintf(stdout,"DEBUG nang = %d\n",nang);  
+
+    
+  }
+  
+  else{
+    // do a forward local move
+    
+    fprintf(stdout,"DEBUG local forward\n");
+    fprintf(stdout,"DEBUG get energy between %d and %d\n",iw,iw+nmul);
+
+    deltaE=-GetEnergyMonomerRange(p,iw,iw+nmul,ip);
+    if(!parms->nodihpot)
+      fprintf(stdout,"DEBUG QUA BISOGNA PRENDERE L'ENERGIA DIEDRI E ANGOLI DA METTERE\n");
+    
+    
+    fprintf(stdout,"DEBUG energy is %lf\n",deltaE);
+ 
+    nang=0;
+    
+    for(i=0;i<nmul;i++)
+	{
+                fprintf(stdout,"get move of backbone %d = %d\n",iw+i+1,(((p+ip)->back)+(iw+i+1) )->move);
+      
+		nang+=(((p+ip)->back)+(iw+i+1) )->move;
+	}
+
+    fprintf(stdout,"DEBUG nang = %d\n",nang);  
+    
+    Gaussian_Angles((fragment+ip)->g_ang,nang);
+    fprintf(stdout,"\nDEBUG generated %d gaussian angles\n",nang);
+    
+    for(i=0;i<nang;i++)
+    fprintf(stdout,"DEBUG   %d = %lf\n",i,(((fragment+ip)->g_ang[i])));
+ 
+    fprintf(stdout,"DEBUG now compute G\n");
+    
+    G_Matrix(fragment,p,ip,iw,nmul,nang,parms);
+  
+    MatA((fragment+ip)->A,(fragment+ip)->G,nang,parms->bgs_a,parms->bgs_b);
+    Cholesky_2((fragment+ip)->L,(fragment+ip)->A,nang);
+    psisquared=Squared_n_Norma((fragment+ip)->g_ang,nang);
+    e=exp(-psisquared);
+    detL1=DetTriang((fragment+ip)->L,nang);
+    detA1=detL1*detL1;
+    W1=e * sqrt(detA1);
+    InvertTriang((fragment+ip)->Y,(fragment+ip)->L,nang);
+    TransposedMatOnVect((fragment+ip)->Y,(fragment+ip)->g_ang,(fragment+ip)->d_ang,nang);
+
+    fprintf(stdout,"DEBUG pivoting polymer using d-angles\n");
+    m=0;
+    for(i=0;i<nmul;i++)
+    {
+      
+      if( (((p+ip)->back)+iw+i+1)->move==0) continue;
+      fprintf(stdout,"DEBUG pivoting after %d, using angle %d\n",iw+i,m);
+      for(j=iw;j<iw+nmul;j++)
+      {
+        fprintf(stdout,"DEBUG   before pivoting polymer coordinates backbone %d\t%lf\t%f\t%f\n",j,(((p+ip)->back)+j)->pos.x,(((p+ip)->back)+j)->pos.y,(((p+ip)->back)+j)->pos.z);
+      }
+      PivotForward((p+ip),iw+i,(fragment+ip)->d_ang[m],nmul-i-2,parms);
+      for(j=iw;j<iw+nmul;j++)
+      {
+        fprintf(stdout,"DEBUG   after pivoting polymer coordinates backbone %d\t%lf\t%f\t%f\n",j,(((p+ip)->back)+j)->pos.x,(((p+ip)->back)+j)->pos.y,(((p+ip)->back)+j)->pos.z);
+      }
+      m++;
+      //if(m==nang)
+      //	break;
+      
+	
+    }
+    
+    fprintf(stdout,"DEBUG end of pivots. %d angles were used\n",m);
+   
+    fprintf(stdout,"DEBUG now check distance between moved segment and fixed part\n");
+    fprintf(stdout,"DEBUG dist between %d and %d\n",iw+nmul-1,iw+nmul);
+    /*
+    if(DAbs (Dist2( (((p+ip)->back)+iw+nmul)->pos,(((p+ip)->back)+iw+nmul+1)->pos )) -(((p+ip)->back)+iw)->d2_next  < rc2)
+    {
+     fprintf(stdout,"DEBUG distance is not good! %lf > %lf\n",(Dist2( (((p+ip)->back)+iw)->pos,(((p+ip)->back)+iw+1)->pos ) -(((p+ip)->back)+iw),rc2); 
+    }
+    */
+    
+  }
+    
   
 
-	if(iw==((p+ip)->nback-1)) // pivot forward 
-	{
+  
+     
+  
+  return 0; 
+}
+	  
 
-
-		for(i=0;i<nang;i++)
-			(fragment+ip)->d_ang[i]=(0.5-frand());
-		if (!parms->nodihpot)
-                	for(i=0;i<nmul+3;i++)
-			{
-				deltaE-=(((p+ip)->back)+iw-nmul+i+1)->e_dih;
-			}
-		m=0;
-		for(i=0;i<nmul;i++)
-		{
-			if( (((p+ip)->back)+iw+i-nmul+2)->move==1)
-                	{
-	             		ok*=PivotForward((p+ip),iw-nmul+i+1,(fragment+ip)->d_ang[m],nmul-i-2,parms);
-                     		m++;
-                     		if(m==nang) break;
-                	}
-
-		}
-		if(!parms->nosidechains)
-		{
-			ok*=AddSidechain(p,iw-nmul+1,iw+1,ip);
-		}
-
-		deltaE += EnergyMonomerRange(p,pot,iw-nmul+1,iw+1,ip,parms->npol,parms->shell,1,parms->nosidechains,parms->disentangle,parms->hb);
-		if (!parms->nodihpot)
-                	for(i=0;i<nmul+3;i++)
-			{
-
-				deltaE+=EnergyDihedrals(p,pot,iw-nmul+i+1,ip,1);
-			}
-		
-		ok*=Metropolis(deltaE,t,p->tables);
-
-		if(ok==0)
-		{
-			UpdateMonomerRange(oldp,p,iw-nmul+1,iw+1,ip,parms->shell);
-        	}    
-		else
-		{
-			//move accepted
-
-                	UpdateMonomerRange(p,oldp,iw-nmul+1,iw+1,ip,parms->shell);
-             		p->etot+=deltaE;
-                	parms->acc++;
-		}
-
-
-	} //end of forward
+int LocalMove(struct s_polymer *p, struct s_polymer *oldp,struct s_polymer *fragment,struct s_potential *pot,int nmul,struct s_mc_parms *parms, double t)
+{
+        int ip,iw,idir;
+	int ok=1;
 	
-
-
-	else if(iw==nmul-1) // pivot backward 
-	{
-
-		for(i=0;i<nang;i++)
-			{
-			
-                        (fragment+ip)->d_ang[i]=(0.5-frand());
-			//fprintf(stderr,"%d\t%lf\n",i,(fragment+ip)->d_ang[i]);
-			}
-                if (!parms->nodihpot)
-                        for(i=0;i<nmul+3;i++)
-			{
-                                deltaE-=(((p+ip)->back)+i)->e_dih;
-
-			}
-	        m=0;
-
-                for(i=0;i<nmul;i++)
-                {
-                        if( (((p+ip)->back)+iw-i)->move==1)
-                        {
-		                ok*=PivotBackward((p+ip),iw-i,(fragment+ip)->d_ang[m],nmul-i-2,parms);
-                                m++;
-                                if(m==nang) break;
-                        }
-
-                }
-		if(!parms->nosidechains)
-			ok*=AddSidechain(p,0,iw+1,ip);
-                deltaE += EnergyMonomerRange(p,pot,0,iw+1,ip,parms->npol,parms->shell,1,parms->nosidechains,parms->disentangle,parms->hb);
-                if (!parms->nodihpot)
-                        for(i=0;i<nmul+3;i++)
-			{
-		        	deltaE+=EnergyDihedrals(p,pot,i,ip,1);
-			}
-                ok*=Metropolis(deltaE,t,p->tables);
-
-                if(ok==0)
-                {
- 
-		       UpdateMonomerRange(oldp,p,0,iw+1,ip,parms->shell);
-                }
-		else
-                {
-                        UpdateMonomerRange(p,oldp,0,iw+1,ip,parms->shell);
-
-		        p->etot+=deltaE;
-                        parms->acc++;
-                }
-
-
-	} //end of backward
-
-
-
-	else if(iw!=((p+ip)->nback-2)) //pivot local
-	{
+	
+	ip   = irand(parms->npol);
+	iw   = irand( (p+ip)->nback );
+        idir = rand() % 2 ? 1 : -1;
+	
+	
+	fprintf(stdout,"DEBUG selected polymer %d\n",ip);
+        fprintf(stdout,"DEBUG selected backbone atom %d\n",iw);
+        fprintf(stdout,"DEBUG selected direction %d\n",idir);
+	
+	if(idir==-1)
+	  ok=localbackward(ip,iw,p,oldp,fragment,pot,nmul,parms,t);
+	else
+	  ok=localforward(ip,iw,p,oldp,fragment,pot,nmul,parms,t);
+	  	
+/*	
+	
+	deltaE = -GetEnergyMonomerRange(p,iw-nmul+1,iw+1,ip);
+  
 
 		if((((p+ip)->back)+iw+1)->iapdb==0)
 			iapdbtocheck=1;
@@ -492,9 +734,8 @@ int LocalMove(struct s_polymer *p, struct s_polymer *oldp,struct s_polymer *frag
 		if((((p+ip)->back)+iw+1)->iapdb==2)
 			iapdbtocheck=0;	
 		int out;
-
 		Gaussian_Angles((fragment+ip)->g_ang,nang);
-//		fprintf(stderr,"avanti\n");
+
 		Compute_G(fragment,p,ip,iw-nmul+1,nmul,nang,parms);	
 		MatA((fragment+ip)->A,(fragment+ip)->G,nang,parms->bgs_a,parms->bgs_b);
 		Cholesky_2((fragment+ip)->L,(fragment+ip)->A,nang);
@@ -599,15 +840,8 @@ int LocalMove(struct s_polymer *p, struct s_polymer *oldp,struct s_polymer *frag
 			ok=0;
 	        	UpdateMonomerRange(oldp,p,iw-nmul+1,iw+1,ip,parms->shell);
             	}
-
-
-	}//end of local pivot
-
-	else
-	{
-		ok=0;
-	}
-
+*/
+            	
 	parms->mov++;
 
 	return ok;

@@ -466,29 +466,22 @@ int AddSidechain(struct s_polymer *p, int istart, int istop, int ch)
 	struct vector b1,b2,b3;
 	struct angles ang;
 	int i,iside,irot,ib1,ib2,ib3,out;
-	int flag=1;
+//	int flag;
 	//quite slow for a small system #pragma omp parallel for private(iside,irot,ib1,ib2,ib3,b1,b2,b3,ang,out) shared(flag)
-
 	for (i=istart;i<=istop;i++)
 		for (iside=0;iside<(((p+ch)->back)+i)->nside;iside++)
 		{
-		//	fprintf(stderr,"i= %d, iside = %d\n",i,iside);	
 			irot = (((p+ch)->back)+i)->irot;								// which is the rotamer to insert
-			
 			ib1 = (((((((p+ch)->back)+i)->side)+iside)->rot)+irot)->b1;		// which are the atoms which define the dihedrals
 			ib2 = (((((((p+ch)->back)+i)->side)+iside)->rot)+irot)->b2;
 			ib3 = (((((((p+ch)->back)+i)->side)+iside)->rot)+irot)->b3;
-	
 			b1 = *(*(((p+ch)->vback)+ib1));
 			b2 = *(*(((p+ch)->vback)+ib2));
 			b3 = *(*(((p+ch)->vback)+ib3));
-			
 			ang = (((((((p+ch)->back)+i)->side)+iside)->rot)+irot)->ang;
- 			
-			(((((p+ch)->back)+i)->side)+iside)->pos = Spherical2Cartesian(b1,b2,b3,ang,p->tables,&out);
-		//	fprintf(stderr,"Spherical 2 cartesian ok\n");
-			if (out==0) return 0; 
-			
+ 			(((((p+ch)->back)+i)->side)+iside)->pos = Spherical2Cartesian(b1,b2,b3,ang,p->tables,&out);
+			//if (out==0) flag=0; 
+			if(out==0)	return 0;
 		}
 	//if(flag==0) return flag; else return 1;
 	return 1;
@@ -826,10 +819,11 @@ void CopyPolymer(struct s_polymer *from, struct s_polymer *to, int cfrom, int ct
 		(((to+cto)->back)+i)->nrot = (((from+cfrom)->back)+i)->nrot;
 		(((to+cto)->back)+i)->e_ang = (((from+cfrom)->back)+i)->e_ang;
 		(((to+cto)->back)+i)->e_dih = (((from+cfrom)->back)+i)->e_dih;
+		(((to+cto)->back)+i)->e_hfs = (((from+cfrom)->back)+i)->e_hfs;
 		(((to+cto)->back)+i)->d2_next = (((from+cfrom)->back)+i)->d2_next;
 		(((to+cto)->back)+i)->iapdb = (((from+cfrom)->back)+i)->iapdb;
-            	(((to+cto)->back)+i)->a_next = (((from+cfrom)->back)+i)->a_next;
 
+            (((to+cto)->back)+i)->a_next = (((from+cfrom)->back)+i)->a_next;
 		if (!noside)
 		for (j=0;j<(((from+cfrom)->back)+i)->nside;j++)
 		{
@@ -851,10 +845,13 @@ void CopyPolymer(struct s_polymer *from, struct s_polymer *to, int cfrom, int ct
 			}
 		}
 		(((to+cto)->back)+i)->ncontacts = (((from+cfrom)->back)+i)->ncontacts;
+		(((to+cto)->back)+i)->naacontacts = (((from+cfrom)->back)+i)->naacontacts;
 		for (j=0;j<(((from+cfrom)->back)+i)->ncontacts;j++)
 		{
 			*(((((to+cto)->back)+i)->contacts)+j) = *(((((from+cfrom)->back)+i)->contacts)+j);
 			*(((((to+cto)->back)+i)->contacts_p)+j) = *(((((from+cfrom)->back)+i)->contacts_p)+j);
+			*(((((to+cto)->back)+i)->aacontacts)+j) = *(((((from+cfrom)->back)+i)->aacontacts)+j);
+			*(((((to+cto)->back)+i)->aacontacts_p)+j) = *(((((from+cfrom)->back)+i)->aacontacts_p)+j);
 			*(((((to+cto)->back)+i)->e)+j) = *(((((from+cfrom)->back)+i)->e)+j);
 		}
 		(((to+cto)->back)+i)->nshell = (((from+cfrom)->back)+i)->nshell;
@@ -1031,6 +1028,10 @@ void RotationClusterX(struct s_polymer *p,int ip,double dtheta,int icluster,int 
 
         for(j=0;j<npol_cluster;j++)
         {
+
+
+
+
 	        for(i=0;i<(p+cluster[icluster][j])->nback;i++)
        		 {
                 	cmy+=((((p+cluster[icluster][j])->back)+i)->pos).y;
@@ -1042,6 +1043,7 @@ void RotationClusterX(struct s_polymer *p,int ip,double dtheta,int icluster,int 
 
         cmy=cmy*fact;
         cmz=cmz*fact;
+
 
 
         for(k=0;k<npol_cluster;k++)

@@ -1,14 +1,14 @@
 CC=gcc
 #CC=gcc -fopenmp
-CCMP=/usr/lib64/openmpi/bin/mpicc
+CCMP=mpicc
 #CCMP=/usr/lib64/openmpi/bin/mpicc -fopenmp
-#cc
 #LFLAGS -pg
-LFLAGS= -Wall -pg -fopenmp -lm -L/usr/local/lib
+#LFLAGS= -Wall -pg -fopenmp -lm -L/usr/local/lib
 #LFLAGS= -Wall -pg  -lm -L/usr/local/lib
+LFLAGS= -g -lm -Wall -L/opt/openmpi-1.10.1/lib
 
-LGSLFLAGS= -lgsl -lgslcblas 
-CFLAGS=  -Wall  -funroll-all-loops -finline-functions -I/opt/local/include -Iinclude
+#LGSLFLAGS= -lgsl -lgslcblas 
+CFLAGS= -g -Wall -I/opt/local/include -Iinclude
 
 SRCDIR=src
 OBJDIR=obj
@@ -51,13 +51,14 @@ endif
 
 
 
-grappino:    $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/energy.o $(OBJDIR)/pdb.o $(OBJDIR)/rotamers.o $(OBJDIR)/grappino.o $(OBJDIR)/optimizepot.o	
+grappino:    $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/energy.o $(OBJDIR)/pdb.o $(OBJDIR)/rotamers.o $(OBJDIR)/grappino.o $(OBJDIR)/optimizepot.o
 	$(CC) $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/energy.o $(OBJDIR)/pdb.o $(OBJDIR)/rotamers.o $(OBJDIR)/optimizepot.o $(OBJDIR)/grappino.o -o $(BINDIR)/grappino $(LFLAGS)
-
 
 mhistogram:
 	cd src/mhistogram; make
 
+mgp2pdb:     $(OBJDIR)/mgp2pdb.o $(OBJDIR)/io.o $(OBJDIR)/memory.o $(OBJDIR)/geometry.o $(OBJDIR)/misc.o
+	$(CC) $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/mgp2pdb.o -o $(BINDIR)/mgp2pdb $(LFLAGS)
 
 clean:
 	rm -f $(OBJDIR)/*.o src/mhistogram/*.o  $(BINDIR)/montegrappa*

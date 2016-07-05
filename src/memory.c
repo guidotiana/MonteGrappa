@@ -74,6 +74,10 @@ struct s_polymer *AlloPolymer(int npol, int nback, int nside, int nrot, int nato
 			size += NCONTMAX*sizeof(int);
 			(((p+ipol)->back)+ires)->contacts_p = (int *) calloc(NCONTMAX,sizeof(int));
 			size += NCONTMAX*sizeof(int);
+			(((p+ipol)->back)+ires)->aacontacts = (int *) calloc(NCONTMAX,sizeof(int));
+			size += NCONTMAX*sizeof(int);
+			(((p+ipol)->back)+ires)->aacontacts_p = (int *) calloc(NCONTMAX,sizeof(int));
+			size += NCONTMAX*sizeof(int);
 			(((p+ipol)->back)+ires)->e = (double *) calloc(NCONTMAX,sizeof(double));
 			size += NCONTMAX*sizeof(double);
 			if (shell)
@@ -163,57 +167,43 @@ struct s_tables *InitTables(FILE *fp)
 //ASTEMPERING
 void FreePolymer(struct s_polymer *p,int npol, int nback, int nside, int shell, int noside){
  
-int ires,iside,ipol;
+	int ires,iside,ipol;
 
 
 
-for (ipol=0;ipol<npol;ipol++)
+	for (ipol=0;ipol<npol;ipol++)
 	{
 		for (ires=0;ires<nback;ires++)
 		{
-		if (!noside)
+			if (!noside)
 			{
-			for (iside=0;iside<nside;iside++)
+				for (iside=0;iside<nside;iside++)
+				{
+					free((((((p+ipol)->back)+ires)->side)+iside)->rot);
+				}
+			}
+			if (shell)
 			{
-				free((((((p+ipol)->back)+ires)->side)+iside)->rot);
-
+				free((((p+ipol)->back)+ires)->shell);
+				free((((p+ipol)->back)+ires)->shell_p);
 			}
 
+			if (!noside)
+				free((((p+ipol)->back)+ires)->side);
 
+			free((((p+ipol)->back)+ires)->contacts);
+			free((((p+ipol)->back)+ires)->contacts_p);
+			free((((p+ipol)->back)+ires)->aacontacts);
+			free((((p+ipol)->back)+ires)->aacontacts_p);
+
+
+			free((((p+ipol)->back)+ires)->e) ;
 		}
 
-if (shell)
-{
-free((((p+ipol)->back)+ires)->shell);
-free((((p+ipol)->back)+ires)->shell_p);
-}
-
-
-if (!noside)
-free((((p+ipol)->back)+ires)->side);
-
-free((((p+ipol)->back)+ires)->contacts);
-free((((p+ipol)->back)+ires)->contacts_p);
-
-free((((p+ipol)->back)+ires)->e) ;
-
-
-
-}
-
-free((p+ipol)->vback);
-free((p+ipol)->back);
-
+		free((p+ipol)->vback);
+		free((p+ipol)->back);
 	}
-
-
-
-free(p);
-
-
-
-
-
+	free(p);
 }
 
 
@@ -232,7 +222,7 @@ free(t);
 
 
 
-struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodihpot, int hb)
+struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodihpot, int hb, int nohfields)
 {
 	int i,k;
 	struct s_potential *x;
@@ -333,6 +323,11 @@ struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodi
 	x->g_imin=0;
 	x->boxtype = 'n';
 
+	if (!nohfields){
+		x->h_values = (double *) calloc(ntypes,sizeof(double));
+		if (!(x->h_values)) Error("Cannot allocate h_values in potential structure");
+	}
+	
 	if (hb)
 	{
 		x->hb =  (int *) calloc(natoms,sizeof(int));
@@ -348,68 +343,61 @@ struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodi
 //ASTEMPERING
 void FreePotential(struct s_potential *x, int ntypes, int noangpot, int nodihpot, int hb){
 
-int i;
+	int i;
 
-if (hb)
-         {
-                free(x->hb);
-free(x->hb_iam);
-}
-free(x->hc_type);
-free(x->hc_r0);
-
-
-
-if (!nodihpot)
-      {
-            free(x->e_dih1);
-            free(x->dih01);
-            free(x->e_dih3);
-            free(x->dih03);
-            free(x->dih_pa);
-            free(x->dih_pb);
-            free(x->dih_which);
-            free(x->dih_f_psi_a);
-            free(x->dih_f_psi_b);
-            free(x->dih_f_phi_a);
-            free(x->dih_f_phi_b);
-
-            for (i=0;i<2;i++)
-            {
-                  free(*((x->sigma)+i));	
-                  free(*((x->dih0)+i));		
-                  free(*((x->ab_propensity)+i));
-            }
-            free(x->sigma);
-            free(x->dih0);
-            free(x->ab_propensity);
-      }
-
-if (!noangpot)
-{
-free(x->e_ang);
-free(x->ang0);
-}
+	if (hb)
+	{
+		free(x->hb);
+		free(x->hb_iam);
+	}
+	free(x->hc_type);
+	free(x->hc_r0);
 
 
 
+	if (!nodihpot)
+	{
+		free(x->e_dih1);
+		free(x->dih01);
+		free(x->e_dih3);
+		free(x->dih03);
+		free(x->dih_pa);
+		free(x->dih_pb);
+		free(x->dih_which);
+		free(x->dih_f_psi_a);
+		free(x->dih_f_psi_b);
+		free(x->dih_f_phi_a);
+		free(x->dih_f_phi_b);
+
+		for (i=0;i<2;i++)
+		{
+			free(*((x->sigma)+i));
+			free(*((x->dih0)+i));
+			free(*((x->ab_propensity)+i));
+		}
+		free(x->sigma);
+		free(x->dih0);
+		free(x->ab_propensity);
+	}
+
+	if (!noangpot)
+	{
+		free(x->e_ang);
+		free(x->ang0);
+	}
 
 	for (i=0;i<ntypes;i++)
-{
-free(*((x->e)+i));
-free(*((x->r_2)+i));
-free(*((x->r0_2)+i));
+	{
+		free(*((x->e)+i));
+		free(*((x->r_2)+i));
+		free(*((x->r0_2)+i));
+	}
 
-}
+	free(x->e);
+	free(x->r_2);
+	free(x->r0_2);
 
-free(x->e);
-free(x->r_2);
-free(x->r0_2);
-
-free(x);
-
-
-
+	free(x);
 }
 
 
