@@ -52,9 +52,6 @@ void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r
 		srand(time(0));	
 	}
 	if (parms->debug>1)  fprintf(stderr,"\n\nGo contacts:\n");
-
-	fprintf(stderr,"SONO IN GO PAIRS\n");
-
 	
 	for (i=0;i<nat;i++)
 		for (j=i;j<nat;j++)
@@ -119,8 +116,9 @@ void Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **
 	FILE *fp;
 	
 	fprintf(stderr,"Reading coevolutionary contact file\n");
-	
 	fp = fopen(parms->coevofile,"r");
+	if (!fp) Error("Coevolutionary contact file does not exist");
+
 	
 	while(fgets(aux,500,fp)!=NULL)
 	{
@@ -160,7 +158,7 @@ void Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **
 	}
 	fclose(fp);
 	
-	if (parms->debug>0) fprintf(stderr,"Found %d contacts in contactfile\n",k);
+	if (parms->debug>0) fprintf(stderr,"Found %d contacts in coevolutionary contact file\n",k);
 	
 
 }
