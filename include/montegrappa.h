@@ -43,7 +43,6 @@
 #include <signal.h>
 
 
-
         #define NVER		1
         #define NSUBVER	 	3	
 
@@ -314,7 +313,7 @@ int EnergyBox(struct s_polymer *p, struct s_potential *u, int iw, int ic);
 int EnergyBoxPolymer(struct s_polymer *p, struct s_potential *u, int ic);
 double EnergyHFields(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms, int iw, int ic, int update, int update_contacts);
 double GetHFields(struct s_polymer *p, int ip);
-void ResetAAContacts(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms);
+//NAACONTACTS void ResetAAContacts(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms);
 
 
 

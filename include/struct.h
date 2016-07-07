@@ -85,9 +85,10 @@ struct s_back
 	int ncontacts;			// number of backbone atoms whose atom (including sidechain) are in contact with this
 	int *contacts;			// list of atoms in contact
 	int *contacts_p;		// ... which chain it belongs to
-	int naacontacts;			// number of aminoacids in contact with this (only on CA)
-	int *aacontacts;		// list of residues in contact
-	int *aacontacts_p;		// ... which chain it belongs to
+	//	REMOVE OF AMINOACIDS CONTACTS
+	//int naacontacts;			// number of aminoacids in contact with this (only on CA)
+	//int *aacontacts;		// list of residues in contact
+	//int *aacontacts_p;		// ... which chain it belongs to
 	
 	double *e;			// interaction energy of this with the others residues
 	double e_ang;			// angular energy

@@ -845,13 +845,13 @@ void CopyPolymer(struct s_polymer *from, struct s_polymer *to, int cfrom, int ct
 			}
 		}
 		(((to+cto)->back)+i)->ncontacts = (((from+cfrom)->back)+i)->ncontacts;
-		(((to+cto)->back)+i)->naacontacts = (((from+cfrom)->back)+i)->naacontacts;
+		//NAACONTACTS(((to+cto)->back)+i)->naacontacts = (((from+cfrom)->back)+i)->naacontacts;
 		for (j=0;j<(((from+cfrom)->back)+i)->ncontacts;j++)
 		{
 			*(((((to+cto)->back)+i)->contacts)+j) = *(((((from+cfrom)->back)+i)->contacts)+j);
 			*(((((to+cto)->back)+i)->contacts_p)+j) = *(((((from+cfrom)->back)+i)->contacts_p)+j);
-			*(((((to+cto)->back)+i)->aacontacts)+j) = *(((((from+cfrom)->back)+i)->aacontacts)+j);
-			*(((((to+cto)->back)+i)->aacontacts_p)+j) = *(((((from+cfrom)->back)+i)->aacontacts_p)+j);
+			//NAACONTACTS*(((((to+cto)->back)+i)->aacontacts)+j) = *(((((from+cfrom)->back)+i)->aacontacts)+j);
+			//NAACONTACTS*(((((to+cto)->back)+i)->aacontacts_p)+j) = *(((((from+cfrom)->back)+i)->aacontacts_p)+j);
 			*(((((to+cto)->back)+i)->e)+j) = *(((((from+cfrom)->back)+i)->e)+j);
 		}
 		(((to+cto)->back)+i)->nshell = (((from+cfrom)->back)+i)->nshell;

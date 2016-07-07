@@ -39,9 +39,9 @@
 
 double TotalEnergy(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms, int npol, int update, int nosidechains, int debug, int iproc)
 {
-      int i,j,ci,cj,tooclose;
-      double etot=0,eang=0,edih=0,ehfs=0,ebox=0;
-	  if (update)
+	int i,j,ci,cj,tooclose;
+	double etot=0,eang=0,edih=0,ehfs=0,ebox=0;
+	if (update)
 		#pragma omp parallel for private(i,j)
 		  for (ci=0;ci<npol;ci++)
 			for (i=0;i<(p+ci)->nback;i++)
@@ -50,9 +50,9 @@ double TotalEnergy(struct s_polymer *p, struct s_potential *u, struct s_mc_parms
                         (((p+ci)->back)+i)->ncontacts = 0;
                   }
 
-      if(update)
-      {
-      for (ci=0;ci<npol;ci++)                                     // loops on polymers
+	if(update)
+	{
+	for (ci=0;ci<npol;ci++)                                     // loops on polymers
             for (cj=ci;cj<npol;cj++)
                   for (i=0;i<(p+ci)->nback;i++)             // loops on backbone atoms of each polymer
                         for (j=0;j<(p+cj)->nback;j++)
@@ -63,7 +63,6 @@ double TotalEnergy(struct s_polymer *p, struct s_potential *u, struct s_mc_parms
                                     etot += EnergyPair(p,u,i,j,ci,cj,update,nosidechains,parms->disentangle,tooclose,parms->hb); 
                              }
 	}
-
 	else
 	{
 	#pragma omp parallel for private(cj,i,j,tooclose) reduction(+:etot)
@@ -84,10 +83,8 @@ double TotalEnergy(struct s_polymer *p, struct s_potential *u, struct s_mc_parms
 	{
 		if(update)
 		{
-			if (!parms->nohfields){	// only the first time, to update aa contacts
-				ResetAAContacts(p,u,parms);
-			}
 			for (ci=0;ci<npol;ci++)
+			{
 				for (i=0;i<(p+ci)->nback;i++)
 				{
 					if (!parms->noangpot){
@@ -99,19 +96,18 @@ double TotalEnergy(struct s_polymer *p, struct s_potential *u, struct s_mc_parms
 						edih += EnergyDihedrals(p,u,i,ci,update);					// dihedral potential
  					}
 					if ( (!parms->nohfields) && (!strcmp("CA",(((p+ci)->back)+i)->type)) ){
-					
-						ResetAAContacts(p,u,parms);
 						ehfs += EnergyHFields(p,u,parms,i,ci,update,0);					// H fields potential
 					}
 					if (u->boxtype != 'n')                                                  // box potential
 						if (EnergyBox(p,u,i,ci) == 1) ebox = LARGE;
 				}
-
+			}
 		}
 		else
 		{
 		#pragma omp parallel for shared(ebox) private(i) reduction(+:eang,edih)
 			for (ci=0;ci<npol;ci++)
+			{
 				for (i=0;i<(p+ci)->nback;i++)
 				{
 					if (!parms->noangpot)
@@ -125,7 +121,9 @@ double TotalEnergy(struct s_polymer *p, struct s_potential *u, struct s_mc_parms
 				}
 			}
 		}
-
+	
+	}
+		
 	etot += (eang + edih + ebox + ehfs);
 
 	if (debug>0 && iproc==0) fprintf(parms->flog," Eang  = %lf\n Edih  = %lf\n Ehfs  = %lf\n Etot  = %lf\n",eang,edih,ehfs,etot);
@@ -586,9 +584,9 @@ void ResetContactsMonomer(struct s_polymer *p, int i, int ci)
 
 }
 
-/********************************************************************
+/*NAACONTACTS*******************************************************************
  Reset and recompute the contacts of CA with other residues
- ********************************************************************/
+ ********************************************************************
 void ResetAAContacts(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms)
 {
 	int i,j,js,is,ci,cj,cont,ctrl,ncac,refcont;
@@ -606,7 +604,7 @@ void ResetAAContacts(struct s_polymer *p, struct s_potential *u, struct s_mc_par
 			}
 			(((p+ci)->back)+i)->naacontacts = 0;
 		}
-	
+	//NAACONTACTS
 	// recompute the neighbour lists
 	for (ci=0;ci<parms->npol;ci++)
 		for (cj=ci;cj<parms->npol;cj++)
@@ -767,7 +765,7 @@ void ResetAAContacts(struct s_polymer *p, struct s_potential *u, struct s_mc_par
 				}
 	
 	return;
-}
+}*/
 
 
 /********************************************************************
@@ -1107,18 +1105,15 @@ double EnergyHFields(struct s_polymer *p, struct s_potential *u, struct s_mc_par
 
 	double e=0.;
 	
-	// Reset contacts
-	if (update_contacts) {
-		ResetAAContacts(p,u,parms);
-	}
 	
 	// ignore glycines
+	/* REWRITE
 	if ( !strcmp((((p+ic)->back)+iw)->aa,"GLY") )
 		return 0;
 	else if ( !strcmp((((p+ic)->back)+iw)->type,"CA") ){
 		e += (double)(((p+ic)->back)+iw)->naacontacts * u->h_values[((((p+ic)->back)+iw)->side)->itype];
 	}
-		
+	*/
 	if (update)
 		(((p+ic)->back)+iw)->e_hfs = e;
 	

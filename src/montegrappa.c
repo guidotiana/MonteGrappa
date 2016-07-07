@@ -449,15 +449,13 @@ int main(int argc, char *argv[])
 		}
 
 		#endif
-		//fprintf(stderr,"STARTING MC\n");
+	
 		// MAKE MONTE CARLO
 		#ifdef ACTIVE_MPI		
 		Do_MC(polymer,fragment,replica,startp,u,parms,ftrj,fe,oldp,fproc,irun,mpiparms);	
 		#else
 		Do_MC(polymer,fragment,replica,startp,u,parms,ftrj,fe,oldp,fproc,irun,0);		
 		#endif
-		//fprintf(stderr,"MC_passato\n");
-	//	return 0;
 		#ifdef OPTIMIZEPOT
 		if (strcmp(parms->op_minim,"none"))
 		{

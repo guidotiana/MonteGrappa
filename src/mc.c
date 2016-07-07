@@ -199,8 +199,6 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 			fprintf(stderr,"-----------------\nStep %llu\n",istep);
 		#endif
 
-
-
 		// make a move (one per allowed type)
 		if (mcount[0] == parms->movetype[0])						// flip of backbone
 		{
@@ -599,7 +597,7 @@ int MoveBackboneFlip(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_par
 		unsigned long long istep, int debug, double t)
 {
 	int iw,ip,i,ok=0,out;
-	double dw,deltaE=0;
+	double dw,deltaE=0.;
 
 	ip = irand(parms->npol);						// which chain to move
 	iw = irand( (p+ip)->nback );						// which backbone to move
@@ -688,7 +686,6 @@ int MoveBackboneFlip(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_par
 	
 		if (!parms->nohfields)
 		{
-			ResetAAContacts(p,pot,parms);
 			for(i=0;i<(p+ip)->nback;i++)
 			{
 				deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
@@ -828,8 +825,8 @@ int MoveBackbonePivot(struct s_polymer *p,struct s_polymer *oldp, struct s_poten
 		deltaE = -GetEnergyMonomerRange(p,0,iw,ip);							// two-body energy
 		if (!parms->nodihpot)
 			deltaE -= (((p+ip)->back)+iw+1)->e_dih;							// old dihedral energy
-//		if (!parms->nohfields)
-//			deltaE = -GetHFields(p,ip);										// old H fields energy
+		if (!parms->nohfields)
+			deltaE -= GetHFields(p,ip);										// old H fields energy
 
 		// move
 		ok = PivotBackward((p+ip),iw+1,dw,iw,parms);							// moved atoms are in [0,iw-1]; changed dihedral is iw+1
@@ -838,15 +835,14 @@ int MoveBackbonePivot(struct s_polymer *p,struct s_polymer *oldp, struct s_poten
 		deltaE += EnergyMonomerRange(p,pot,0,iw,ip,parms->npol,0,1,parms->nosidechains,parms->disentangle,parms->hb);			// new energy of iw with the others
 		if (!parms->nodihpot)
 			deltaE += EnergyDihedrals(p,pot,iw+1,ip,1);
-/*		if (!parms->nohfields)
+		if (!parms->nohfields)
 		{
-			ResetAAContacts(p,pot,parms);
 			for(i=0;i<(p+ip)->nback;i++)
 			{
 				deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
 			}
 		}
-*/
+
 	}
 	// if it belong to the second half, pivot forward (moving dih of iw)
 	else
@@ -858,8 +854,8 @@ int MoveBackbonePivot(struct s_polymer *p,struct s_polymer *oldp, struct s_poten
 		deltaE = -GetEnergyMonomerRange(p,iw,(p+ip)->nback-1,ip);
 		if (!parms->nodihpot)
 			deltaE -= (((p+ip)->back)+iw)->e_dih;							// old dihedral energy
-//		if (!parms->nohfields)
-//			deltaE = -GetHFields(p,ip);		// old H fields energy
+		if (!parms->nohfields)
+			deltaE -= GetHFields(p,ip);		// old H fields energy
 
 		// move
 		ok = PivotForward((p+ip),iw-1,dw,(p+ip)->nback-iw-1,parms);			// moved atoms are in [iw+1,nback-1]; changed dihedral of iw
@@ -868,15 +864,13 @@ int MoveBackbonePivot(struct s_polymer *p,struct s_polymer *oldp, struct s_poten
 		deltaE += EnergyMonomerRange(p,pot,iw,(p+ip)->nback-1,ip,parms->npol,0,1,parms->nosidechains,parms->disentangle,parms->hb);
 		if (!parms->nodihpot)
 			deltaE += EnergyDihedrals(p,pot,iw,ip,1);
-/*		if (!parms->nohfields)
+		if (!parms->nohfields)
 		{
-			ResetAAContacts(p,pot,parms);
 			for(i=0;i<(p+ip)->nback;i++)
 			{
 			deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
 			}
 		}
-*/
 	}
 
 	#ifdef DEBUG
@@ -948,9 +942,10 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
 		deltaE = -GetEnergyMonomerRange(p,0,iw,ip);							// calculate old energy
 		if (!parms->nodihpot)
 			for (m=0;m<nmul;m++) deltaE -= (((p+ip)->back)+iw-m+1)->e_dih;		// old dihedral energy
-		if (!parms->nohfields)
-			deltaE = -GetHFields(p,ip);		// old H fields energy
-
+		if (!parms->nohfields){
+			deltaE -= GetHFields(p,ip);		// old H fields energy
+		}
+			
 		
 		for (m=0;m<nmul;m++)													// apply nmul pivot moves
 			if ( (((p+ip)->back)+iw-m+1)->move == 1 )								// check if it you can move it
@@ -970,7 +965,6 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
 			for (m=0;m<nmul;m++) deltaE += EnergyDihedrals(p,pot,iw-m+1,ip,1);
 		if (!parms->nohfields)
 		{
-			ResetAAContacts(p,pot,parms);
 			for(i=0;i<(p+ip)->nback;i++)
 			{
 				deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
@@ -986,7 +980,7 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
 		if (!parms->nodihpot)
 			for (m=0;m<nmul;m++)deltaE -= (((p+ip)->back)+iw+m)->e_dih;				// old dihedral energy
 		if (!parms->nohfields)
-			deltaE = -GetHFields(p,ip);												// old H fields energy
+			deltaE -= GetHFields(p,ip);												// old H fields energy
 
 		for (m=0;m<nmul;m++)														// apply nmul pivot moves
 			if ( (((p+ip)->back)+iw+m)->move == 1 )								// check if it you can move it
@@ -1005,7 +999,6 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
 			for (m=0;m<nmul;m++) deltaE += EnergyDihedrals(p,pot,iw+m,ip,1);
 		if (!parms->nohfields)
 		{
-			ResetAAContacts(p,pot,parms);
 			for(i=0;i<(p+ip)->nback;i++)
 			{
 				deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
@@ -1014,7 +1007,7 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
 	}
 
 //	fprintf(stderr,"\ndeltaE=%lf\n",deltaE);
-      #ifdef DEBUG
+	#ifdef DEBUG
 	if (parms->debug>2) fprintf(stderr,"deltaE=%lf\n",deltaE); fflush(stderr);
 	#endif
 
@@ -1451,7 +1444,6 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 				
 				if (!parms->nohfields)
 				{
-					ResetAAContacts(p,pot,parms);
 					for(i=0;i<(p+ip)->nback;i++)
 					{
 						deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
@@ -1501,7 +1493,6 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 				
 				if (!parms->nohfields)
 				{
-					ResetAAContacts(p,pot,parms);
 					for(i=0;i<(p+ip)->nback;i++)
 					{
 						deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
@@ -1642,7 +1633,6 @@ int MoveMultipleFlip(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_par
 		
 		if (!parms->nohfields)
 		{
-			ResetAAContacts(p,pot,parms);
 			for(i=0;i<(p+ip)->nback;i++)
 			{
 				deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);

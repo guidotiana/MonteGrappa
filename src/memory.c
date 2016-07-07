@@ -74,10 +74,10 @@ struct s_polymer *AlloPolymer(int npol, int nback, int nside, int nrot, int nato
 			size += NCONTMAX*sizeof(int);
 			(((p+ipol)->back)+ires)->contacts_p = (int *) calloc(NCONTMAX,sizeof(int));
 			size += NCONTMAX*sizeof(int);
-			(((p+ipol)->back)+ires)->aacontacts = (int *) calloc(NCONTMAX,sizeof(int));
-			size += NCONTMAX*sizeof(int);
-			(((p+ipol)->back)+ires)->aacontacts_p = (int *) calloc(NCONTMAX,sizeof(int));
-			size += NCONTMAX*sizeof(int);
+			//NAACONTACTS(((p+ipol)->back)+ires)->aacontacts = (int *) calloc(NCONTMAX,sizeof(int));
+			//NAACONTACTSsize += NCONTMAX*sizeof(int);
+			//NAACONTACTS(((p+ipol)->back)+ires)->aacontacts_p = (int *) calloc(NCONTMAX,sizeof(int));
+			//NAACONTACTSsize += NCONTMAX*sizeof(int);
 			(((p+ipol)->back)+ires)->e = (double *) calloc(NCONTMAX,sizeof(double));
 			size += NCONTMAX*sizeof(double);
 			if (shell)
@@ -193,8 +193,8 @@ void FreePolymer(struct s_polymer *p,int npol, int nback, int nside, int shell, 
 
 			free((((p+ipol)->back)+ires)->contacts);
 			free((((p+ipol)->back)+ires)->contacts_p);
-			free((((p+ipol)->back)+ires)->aacontacts);
-			free((((p+ipol)->back)+ires)->aacontacts_p);
+			//NAACONTACTSfree((((p+ipol)->back)+ires)->aacontacts);
+			//NAACONTACTSfree((((p+ipol)->back)+ires)->aacontacts_p);
 
 
 			free((((p+ipol)->back)+ires)->e) ;
@@ -324,6 +324,7 @@ struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodi
 	x->boxtype = 'n';
 
 	if (!nohfields){
+		fprintf(stderr,"Allocating HFIELDS\n");
 		x->h_values = (double *) calloc(ntypes,sizeof(double));
 		if (!(x->h_values)) Error("Cannot allocate h_values in potential structure");
 	}
