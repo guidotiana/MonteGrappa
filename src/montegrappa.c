@@ -580,14 +580,6 @@ int main(int argc, char *argv[])
 
 void Welcome(FILE *fp)
 {
-/*
-      fprintf(fp,"\n\n***************************************\n");
-      fprintf(fp,"*        MonteGrappa v. %d.%d           *\n",NVER,NSUBVER);
-      fprintf(fp,"***************************************\n");
-      fprintf(fp,"  G. Tiana, 2010\n");
-      fprintf(fp,"pid = %d\n",getpid());
-*/
-
 	time_t t = time(NULL);
 	struct tm *tm = localtime(&t);
 
@@ -595,11 +587,11 @@ void Welcome(FILE *fp)
 	fprintf(fp,"\n\n");
 	fprintf(fp,"             ,/k.\n");
 	fprintf(fp,"            /  ih,\t Monte^Grappa \n");     
-	fprintf(fp,"       ,-' ,  `:7b \t\t  1.2 \n");
+	fprintf(fp,"       ,-' ,  `:7b \t\t  %d.%d \n",NVER,NSUBVER);
 	fprintf(fp,"     _.-/   '  /b.`.4p,\n");
 	fprintf(fp,"  --   ,    ,-' ^6x, `.'^=._\n");
 	fprintf(fp,"\n");
-	fprintf(fp,"\nG. Tiana, 2015\n");
+	fprintf(fp,"\nG. Tiana, 2016\n");
 	fprintf(fp,"\n");
 	fprintf(fp,"%s", asctime(tm));
 	fprintf(fp,"pid = %d\n",getpid());

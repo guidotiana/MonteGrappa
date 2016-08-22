@@ -38,7 +38,7 @@ The whole distribution can be quickly compiled just typing in your terminal
 
 	$ make all
 
-The binary files "montegrappa", "montegrappa_mpi", "grappino" 
+The binary files "montegrappa", "montegrappa_mpi", "grappino", "mgp2pdb", 
 and "mhistogram" will be created in the ./bin directory. 
 
 

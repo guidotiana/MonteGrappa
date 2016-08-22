@@ -194,5 +194,5 @@ int Rot2Polymer(int nrot_kinds, int nchains, struct s_polymer *p, struct rot_inp
 
 //io.c
 void ReadPropensity(char *fname, struct s_potential *u);
-void ReadHFields(char *fname, struct s_potential *u);
+void ReadHFields(char *fname, struct s_potential *u, struct s_polymer *p, int nchain);
 void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, int noangpot, int nodihpot, int hb, int nohfields);

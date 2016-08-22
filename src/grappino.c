@@ -13,11 +13,13 @@ int main(int argc, char *argv[])
 	struct s_parms *p;                      // parameters structure
 	struct atom_s *pdb;                     // atom structure
 	struct s_polymer *polymer;              // polymer structure
-	int npdb, nchain, i, nrot_kinds=0, ntypes=0, nat, nbackmax;
+	int npdb, nchain, nrot_kinds=0, ntypes=0, nat, nbackmax;
 	struct rot_input_s *rotamers;           // rotamers structure
 	struct s_potential *u;                  // potential structure
 	double **cm;                            // contact map
 	FILE *fin;
+	double dummy, r2;							// for contacts calculation
+	int i,j,ci,cj,tooclose;							// for contacts
 
     GrappinoWelcome(stderr);
     
@@ -129,23 +131,42 @@ int main(int argc, char *argv[])
 		ReadPropensity(p->ab_propensityfile,u);
 	}
 	
+	// Print output files
 	// H fields
-	if (p->h_fields) {
-		fprintf(stderr,"Opening h_fields file %s...\n",p->h_fieldsfile);
-		fflush(stderr);
-		ReadHFields(p->h_fieldsfile,u);
-	}
-	
-
-	// print output
-	PrintPolymer(p->poutfile,polymer,nchain);
 	if (p->h_fields)
-		PrintPotential(u,p->eoutfile,npdb,ntypes,0,0,0,0);
+		{
+			dummy = 0.;
+			// To normalize the h-fields energy, we need to know the contact number for every CA atom.
+			for (ci=0;ci<nchain;ci++)                                     // loops on polymers
+				for (cj=ci;cj<nchain;cj++)
+					for (i=0;i<(polymer+ci)->nback;i++)             // loops on backbone atoms of each polymer
+						for (j=0;j<(polymer+cj)->nback;j++)
+							if (ci!=cj || i<j)                        // in the same polymer, do not count twice a contact
+							{
+								if ( !(ci==cj && (((polymer+ci)->back)+i)->iaa == (((polymer+cj)->back)+j)->iaa) )
+								{
+									r2 = Dist2( (((polymer+ci)->back)+i)->pos, (((polymer+cj)->back)+j)->pos );
+									if ( r2 < p->rnat*p->rnat)
+									{
+										AddContact(polymer,i,j,ci,cj,0.);
+									}
+								}
+							}
+			fprintf(stderr,"Opening h_fields file %s...\n",p->h_fieldsfile);
+			fflush(stderr);
+			// Read and rescale the hfields file
+			ReadHFields(p->h_fieldsfile,u,polymer,nchain);
+			// Print the potential file
+			PrintPotential(u,p->eoutfile,npdb,ntypes,0,0,0,0);
+		}
 	else
 		PrintPotential(u,p->eoutfile,npdb,ntypes,0,0,0,1);	// to avoid the h_fields printing
 	AppendPotentialComments(p, p->eoutfile);
 
-	//if you want a file.op to optimize the potential 
+	// print polymer
+	PrintPolymer(p->poutfile,polymer,nchain);
+	
+	//if you want a file.op to optimize the potential
 	if(strcmp(p->op_file,""))
         PrintOpGoFile(p->op_file,cm,polymer,nchain,p->op_kind,p->imin/3); // imin in aa
 

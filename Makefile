@@ -1,5 +1,5 @@
 CC=gcc
-#CC=gcc -fopenmp
+#CC=icc -fopenmp
 CCMP=mpicc
 #CCMP=/usr/lib64/openmpi/bin/mpicc -fopenmp
 #LFLAGS -pg
@@ -61,7 +61,7 @@ mgp2pdb:     $(OBJDIR)/mgp2pdb.o $(OBJDIR)/io.o $(OBJDIR)/memory.o $(OBJDIR)/geo
 	$(CC) $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/mgp2pdb.o -o $(BINDIR)/mgp2pdb $(LFLAGS)
 
 clean:
-	rm -f $(OBJDIR)/*.o src/mhistogram/*.o  $(BINDIR)/montegrappa*
+	rm -f $(OBJDIR)/*.o src/mhistogram/*.o  $(BINDIR)/* 
 
 cleanobj:
 	rm -f $(OBJDIR)/*.o 
@@ -74,6 +74,7 @@ all:
 	make version=STEMPERING;
 	make cleanobj;
 	make grappino;
+	make mgp2pdb;
 	make mhistogram;
 	make cleanobj;
 	make version=MPI;

@@ -688,7 +688,7 @@ int MoveBackboneFlip(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_par
 		{
 			for(i=0;i<(p+ip)->nback;i++)
 			{
-				deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
+				deltaE += EnergyHFields(p,pot,parms,i,ip,1);
 			}
 		}
 	}
@@ -839,7 +839,7 @@ int MoveBackbonePivot(struct s_polymer *p,struct s_polymer *oldp, struct s_poten
 		{
 			for(i=0;i<(p+ip)->nback;i++)
 			{
-				deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
+				deltaE += EnergyHFields(p,pot,parms,i,ip,1);
 			}
 		}
 
@@ -868,7 +868,7 @@ int MoveBackbonePivot(struct s_polymer *p,struct s_polymer *oldp, struct s_poten
 		{
 			for(i=0;i<(p+ip)->nback;i++)
 			{
-			deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
+			deltaE += EnergyHFields(p,pot,parms,i,ip,1);
 			}
 		}
 	}
@@ -967,7 +967,7 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
 		{
 			for(i=0;i<(p+ip)->nback;i++)
 			{
-				deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
+				deltaE += EnergyHFields(p,pot,parms,i,ip,1);
 			}
 		}
 	}
@@ -1001,7 +1001,7 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
 		{
 			for(i=0;i<(p+ip)->nback;i++)
 			{
-				deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
+				deltaE += EnergyHFields(p,pot,parms,i,ip,1);
 			}
 		}
 	}
@@ -1446,7 +1446,7 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 				{
 					for(i=0;i<(p+ip)->nback;i++)
 					{
-						deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
+						deltaE += EnergyHFields(p,pot,parms,i,ip,1);
 					}
 				}
             }
@@ -1495,7 +1495,7 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 				{
 					for(i=0;i<(p+ip)->nback;i++)
 					{
-						deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
+						deltaE += EnergyHFields(p,pot,parms,i,ip,1);
 					}
 				}
 				
@@ -1635,7 +1635,7 @@ int MoveMultipleFlip(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_par
 		{
 			for(i=0;i<(p+ip)->nback;i++)
 			{
-				deltaE += EnergyHFields(p,pot,parms,i,ip,1,0);
+				deltaE += EnergyHFields(p,pot,parms,i,ip,1);
 			}
 		}
 

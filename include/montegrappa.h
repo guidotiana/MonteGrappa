@@ -311,7 +311,7 @@ int CheckOverlaps(struct s_polymer *p, struct s_potential *u, struct s_mc_parms 
 void CompareStructures(struct s_polymer *a, struct s_polymer *b, int nc, int natoms);
 int EnergyBox(struct s_polymer *p, struct s_potential *u, int iw, int ic);
 int EnergyBoxPolymer(struct s_polymer *p, struct s_potential *u, int ic);
-double EnergyHFields(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms, int iw, int ic, int update, int update_contacts);
+double EnergyHFields(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms, int iw, int ic, int update);
 double GetHFields(struct s_polymer *p, int ip);
 //NAACONTACTS void ResetAAContacts(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms);
 

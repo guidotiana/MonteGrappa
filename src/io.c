@@ -288,6 +288,7 @@ void PrintPolymer(char *fname, struct s_polymer *p, int nchains)
 		{
 			fprintf(fout, "%d\t %d\t%s\t%d\t%s\t%d\t%d\t%lf\t%lf\t%lf\t%d\n",i,(((p+ic)->back)+i)->ia,(((p+ic)->back)+i)->type,(((p+ic)->back)+i)->itype,(((p+ic)->back)+i)->aa,
 					(((p+ic)->back)+i)->iaa,ic,((((p+ic)->back)+i)->pos).x,((((p+ic)->back)+i)->pos).y,((((p+ic)->back)+i)->pos).z, (((p+ic)->back)+i)->move );
+			
 //			fprintf(stderr, "%d\t %d\t%s\t%d\t%s\t%d\t%d\t%lf\t%lf\t%lf\t%d\n",i,(((p+ic)->back)+i)->ia,(((p+ic)->back)+i)->type,(((p+ic)->back)+i)->itype,(((p+ic)->back)+i)->aa,
   //                                      (((p+ic)->back)+i)->iaa,ic,((((p+ic)->back)+i)->pos).x,((((p+ic)->back)+i)->pos).y,((((p+ic)->back)+i)->pos).z, (((p+ic)->back)+i)->move );
 
@@ -1809,7 +1810,6 @@ int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, 
 void ReadPropensity(char *fname, struct s_potential *u)
 {
 	FILE *fp;
-	fprintf(stderr,"%s",fname);
 	fflush(stderr);
 	fp = fopen(fname,"r");
 	if (!fp) Error("Cannot open propensity file");
@@ -1837,7 +1837,7 @@ void ReadPropensity(char *fname, struct s_potential *u)
  Read the file of H fields obtained from CoCaInE
  *****************************************************************************/
 
-void ReadHFields(char *fname, struct s_potential *u)
+void ReadHFields(char *fname, struct s_potential *u, struct s_polymer *polymer, int nchain)
 {
 	FILE *fp;
 	fp = fopen(fname,"r");
@@ -1845,13 +1845,14 @@ void ReadHFields(char *fname, struct s_potential *u)
 	fprintf(stderr,"Reading H fields File....\n");
 	
 	
-	int iaa, ncont, idtype=1;
+	int iaa, ncont, idtype=1; //idtype is equal to 1 because hfields is atomtype-based
 	char aatype[3],aux[300];
 	double alpha, hbar, htild, htot, frustr, ht_hmin, e_emin, Z_h, Z_e, T_t, tot, S_f, occ;
+	int i, ci;
 	
-	alpha = 1.;		// problems with potential convergence. TODO
+	alpha = 0.15;		// problems with potential convergence. CHECK
 	
-	// This is for sidechain atoms
+	// This is for CA atoms
 	u->h_values[0] = 0.;
 	
 	while(fgets(aux,500,fp)!=NULL)
@@ -1864,15 +1865,28 @@ void ReadHFields(char *fname, struct s_potential *u)
 				   &iaa,aatype,&hbar,&htild,&htot,&ncont,&frustr,&ht_hmin, \
 				   &e_emin,&Z_h,&Z_e,&T_t,&tot,&S_f)==14) )
 		{
-			// ignore glicines
-			if (strcmp("GLY",aatype)) {
-				u->h_values[idtype] = htild/(double)ncont/alpha; // h/(n_N*alpha)
-				idtype++;
-		
+			if (strcmp(aatype,"type")){	// Ignore first row
+				// ignore glicines
+				if (strcmp("GLY",aatype)) {
+					u->h_values[idtype] = htild/alpha; // h/(alpha)
+					idtype++;
+				}
 			}
 		}
-		
 	}
+	
+	// Reset the counter
+	idtype = 1;
+	
+	// Rescale hfields value using the contact number of CA atom
+	for (ci=0;ci<nchain;ci++)                           // loops on polymers
+		for (i=0;i<(polymer+ci)->nback;i++)             // loops on backbone atoms of each polymer
+			if ( (!strcmp((((polymer+ci)->back)+i)->type, "CA")) && strcmp((((polymer+ci)->back)+i)->aa,"GLY") )
+			{
+				u->h_values[idtype] /= (double)(((polymer+ci)->back)+i)->ncontacts;
+				idtype++;
+			}
+	
 	fclose(fp);
 	
 	return;

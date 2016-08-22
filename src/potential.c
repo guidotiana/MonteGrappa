@@ -18,7 +18,7 @@
 
 
     This program is free. We just ask you to cite in the publications you get 
-    making use of    MonteGrappa the following article:
+    making use of MonteGrappa the following article:
 
     G. Tiana, F. Villa, Y. Zhan, R. Capelli, C.Paissoni, P. Sormanni, E. Heard,
     L. Giorgetti and R. Meloni, "MonteGrappa: an iterative Monte Carlo program
@@ -96,7 +96,7 @@ double TotalEnergy(struct s_polymer *p, struct s_potential *u, struct s_mc_parms
 						edih += EnergyDihedrals(p,u,i,ci,update);					// dihedral potential
  					}
 					if ( (!parms->nohfields) && (!strcmp("CA",(((p+ci)->back)+i)->type)) ){
-						ehfs += EnergyHFields(p,u,parms,i,ci,update,0);					// H fields potential
+						ehfs += EnergyHFields(p,u,parms,i,ci,update);					// H fields potential
 					}
 					if (u->boxtype != 'n')                                                  // box potential
 						if (EnergyBox(p,u,i,ci) == 1) ebox = LARGE;
@@ -115,7 +115,7 @@ double TotalEnergy(struct s_polymer *p, struct s_potential *u, struct s_mc_parms
 					if (!parms->nodihpot)
 						edih += EnergyDihedrals(p,u,i,ci,update);				// dihedral potential
 					if ( (!parms->nohfields) && (!strcmp("CA",(((p+ci)->back)+i)->type)) )
-						ehfs += EnergyHFields(p,u,parms,i,ci,update,0);					// H fields potential
+						ehfs += EnergyHFields(p,u,parms,i,ci,update);					// H fields potential
 					if (u->boxtype != 'n')
 						if (EnergyBox(p,u,i,ci) == 1) ebox = LARGE;				// box potential
 				}
@@ -1101,19 +1101,18 @@ double EnergyDihedrals(struct s_polymer *p, struct s_potential *u, int iw, int i
  H fields potential
  ***********************************************/
 
-double EnergyHFields(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms, int iw, int ic, int update, int update_contacts){
+double EnergyHFields(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms, int iw, int ic, int update){
 
 	double e=0.;
 	
 	
 	// ignore glycines
-	/* REWRITE
 	if ( !strcmp((((p+ic)->back)+iw)->aa,"GLY") )
 		return 0;
 	else if ( !strcmp((((p+ic)->back)+iw)->type,"CA") ){
-		e += (double)(((p+ic)->back)+iw)->naacontacts * u->h_values[((((p+ic)->back)+iw)->side)->itype];
+		e += (double)(((p+ic)->back)+iw)->ncontacts * u->h_values[((((p+ic)->back)+iw)->side)->itype];
 	}
-	*/
+	
 	if (update)
 		(((p+ic)->back)+iw)->e_hfs = e;
 	
