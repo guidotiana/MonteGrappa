@@ -146,7 +146,7 @@ int main(int argc, char *argv[])
 								if ( !(ci==cj && (((polymer+ci)->back)+i)->iaa == (((polymer+cj)->back)+j)->iaa) )
 								{
 									r2 = Dist2( (((polymer+ci)->back)+i)->pos, (((polymer+cj)->back)+j)->pos );
-									if ( r2 < p->rnat*p->rnat)
+									if ( r2 < p->rnat*p->rnat && (ci != cj || j-i >= u->g_imin ) )
 									{
 										AddContact(polymer,i,j,ci,cj,0.);
 									}
