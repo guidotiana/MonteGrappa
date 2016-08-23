@@ -198,7 +198,7 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 		if (parms->debug>1)
 			fprintf(stderr,"-----------------\nStep %llu\n",istep);
 		#endif
-
+		
 		// make a move (one per allowed type)
 		if (mcount[0] == parms->movetype[0])						// flip of backbone
 		{
@@ -290,9 +290,6 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 			if(ok==1) macc[10]++;
 			mdone[10]++;
 		}
-
-
-
 
 /************************************************\
  * 	print di varie ed eventuali		*
@@ -824,10 +821,14 @@ int MoveBackbonePivot(struct s_polymer *p,struct s_polymer *oldp, struct s_poten
 		// calculate old energy
 		deltaE = -GetEnergyMonomerRange(p,0,iw,ip);							// two-body energy
 		if (!parms->nodihpot)
+		{
 			deltaE -= (((p+ip)->back)+iw+1)->e_dih;							// old dihedral energy
+		}
 		if (!parms->nohfields)
+		{
 			deltaE -= GetHFields(p,ip);										// old H fields energy
-
+		}
+		
 		// move
 		ok = PivotBackward((p+ip),iw+1,dw,iw,parms);							// moved atoms are in [0,iw-1]; changed dihedral is iw+1
 		ok *= AddSidechain(p,0,iw,ip);
@@ -842,7 +843,6 @@ int MoveBackbonePivot(struct s_polymer *p,struct s_polymer *oldp, struct s_poten
 				deltaE += EnergyHFields(p,pot,parms,i,ip,1);
 			}
 		}
-
 	}
 	// if it belong to the second half, pivot forward (moving dih of iw)
 	else
@@ -853,10 +853,13 @@ int MoveBackbonePivot(struct s_polymer *p,struct s_polymer *oldp, struct s_poten
 		// calculate old energy
 		deltaE = -GetEnergyMonomerRange(p,iw,(p+ip)->nback-1,ip);
 		if (!parms->nodihpot)
+		{
 			deltaE -= (((p+ip)->back)+iw)->e_dih;							// old dihedral energy
+		}
 		if (!parms->nohfields)
-			deltaE -= GetHFields(p,ip);		// old H fields energy
-
+		{
+			deltaE -= GetHFields(p,ip);										// old H fields energy
+		}
 		// move
 		ok = PivotForward((p+ip),iw-1,dw,(p+ip)->nback-iw-1,parms);			// moved atoms are in [iw+1,nback-1]; changed dihedral of iw
 		ok *= AddSidechain(p,iw,(p+ip)->nback-1,ip);
@@ -937,18 +940,18 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
 	// if iw belongs to the first half, pivot backward
 	if (idir == -1)
 	{
-		if ( iw+2-nmul < 2 ) nmul = iw;											// if nmul beyond beginning of the chain, decrease it
+		if ( iw+2-nmul < 2 ) nmul = iw;										// if nmul beyond beginning of the chain, decrease it
 
 		deltaE = -GetEnergyMonomerRange(p,0,iw,ip);							// calculate old energy
 		if (!parms->nodihpot)
-			for (m=0;m<nmul;m++) deltaE -= (((p+ip)->back)+iw-m+1)->e_dih;		// old dihedral energy
+			for (m=0;m<nmul;m++) deltaE -= (((p+ip)->back)+iw-m+1)->e_dih;	// old dihedral energy
 		if (!parms->nohfields){
-			deltaE -= GetHFields(p,ip);		// old H fields energy
+			deltaE -= GetHFields(p,ip);										// old H fields energy
 		}
 			
 		
-		for (m=0;m<nmul;m++)													// apply nmul pivot moves
-			if ( (((p+ip)->back)+iw-m+1)->move == 1 )								// check if it you can move it
+		for (m=0;m<nmul;m++)												// apply nmul pivot moves
+			if ( (((p+ip)->back)+iw-m+1)->move == 1 )						// check if it you can move it
 			{
 				if (parms->randdw==1) dw = parms->dw_mpivot * (0.5 - frand());				// dihedral to pivot
 				else if (parms->randdw==2) dw = parms->dw_mpivot *gasdev(&(parms->seed));
@@ -1208,7 +1211,13 @@ void UpdateMonomerRange(struct s_polymer *from, struct s_polymer *to, int wfrom,
 		if (w<((from+p)->nback)-2) (((to+p)->back)+w+2)->e_dih = (((from+p)->back)+w+2)->e_dih;
 
 	}
-
+	
+	// Update hfields energies for all the sequence
+	for (w=0;w<=(from+p)->nback;w++)
+	{
+		(((to+p)->back)+w)->e_hfs = (((from+p)->back)+w)->e_hfs;
+	}
+	
 	// Copy those contacts
 	//so slow #pragma omp parallel for private(j)
 	for (i=0;i<ntm;i++)
@@ -1414,7 +1423,7 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 				deltaE -= (((p+ip)->back)+iw-nmul)->e_ang;
 			}
 			if (!parms->nohfields)
-				deltaE = -GetHFields(p,ip);													  // old H fields energy
+				deltaE -= GetHFields(p,ip);													  // old H fields energy
 		  
 		  
             for (m=0;m<nmul;m++)                                                                            // apply nmul pivot moves
@@ -1464,7 +1473,7 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 				deltaE -= (((p+ip)->back)+iw+nmul)->e_ang;
 			}
 		    if (!parms->nohfields)
-				deltaE = -GetHFields(p,ip);													  // old H fields energy
+				deltaE -= GetHFields(p,ip);													  // old H fields energy
 
             for (m=0;m<nmul;m++)                                                               // apply nmul pivot moves
 				if ( (((p+ip)->back)+iw-1+m)->move == 1 )                                      // check if it you can move it
@@ -1576,7 +1585,7 @@ int MoveMultipleFlip(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_par
 		if (iw2<(p+ip)->nback-2) deltaE -= (((p+ip)->back)+iw2+2)->e_dih;
 	}
 	if (!parms->nohfields)
-		deltaE = -GetHFields(p,ip);								// old H fields energy
+		deltaE -= GetHFields(p,ip);								// old H fields energy
 
 	// make the move in p
 

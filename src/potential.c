@@ -815,8 +815,12 @@ double GetHFields(struct s_polymer *p, int ip)
 	int iw;
 	
 	for (iw=0;iw<(p+ip)->nback;iw++)
-		e += (((p+ip)->back)+iw)->e_hfs;
-	
+	{
+		if ( !strcmp((((p+ip)->back)+iw)->type,"CA") && strcmp((((p+ip)->back)+iw)->type,"GLY") )
+		{
+			e += (((p+ip)->back)+iw)->e_hfs;
+		}
+	}
 	return e;
 }
 
@@ -1048,16 +1052,16 @@ double EnergyDihedrals(struct s_polymer *p, struct s_potential *u, int iw, int i
 			e += u->g_dihe * (u->dih_pa)[ia] * (u->dih_f_psi_a)[i] + u->g_dihe * (u->dih_pb)[ia] * (u->dih_f_psi_b)[i];
 	}
 
-    //potenziale gaussiano sui diedri
+    // Gaussian potential on dihedrals (Propensity)
 	
     if(u->dih_ram)
     {
-        if((iw+1)%3==0) //di tipo psi
+        if((iw+1)%3==0) // psi dihedral
             for(i=0;i<2;i++)
             { 
                 e += - (u->e_dihram) * (u->ab_propensity[i][iaa]/u->sigma[i][1]) * exp(-0.5*(((dih - u->dih0[i][1])/u->sigma[i][1])*((dih - u->dih0[i][1])/u->sigma[i][1])));
             }
-        if((iw-1)%3==0)   //di tipo phi
+        if((iw-1)%3==0)   // phi dihedral
             for(i=0;i<2;i++)
              {
                 e += - (u->e_dihram) * ( (u->ab_propensity[i][iaa]/u->sigma[i][0]) * exp(-0.5*(((dih - u->dih0[i][0])/u->sigma[i][0])*((dih - u->dih0[i][0])/u->sigma[i][0]))) );
@@ -1106,16 +1110,21 @@ double EnergyHFields(struct s_polymer *p, struct s_potential *u, struct s_mc_par
 	double e=0.;
 	
 	
-	// ignore glycines
-	if ( !strcmp((((p+ic)->back)+iw)->aa,"GLY") )
+	// ignore non-CA and glycine
+	if ( strcmp((((p+ic)->back)+iw)->type,"CA") || !strcmp((((p+ic)->back)+iw)->aa,"GLY") )
+	{
 		return 0;
-	else if ( !strcmp((((p+ic)->back)+iw)->type,"CA") ){
+	}
+	else
+	{
 		e += (double)(((p+ic)->back)+iw)->ncontacts * u->h_values[((((p+ic)->back)+iw)->side)->itype];
 	}
 	
 	if (update)
+	{
 		(((p+ic)->back)+iw)->e_hfs = e;
-	
+	}
+		
 	return e;
 }
 

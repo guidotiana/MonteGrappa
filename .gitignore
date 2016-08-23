@@ -4,6 +4,7 @@
 
 # Libraries
 *.a
+*.o
 
 # Shared objects (inc. Windows DLLs)
 *.dll
