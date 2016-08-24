@@ -1837,7 +1837,7 @@ void ReadPropensity(char *fname, struct s_potential *u)
  Read the file of H fields obtained from CoCaInE
  *****************************************************************************/
 
-void ReadHFields(char *fname, struct s_potential *u, struct s_polymer *polymer, int nchain)
+void ReadHFields(char *fname, struct s_potential *u, struct s_polymer *polymer, int nchain, double hfs_alpha)
 {
 	FILE *fp;
 	fp = fopen(fname,"r");
@@ -1850,7 +1850,7 @@ void ReadHFields(char *fname, struct s_potential *u, struct s_polymer *polymer, 
 	double alpha, hbar, htild, htot, frustr, ht_hmin, e_emin, Z_h, Z_e, T_t, tot, S_f, occ;
 	int i, ci;
 	
-	alpha = 0.15;		// problems with potential convergence. CHECK
+	//alpha = 0.15;		// problems with potential convergence. CHECK
 	
 	// This is for CA atoms
 	u->h_values[0] = 0.;
@@ -1868,7 +1868,7 @@ void ReadHFields(char *fname, struct s_potential *u, struct s_polymer *polymer, 
 			if (strcmp(aatype,"type")){	// Ignore first row
 				// ignore glicines
 				if (strcmp("GLY",aatype)) {
-					u->h_values[idtype] = htild/alpha; // h/(alpha)
+					u->h_values[idtype] = htild/hfs_alpha; // h/(alpha)
 					idtype++;
 				}
 			}

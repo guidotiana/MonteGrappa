@@ -1,4 +1,4 @@
- /*
+/*
  * Grappino.c
  *
  *  Created on: Sep 24, 2010
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 			fprintf(stderr,"Opening h_fields file %s...\n",p->h_fieldsfile);
 			fflush(stderr);
 			// Read and rescale the hfields file
-			ReadHFields(p->h_fieldsfile,u,polymer,nchain);
+			ReadHFields(p->h_fieldsfile,u,polymer,nchain,p->hfs_alpha);
 			// Print the potential file
 			PrintPotential(u,p->eoutfile,npdb,ntypes,0,0,0,0);
 		}
@@ -225,7 +225,8 @@ void Parse(FILE *fp, struct s_parms *p)
 	p->psi_0_b = 124;
 	
 	p->h_fields = 0;
-    
+	p->hfs_alpha = 0.15;		// Original value in Contini, Tiana JCP (2015)
+	
     // read parameters file
 	while(fgets(aux,500,fp)!=NULL)
     {
@@ -282,7 +283,9 @@ void Parse(FILE *fp, struct s_parms *p)
 		ReadParD(aux,"psi_0_b",&(p->psi_0_b));
 		
 		ReadParN(aux,"h_fields",&(p->h_fields));
+		ReadParF(aux,"hfs_alpha",&(p->hfs_alpha));
 
+		
         // read explicitly declared backbone atoms
 		if (!strncmp(aux,"backbone_atoms",14)) {
             (p->n_back_a)=0;
