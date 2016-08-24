@@ -1883,11 +1883,11 @@ void ReadHFields(char *fname, struct s_potential *u, struct s_polymer *polymer, 
 		for (i=0;i<(polymer+ci)->nback;i++)             // loops on backbone atoms of each polymer
 			if ( (!strcmp((((polymer+ci)->back)+i)->type, "CA")) && strcmp((((polymer+ci)->back)+i)->aa,"GLY") )
 			{
-				// CAPE
-				// il +1 serve per evitare dei nan a caso. Se ci sono campi con un numero di contatti alla
-				// partenza di 0, lui modifica ad 1. Non so se sia meglio questo o una molto piu' banale
-				// eguaglianza a 0, ma per ora va cosi'
-				u->h_values[idtype] /= (double)((((polymer+ci)->back)+i)->ncontacts + 1);
+				// If native contacts are greater than 0, we rescale them
+				if ((((polymer+ci)->back)+i)->ncontacts != 0 )
+				{
+					u->h_values[idtype] /= (double)((((polymer+ci)->back)+i)->ncontacts);
+				}
 				idtype++;
 			}
 	
