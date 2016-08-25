@@ -60,7 +60,7 @@ struct s_polymer *AlloPolymer(int npol, int nback, int nside, int nrot, int nato
 		size += nback * sizeof(struct vector *);
 
 		// allocate sidechains
-		for (ires=0;ires<nback;ires++)
+		for (ires=0;ires<nback;++ires)
 		{
 			(((p+ipol)->back)+ires)->nside = 0;
 			(((p+ipol)->back)+ires)->nrot = 0;
@@ -94,13 +94,13 @@ struct s_polymer *AlloPolymer(int npol, int nback, int nside, int nrot, int nato
 
 			if (!noside)
 			{
-				for (iside=0;iside<nside;iside++)
+				for (iside=0;iside<nside;++iside)
 				{
 					(((((p+ipol)->back)+ires)->side)+iside)->rot = (struct s_rotamers *) calloc(nrot,sizeof(struct s_rotamers));
 					size += nrot*sizeof(struct s_rotamers);
 				}
 
-				for (iside=0;iside<natoms;iside++) ((p+ipol)->vback)[iside] = NULL;
+				for (iside=0;iside<natoms;++iside) ((p+ipol)->vback)[iside] = NULL;
 			}
 		}
 
@@ -173,11 +173,11 @@ void FreePolymer(struct s_polymer *p,int npol, int nback, int nside, int shell, 
 
 	for (ipol=0;ipol<npol;++ipol)
 	{
-		for (ires=0;ires<nback;ires++)
+		for (ires=0;ires<nback;++ires)
 		{
 			if (!noside)
 			{
-				for (iside=0;iside<nside;iside++)
+				for (iside=0;iside<nside;++iside)
 				{
 					free((((((p+ipol)->back)+ires)->side)+iside)->rot);
 				}

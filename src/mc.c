@@ -944,13 +944,13 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
 
 		deltaE = -GetEnergyMonomerRange(p,0,iw,ip);							// calculate old energy
 		if (!parms->nodihpot)
-			for (m=0;m<nmul;m++) deltaE -= (((p+ip)->back)+iw-m+1)->e_dih;	// old dihedral energy
+			for (m=0;m<nmul;++m) deltaE -= (((p+ip)->back)+iw-m+1)->e_dih;	// old dihedral energy
 		if (!parms->nohfields){
 			deltaE -= GetHFields(p,ip);										// old H fields energy
 		}
 			
 		
-		for (m=0;m<nmul;m++)												// apply nmul pivot moves
+		for (m=0;m<nmul;++m)												// apply nmul pivot moves
 			if ( (((p+ip)->back)+iw-m+1)->move == 1 )						// check if it you can move it
 			{
 				if (parms->randdw==1) dw = parms->dw_mpivot * (0.5 - frand());				// dihedral to pivot
@@ -965,7 +965,7 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
 
 
 		if (!parms->nodihpot)													// new dihedral energy
-			for (m=0;m<nmul;m++) deltaE += EnergyDihedrals(p,pot,iw-m+1,ip,1);
+			for (m=0;m<nmul;++m) deltaE += EnergyDihedrals(p,pot,iw-m+1,ip,1);
 		if (!parms->nohfields)
 		{
 			for(i=0;i<(p+ip)->nback;++i)
@@ -981,11 +981,11 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
 
 		deltaE = -GetEnergyMonomerRange(p,iw,(p+ip)->nback-1,ip);					// calculate old energy
 		if (!parms->nodihpot)
-			for (m=0;m<nmul;m++)deltaE -= (((p+ip)->back)+iw+m)->e_dih;				// old dihedral energy
+			for (m=0;m<nmul;++m)deltaE -= (((p+ip)->back)+iw+m)->e_dih;				// old dihedral energy
 		if (!parms->nohfields)
 			deltaE -= GetHFields(p,ip);												// old H fields energy
 
-		for (m=0;m<nmul;m++)														// apply nmul pivot moves
+		for (m=0;m<nmul;++m)														// apply nmul pivot moves
 			if ( (((p+ip)->back)+iw+m)->move == 1 )								// check if it you can move it
 			{
 				if (parms->randdw==1) dw = parms->dw_mpivot * (0.5 - frand());					// dihedral to pivot
@@ -999,7 +999,7 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
 		deltaE += EnergyMonomerRange(p,pot,iw,(p+ip)->nback-1,ip,parms->npol,0,1,parms->nosidechains,parms->disentangle,parms->hb);   
 	//	deltaE += EnergyMonomerRange(p,pot,iw,p->nback-1,ip,parms->npol,parms->shell,1,parms->nosidechains,parms->disentangle,parms->hb);			// new energy of iw with the others
 		if (!parms->nodihpot)														// new dihedral energy
-			for (m=0;m<nmul;m++) deltaE += EnergyDihedrals(p,pot,iw+m,ip,1);
+			for (m=0;m<nmul;++m) deltaE += EnergyDihedrals(p,pot,iw+m,ip,1);
 		if (!parms->nohfields)
 		{
 			for(i=0;i<(p+ip)->nback;++i)
@@ -1103,7 +1103,7 @@ void UpdateMonomer(struct s_polymer *from, struct s_polymer *to, int w, int n, i
 	{
 		l[ntm] = ((((from+n)->back)+w)->contacts)[i];				// which backbone is close to in the from structure
 		lp[ntm] = ((((from+n)->back)+w)->contacts_p)[i];			// which chain
-		ntm++;
+		++ntm;
 		if (ntm>NCONTMAX2) Error("NCONTMAX2 too small in UpdateMonomerRange");
 	}
 
@@ -1111,7 +1111,7 @@ void UpdateMonomer(struct s_polymer *from, struct s_polymer *to, int w, int n, i
 	{
 		l[ntm]=((((to+n)->back)+w)->contacts)[i];
 		lp[ntm] = ((((to+n)->back)+w)->contacts_p)[i];
-		ntm++;
+		++ntm;
 		if (ntm>NCONTMAX2) Error("NCONTMAX2 too small in UpdateMonomerRange");
 
 	}
@@ -1158,7 +1158,7 @@ void UpdateMonomerRange(struct s_polymer *from, struct s_polymer *to, int wfrom,
 	ntm=0;
 	int error=1;
 	//#pragma omp parallel for private(i,chk,k) shared(error) reduction(+ : ntm) 
-	for (w=wfrom;w<=wto;w++)											// w ranges over all changed residues
+	for (w=wfrom;w<=wto;++w)											// w ranges over all changed residues
 		for (i=0;i< (((from+p)->back)+w)->ncontacts;++i)			// i ranges over the contacts of w
 		{
 			chk=0;														// count contacts only once
@@ -1169,13 +1169,13 @@ void UpdateMonomerRange(struct s_polymer *from, struct s_polymer *to, int wfrom,
 
 				l[ntm] = (((from+p)->back)+w)->contacts[i];				// which backbone is close to in the from structure
 				lp[ntm] = (((from+p)->back)+w)->contacts_p[i];			// which chain
-				ntm++;
+				++ntm;
 				if (ntm>NCONTMAX2) error=0; 
 			}
 		}
 	if (error==0) Error("NCONTMAX2 too small in UpdateMonomerRange");
 	
-	for (w=wfrom;w<=wto;w++)											// w ranges over all changed residues
+	for (w=wfrom;w<=wto;++w)											// w ranges over all changed residues
 		for (i=0;i< (((to+p)->back)+w)->ncontacts;++i)
 		{
 			chk=0;
@@ -1187,7 +1187,7 @@ void UpdateMonomerRange(struct s_polymer *from, struct s_polymer *to, int wfrom,
 				
 				l[ntm] = ((((to+p)->back)+w)->contacts)[i];				// same in the to structure
 				lp[ntm] = ((((to+p)->back)+w)->contacts_p)[i];
-				ntm++;
+				++ntm;
 				if (ntm>NCONTMAX2) Error("NCONTMAX2 too small in UpdateMonomerRange");
 			}
 		}
@@ -1196,7 +1196,7 @@ void UpdateMonomerRange(struct s_polymer *from, struct s_polymer *to, int wfrom,
 	
 	// Update angle/dihedral energies from w-1 to w+2
 	//so slow #pragma omp parallel for
-	for (w=wfrom;w<=wto;w++)
+	for (w=wfrom;w<=wto;++w)
 	{
 		(((to+p)->back)+w)->e_ang = (((from+p)->back)+w)->e_ang;
 		if (w>0) (((to+p)->back)+w-1)->e_ang = (((from+p)->back)+w-1)->e_ang;
@@ -1213,7 +1213,7 @@ void UpdateMonomerRange(struct s_polymer *from, struct s_polymer *to, int wfrom,
 	}
 	
 	// Update hfields energies for all the sequence
-	for (w=0;w<=(from+p)->nback;w++)
+	for (w=0;w<=(from+p)->nback;++w)
 	{
 		(((to+p)->back)+w)->e_hfs = (((from+p)->back)+w)->e_hfs;
 	}
@@ -1238,7 +1238,7 @@ void UpdateMonomerRange(struct s_polymer *from, struct s_polymer *to, int wfrom,
 
 
 //	 Finally, copy w itself
-	for (w=wfrom;w<=wto;w++)											// w ranges over all changed residues
+	for (w=wfrom;w<=wto;++w)											// w ranges over all changed residues
 		CopyResiduePositions( ((from+p)->back)+w, ((to+p)->back)+w) ;
 
 }
@@ -1323,7 +1323,7 @@ void CompareStructures(struct s_polymer *a, struct s_polymer *b, int nc, int nat
 	int ic,i,j,irot;
 
 
-	for (ic=0;ic<nc;ic++)
+	for (ic=0;ic<nc;++ic)
 		for (i=0;i<(a+ic)->nback;++i)
 		{
 			irot = (((a+ic)->back)+i)->irot;
@@ -1371,7 +1371,7 @@ void CompareStructures(struct s_polymer *a, struct s_polymer *b, int nc, int nat
 
 		}
 
-	for (ic=0;ic<nc;ic++)
+	for (ic=0;ic<nc;++ic)
 		for (i=0;i<natoms;++i)
 				{
 				//	if ( ((a+ic)->vback[i]) != ((b+ic)->vback[i]) ) fprintf(stderr,"*** ia=%d different address\n",i);
@@ -1416,7 +1416,7 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 
             deltaE = -GetEnergyMonomerRange(p,iw-nmul-1,iw,ip);                                 // calculate old energy
             if (!parms->nodihpot)
-				for (m=0;m<nmul+3;m++) deltaE -= (((p+ip)->back)+iw-m+1)->e_dih;  // old dihedral energy in [iw-nmul-1,iw+1]
+				for (m=0;m<nmul+3;++m) deltaE -= (((p+ip)->back)+iw-m+1)->e_dih;  // old dihedral energy in [iw-nmul-1,iw+1]
             if (!parms->noangpot)
             {
 				deltaE -= (((p+ip)->back)+iw-nmul-1)->e_ang ;                                 // old angular energy
@@ -1426,7 +1426,7 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 				deltaE -= GetHFields(p,ip);													  // old H fields energy
 		  
 		  
-            for (m=0;m<nmul;m++)                                                                            // apply nmul pivot moves
+            for (m=0;m<nmul;++m)                                                                            // apply nmul pivot moves
                   if ( (((p+ip)->back)+iw-m)->move == 1 )                                             // check if it you can move it
                   {
                         if (parms->randdw==1) dw = parms->dw_lpivot * (0.5 - frand());                            // dihedral to pivot
@@ -1444,7 +1444,7 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 				deltaE += EnergyMonomerRange(p,pot,iw-nmul-1,iw,ip,parms->npol,parms->shell,1,
                                                                         parms->nosidechains,parms->disentangle,parms->hb);                      // new energy of iw with the others
 				if (!parms->nodihpot)                                                                                                         // new dihedral energy
-                        for (m=0;m<nmul+3;m++) deltaE += EnergyDihedrals(p,pot,iw-m+1,ip,1);
+                        for (m=0;m<nmul+3;++m) deltaE += EnergyDihedrals(p,pot,iw-m+1,ip,1);
 				if (!parms->noangpot)                                                                                                         // new angle energy
 				{
                         deltaE += EnergyAngles(p,pot,iw-nmul-1,ip,1);
@@ -1466,7 +1466,7 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 
             deltaE = -GetEnergyMonomerRange(p,iw,iw+nmul+1,ip);                                // calculate old energy
             if (!parms->nodihpot)
-                  for (m=0;m<nmul+3;m++) deltaE -= (((p+ip)->back)+iw+m)->e_dih;               // old dihedral energy
+                  for (m=0;m<nmul+3;++m) deltaE -= (((p+ip)->back)+iw+m)->e_dih;               // old dihedral energy
             if (!parms->noangpot)
             {
 				deltaE -= (((p+ip)->back)+iw+nmul+1)->e_ang ;                                  // old angular energy
@@ -1475,7 +1475,7 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 		    if (!parms->nohfields)
 				deltaE -= GetHFields(p,ip);													  // old H fields energy
 
-            for (m=0;m<nmul;m++)                                                               // apply nmul pivot moves
+            for (m=0;m<nmul;++m)                                                               // apply nmul pivot moves
 				if ( (((p+ip)->back)+iw-1+m)->move == 1 )                                      // check if it you can move it
 				{
 					if (parms->randdw==1) dw = parms->dw_lpivot * (0.5 - frand());                      // dihedral to pivot
@@ -1493,7 +1493,7 @@ int MoveLoosePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_potenti
 				deltaE += EnergyMonomerRange(p,pot,iw,iw+nmul+1,ip,parms->npol,parms->shell,1,
                                                                                     parms->nosidechains,parms->disentangle,parms->hb);                // new energy of iw with the others
 				if (!parms->nodihpot)                                                                                                               // new dihedral energy
-					for (m=0;m<nmul+3;m++) deltaE += EnergyDihedrals(p,pot,iw+m,ip,1);
+					for (m=0;m<nmul+3;++m) deltaE += EnergyDihedrals(p,pot,iw+m,ip,1);
 				if (!parms->noangpot)
 				{
 					deltaE += EnergyAngles(p,pot,iw+nmul+1,ip,1);                                                                     // new angular energy
@@ -1811,16 +1811,16 @@ int MoveClusterCoM(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms
       int avector[NCHAINMAX];
       int npol_cluster[NCHAINMAX];
 
-      for(ic=0;ic<NCHAINMAX;ic++)
+      for(ic=0;ic<NCHAINMAX;++ic)
       {
-            for(jc=0;jc<NCHAINMAX;jc++)
+            for(jc=0;jc<NCHAINMAX;++jc)
 	    {
             	adjacency[ic][jc]=0;
                 cluster[ic][jc]=-1;
             }
       }
 
-      for(ic=0;ic<parms->npol;ic++)
+      for(ic=0;ic<parms->npol;++ic)
       {
            for (i=0;i<(p+ic)->nback;++i)
 	   {
@@ -1838,7 +1838,7 @@ int MoveClusterCoM(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms
             
 
 		ctrl=99;
-            for(ic=0;ic<parms->npol;ic++)
+            for(ic=0;ic<parms->npol;++ic)
                   avector[ic]=adjacency[cont][ic];
             
 	    ind_cluster=0;
@@ -1850,18 +1850,18 @@ int MoveClusterCoM(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms
 
                   old_ctrl=ctrl;
                   ctrl=0;
-                  for(ic=cont;ic<parms->npol;ic++)
+                  for(ic=cont;ic<parms->npol;++ic)
 		  {
 
                         sum=0;
-                        for(jc=0;jc<parms->npol;jc++)
+                        for(jc=0;jc<parms->npol;++jc)
                               sum += avector[jc]*adjacency[ic][jc];
                         if(sum!=0)
 			{
                               cluster[ncluster][ind_cluster] = ic;
                               ind_cluster++;
                               ++ctrl;
-                              for(jc=0;jc<parms->npol;jc++)
+                              for(jc=0;jc<parms->npol;++jc)
 			      {
                                     if(avector[jc]+adjacency[ic][jc]>=1)
 				    	avector[jc]=1;
@@ -1874,12 +1874,12 @@ int MoveClusterCoM(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms
 
             npol_cluster[ncluster]=ind_cluster;
             ncluster++;
-            cont++;
+            ++cont;
 
             for(i=cont;i<parms->npol;++i)
 	    {
                   if(adjacency[i][i] == 0)
-		  	cont++;
+		  	++cont;
                   else 
 		  {
                         cont=i;
@@ -1986,16 +1986,16 @@ int MoveClusterRot(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms
 
 
 
-      for(ic=0;ic<NCHAINMAX;ic++)
+      for(ic=0;ic<NCHAINMAX;++ic)
       {
-            for(jc=0;jc<NCHAINMAX;jc++)
+            for(jc=0;jc<NCHAINMAX;++jc)
 	    {
                   adjacency[ic][jc]=0;
                   cluster[ic][jc]=-1;
             }
       }
 
-      for(ic=0;ic<parms->npol;ic++)
+      for(ic=0;ic<parms->npol;++ic)
       {
             for (i=0;i<(p+ic)->nback;++i)
 	    {
@@ -2011,7 +2011,7 @@ int MoveClusterRot(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms
       while(1)
       {
             ctrl=99;
-            for(ic=0;ic<NCHAINMAX;ic++)
+            for(ic=0;ic<NCHAINMAX;++ic)
 	    {
                   avector[ic]=adjacency[cont][ic];
             }
@@ -2026,11 +2026,11 @@ int MoveClusterRot(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms
 	
                   old_ctrl=ctrl;
                   ctrl=0;
-                  for(ic=cont;ic<parms->npol;ic++)
+                  for(ic=cont;ic<parms->npol;++ic)
 		  {
 
                         sum=0;
-                        for(jc=0;jc<parms->npol;jc++)
+                        for(jc=0;jc<parms->npol;++jc)
                         	sum += avector[jc]*adjacency[ic][jc];
                         if(sum!=0)
 			{
@@ -2039,7 +2039,7 @@ int MoveClusterRot(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms
                               cluster[ncluster][ind_cluster] = ic;
                               ind_cluster++;
                               ++ctrl;
-                              for(jc=0;jc<parms->npol;jc++)
+                              for(jc=0;jc<parms->npol;++jc)
 			      {
                                     if(avector[jc]+adjacency[ic][jc]>=1) avector[jc]=1;
                                     adjacency[ic][jc]=0;
@@ -2050,11 +2050,11 @@ int MoveClusterRot(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms
 
             npol_cluster[ncluster]=ind_cluster;
             ncluster++;
-            cont++;
+            ++cont;
             for(i=cont;i<parms->npol;++i)
 	    {
                   if(adjacency[i][i] == 0)
-		  	cont++;
+		  	++cont;
                   else 
 		  {
                         cont=i;

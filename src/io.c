@@ -77,7 +77,7 @@ void ReadPolymer(char *fname, struct s_polymer *p, FILE *flog, int npol, int deb
 
 	*iamax = -1;
 	*itypemax = -1;
-	for (ch=0;ch<npol;ch++) (p+ch)->nback = 0;
+	for (ch=0;ch<npol;++ch) (p+ch)->nback = 0;
 
 	while(fgets(aux,500,fp)!=NULL)
     	{
@@ -163,15 +163,15 @@ void ReadPolymer(char *fname, struct s_polymer *p, FILE *flog, int npol, int deb
 	if (ichmax+1 != npol) Error("Number of chains contained in polymer file is different from that indicated in parameter file");
 
 	// assign addresses of sidechain position to lookback table
-	for (ch=0;ch<=ichmax;ch++)
-		for (iab=0;iab<(p+ch)->nback;iab++)
-			for (iat=0;iat<(((p+ch)->back)+iab)->nside;iat++)
+	for (ch=0;ch<=ichmax;++ch)
+		for (iab=0;iab<(p+ch)->nback;++iab)
+			for (iat=0;iat<(((p+ch)->back)+iab)->nside;++iat)
 				((p+ch)->vback)[ (((((p+ch)->back)+iab)->side)+iat)->ia ] = &((((((p+ch)->back)+iab)->side)+iat)->pos);
 
 	(*iamax) ++;		// number of atoms and of atomtypes
 	(*itypemax)++;
 
-	for (ch=0;ch<ichmax;ch++)
+	for (ch=0;ch<ichmax;++ch)
 
 	if (p->nback==0) Error("No backbone atoms read");
 	fprintf(flog,"Read %d backbone atoms in %s\n",nat_back,fname);
@@ -222,11 +222,11 @@ void SetLookbackTables(struct s_polymer *p, int nc)
 	int iab,iat;
 
 	// assign addresses of backbone position
-	for (iab=0;iab<(p+nc)->nback;iab++)
+	for (iab=0;iab<(p+nc)->nback;++iab)
 	{
 		// given the atom, find the pointer to the position vector
 		((p+nc)->vback)[ (((p+nc)->back)+iab)->ia ] = &(((((p+nc)->back)+iab)->pos));
-		for (iat=0;iat<(((p+nc)->back)+iab)->nside;iat++)
+		for (iat=0;iat<(((p+nc)->back)+iab)->nside;++iat)
 			((p+nc)->vback)[ (((((p+nc)->back)+iab)->side)+iat)->ia ] = &((((((p+nc)->back)+iab)->side)+iat)->pos);
 	}
 
@@ -283,7 +283,7 @@ void PrintPolymer(char *fname, struct s_polymer *p, int nchains)
 	fprintf(fout,"[ backbone ]\n");
 	fprintf(fout,"back\tia\ttype\titype\taa\tiaa\tch\tx\t\ty\t\tz\t\ttomove\n");
 	
-	for (ic=0;ic<nchains;ic++)
+	for (ic=0;ic<nchains;++ic)
 		for (i=0;i<(p+ic)->nback;++i)
 		{
 			fprintf(fout, "%d\t %d\t%s\t%d\t%s\t%d\t%d\t%lf\t%lf\t%lf\t%d\n",i,(((p+ic)->back)+i)->ia,(((p+ic)->back)+i)->type,(((p+ic)->back)+i)->itype,(((p+ic)->back)+i)->aa,
@@ -302,7 +302,7 @@ void PrintPolymer(char *fname, struct s_polymer *p, int nchains)
 
 	fprintf(fout,"\n[ rotamers ]\n");
 	fprintf(fout,"back ch rot at\t b1  b2   b3\tia type itype\tang\t    dih\t      r\n");
-	for (ic=0;ic<nchains;ic++)
+	for (ic=0;ic<nchains;++ic)
 		for (i=0;i<(p+ic)->nback;++i)
 			for (j=0;j<(((p+ic)->back)+i)->nside;++j)
 				for (k=0;k<(((p+ic)->back)+i)->nrot;++k)
@@ -314,7 +314,7 @@ void PrintPolymer(char *fname, struct s_polymer *p, int nchains)
 
 	fprintf(fout,"\n[ sidechains ]\n");
 	fprintf(fout,"back\tch\tirot\n");
-	for (ic=0;ic<nchains;ic++)
+	for (ic=0;ic<nchains;++ic)
 		for (i=0;i<(p+ic)->nback;++i)
 			if ((((p+ic)->back)+i)->nrot > 0)
 				fprintf(fout,"%d\t%d\t%d\n",i,ic,(((p+ic)->back)+i)->irot);
@@ -333,7 +333,7 @@ void PrintPDBStream(struct s_polymer *p, int npol, FILE *fp)
 
 	fprintf(fp,"TITLE %s\n",p->title);
 
-	for (ch=0;ch<npol;ch++)
+	for (ch=0;ch<npol;++ch)
 	{
 		for (i=0;i<(p+ch)->nback;++i)
 	      {

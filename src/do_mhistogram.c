@@ -62,11 +62,11 @@ double *MHistogram(double **h, double *t, int ntemp, int nbin, double emin, doub
     if (debug>1) fprintf(stderr," ntemp =\t%d\n nbin =\t%d\n emin =\t%lf\n ebin =\t%lf kb=%lf\n",ntemp,nbin,emin,ebin,kb);
     if (debug>1) fprintf(stderr," EPSILON=%e MHE_RESIDUAL=%e MHE_RESIDUAL2=%e NITERHIS=%d\n",EPSILON,MHE_RESIDUAL,MHE_RESIDUAL2,NITERHIS);
     if (debug>1) fprintf(stderr," NTEMPMAX=%d NEBINMAX=%d\n",NTEMPMAX,NEBINMAX);
-    if (debug>1) { fh = fopen("histocheck.dat","w"); for (ie=0;ie<nbin;ie++) { fprintf(fh,"%d\t",ie); for (i=0;i<ntemp;++i) fprintf(fh,"%lf ",h[i][ie]);
+    if (debug>1) { fh = fopen("histocheck.dat","w"); for (ie=0;ie<nbin;++ie) { fprintf(fh,"%d\t",ie); for (i=0;i<ntemp;++i) fprintf(fh,"%lf ",h[i][ie]);
     				fprintf(fh,"\n"); } fclose(fh); }
 	if (debug>1) { for (j=0;j<ntemp;++j) fprintf(stderr," T[%d] = %lf  ",j,t[j]); fprintf(stderr,"\n"); }
 
-	for (ie=0;ie<nbin;ie++) binok[ie] = 0;			// which bin to use (set by DensityofStates
+	for (ie=0;ie<nbin;++ie) binok[ie] = 0;			// which bin to use (set by DensityofStates
 
 	// Check if  there are empty histograms
 	for (i=0;i<ntemp;++i)
@@ -86,7 +86,7 @@ double *MHistogram(double **h, double *t, int ntemp, int nbin, double emin, doub
 		}
 
 		// check histograms
-		for (ie=0;ie<nbin;ie++)  z += h[i][ie];
+		for (ie=0;ie<nbin;++ie)  z += h[i][ie];
 		if (z<EPSILON)
 		{
 			fprintf(stderr,"Histogram %d (T=%lf) is empty\n",i,t[i]);
@@ -123,7 +123,7 @@ double *MHistogram(double **h, double *t, int ntemp, int nbin, double emin, doub
 
 			fmax = -9E19;
 			chk = 0;
-			for (ie=0;ie<nbin;ie++)								// find maximum exponential to avoid overflows
+			for (ie=0;ie<nbin;++ie)								// find maximum exponential to avoid overflows
 			{
 				e = emin + (double) ebin * ie;
 				if ( (-e/(kb*t[i]) + lg[ie] > fmax) && binok[ie] == 1 ) {fmax = -e/(kb*t[i]) + lg[ie]; chk = 1;}
@@ -132,7 +132,7 @@ double *MHistogram(double **h, double *t, int ntemp, int nbin, double emin, doub
 			if (chk == 0) FatalError("Cannot find fmax in MHistogram");
 
 			z = 0;
-			for (ie=0;ie<nbin;ie++)								// sum partition function
+			for (ie=0;ie<nbin;++ie)								// sum partition function
 			{
 				e = emin + (double) ebin * ie;
 				if ( binok[ie] == 1 )
@@ -229,9 +229,9 @@ void DensityOfStates(double **h, double *t, double *f, double emin, double ebin,
 	if (debug>2) fprintf(stderr," Density of states\n");
 
 	// set binok
-	for (ie=0;ie<nbin;ie++) binok[ie] = 0;
+	for (ie=0;ie<nbin;++ie) binok[ie] = 0;
 	for (i=0;i<ntemp;++i)
-		for (ie=0;ie<nbin;ie++)
+		for (ie=0;ie<nbin;++ie)
 			if (h[i][ie]>0.) binok[ie] = 1;
 
 
@@ -240,13 +240,13 @@ void DensityOfStates(double **h, double *t, double *f, double emin, double ebin,
 		if (useit[i]==1)
 		{
 			n[i] = 0;
-			for (ie=0;ie<nbin;ie++)
+			for (ie=0;ie<nbin;++ie)
 				if (binok[ie] == 1) n[i] += h[i][ie];
 		}
 
 	// calculate density of states
 	chk=0;
-	for (ie=0;ie<nbin;ie++)					// each energy bin is calculated separately
+	for (ie=0;ie<nbin;++ie)					// each energy bin is calculated separately
 		if (binok[ie]==1)
 		{
 			num=0.;
@@ -284,7 +284,7 @@ void DensityOfStates(double **h, double *t, double *f, double emin, double ebin,
 	{
 		for (i=0;i<ntemp;++i)
 			if (binok[ie]==1)
-				for (ie=0;ie<nbin;ie++) fprintf(stderr,"it=%d\tie=%d\th=%lf\n",i,ie,h[i][ie]);
+				for (ie=0;ie<nbin;++ie) fprintf(stderr,"it=%d\tie=%d\th=%lf\n",i,ie,h[i][ie]);
 		fprintf(stderr,"All histograms empty in DensityofStates\n\n");
 		exit(1);
 	}
@@ -312,7 +312,7 @@ void CalculateThermodynamics(double *lg, double emin, double ebin, int nbin,
 
 	// <E> = \sum_E E g(E) exp[-(E-Emin)/T] / \sum_E g(E) exp[-(E-Emin)/T]
 
-	for (it=0;it<nt;it++)						// loop over temperatures
+	for (it=0;it<nt;++it)						// loop over temperatures
 	{
 		em = 0;
 		em2 = 0;
@@ -325,7 +325,7 @@ void CalculateThermodynamics(double *lg, double emin, double ebin, int nbin,
 		else
 			kt = kb*temp[it];						// ...or take from temp
 
-		for (ie=0;ie<nbin;ie++)						// find maxium exponent to prevent overflows
+		for (ie=0;ie<nbin;++ie)						// find maxium exponent to prevent overflows
 			if ( binok[ie] == 1)
 			{
 				e = emin + (double) ebin * ie;		// energy from energy bin
@@ -336,7 +336,7 @@ void CalculateThermodynamics(double *lg, double emin, double ebin, int nbin,
 			exit(1);
 		}
 
-		for (ie=0;ie<nbin;ie++)					// loop over energies
+		for (ie=0;ie<nbin;++ie)					// loop over energies
 		{
 			if (binok[ie] == 1)
 			{
@@ -361,7 +361,7 @@ void CalculateThermodynamics(double *lg, double emin, double ebin, int nbin,
 		}
 
 		if (prob != NULL)
-			for (ie=0;ie<nbin;ie++) prob[it][ie] /= z;
+			for (ie=0;ie<nbin;++ie) prob[it][ie] /= z;
 
 	}
 }
@@ -748,14 +748,14 @@ int GMHequation (const gsl_vector *ff, void *params, gsl_vector *eqq)
 	  {
 		  // normalization constant
 		  n = 0;
-		  for (ie=0;ie<nbin;ie++)
+		  for (ie=0;ie<nbin;++ie)
 			  if (binok[ie] == 1 ) n += h[i][ie];
 
 		  // Find maximum exponent to prevent overflows
 		   fmax = -9E19;
-		   for (ie=0;ie<nbin;ie++)
+		   for (ie=0;ie<nbin;++ie)
 			   if (binok[ie] == 1)
-				for (it=0;it<ntemp;it++)
+				for (it=0;it<ntemp;++it)
 					if (useit[it]==1)
 						{
 							e = emin + (double) ebin * ie;		// energy from energy bin
@@ -765,14 +765,14 @@ int GMHequation (const gsl_vector *ff, void *params, gsl_vector *eqq)
 		   if (fmax <-8E19) fmax = 0;
 
 		  eq[i] = 0;
-		  for (ie=0;ie<nbin;ie++)							// sum over energies
+		  for (ie=0;ie<nbin;++ie)							// sum over energies
 			if (h[i][ie]>0 && binok[ie] == 1)									// Ei must belong to the support of the histogram
 			{
 				e = emin + (double) ebin * ie;		// energy from energy bin
 				num = 0;
 				den = 0;
 
-				for (it=0;it<ntemp;it++)					// sum over temperatures in the denominator
+				for (it=0;it<ntemp;++it)					// sum over temperatures in the denominator
 					if (useit[it]==1)
 					{
 						num += h[it][ie];						// sum numerator
@@ -824,7 +824,7 @@ int GMHequation_df (const gsl_vector *ff, void *params, gsl_matrix *J)
   useit = ((struct rparams *) params)->useit;
   binok = ((struct rparams *) params)->binok;
 
-  for (ie=0;ie<nbin;ie++) { s[ie] = 0; den2[ie] = 0; }
+  for (ie=0;ie<nbin;++ie) { s[ie] = 0; den2[ie] = 0; }
 
   for (i=0;i<ntemp;++i)
 	  if (useit[i])
@@ -834,7 +834,7 @@ int GMHequation_df (const gsl_vector *ff, void *params, gsl_matrix *J)
 
 		  // normalization constants
 		  n[i] = 0;
-		  for (ie=0;ie<nbin;ie++)
+		  for (ie=0;ie<nbin;++ie)
 			  if ( binok[ie] == 1 )
 			  {
 				  n[i] += h[i][ie];
@@ -843,7 +843,7 @@ int GMHequation_df (const gsl_vector *ff, void *params, gsl_matrix *J)
 	  }
 
   // denominator square
-  for (ie=0;ie<nbin;ie++)
+  for (ie=0;ie<nbin;++ie)
 	  if ( binok[ie] == 1 )
 	  {
 		  fmax[ie] = -9E19;
@@ -869,13 +869,13 @@ int GMHequation_df (const gsl_vector *ff, void *params, gsl_matrix *J)
   GMHequation (ff,params,eqq);
 
 
-  for (iT=0;iT<ntemp;iT++)
+  for (iT=0;iT<ntemp;++iT)
 	  if (useit[iT])
 		  for (i=0;i<ntemp;++i)
 			  if (useit[i])
 			  {
 				  fmax2 = -9E19;							// maximum exponent to prevent overflows
-				  for (ie=0;ie<nbin;ie++)
+				  for (ie=0;ie<nbin;++ie)
 				  	if (h[iT][ie]>0 && h[i][ie]>0 && binok[ie] == 1)
 				  	{
 						e = emin + (double) ebin * ie;		// energy from energy bin
@@ -887,7 +887,7 @@ int GMHequation_df (const gsl_vector *ff, void *params, gsl_matrix *J)
 				  else deriv = 0;
 
 				  sum = 0;									// actual sum is sum * exp[fmax2]
-				  for (ie=0;ie<nbin;ie++)
+				  for (ie=0;ie<nbin;++ie)
 					  if (h[iT][ie]>0 && h[i][ie]>0 && binok[ie] == 1 )
 					  {
 						e = emin + (double) ebin * ie;		// energy from energy bin

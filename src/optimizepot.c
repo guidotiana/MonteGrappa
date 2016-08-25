@@ -280,7 +280,7 @@ void OP_GetRestrain(int it, struct s_polymer *p, int ipol, struct s_optimizepot_
 			i4 = opi->i4[i];		
 			for (k=i1;k<=i2;++k)
 				for (l=i3;l<=i4;++l)
-					for (m=0;m<(((p+ipol)->back)+k)->ncontacts;m++)
+					for (m=0;m<(((p+ipol)->back)+k)->ncontacts;++m)
 						if ( *(((((p+ipol)->back)+k)->contacts)+m) == l ) xraw = 1.;
 		}
 		
@@ -336,12 +336,12 @@ void OP_AddEnergy(struct s_polymer *p, int a1, int a2, double mul)
 		if (!p->op->it1) Error("Cannot reallocate it1");
 		p->op->it2 = (int *) realloc(p->op->it2,( OP_NCONTMAX * p->op->nallocont * sizeof(int)));
 		if (!p->op->it2) Error("Cannot reallocate it2");
-		for (iframe=0;iframe<p->op->nframesmax;iframe++)
+		for (iframe=0;iframe<p->op->nframesmax;++iframe)
 		{
 			p->op->mul[iframe] = (double *) realloc( (p->op->mul[iframe]) , ( OP_NCONTMAX * p->op->nallocont * sizeof(double) ) );
 			if (!p->op->mul[iframe]) Error("Cannot reallocate mul");
 		}
-		for (iframe=0;iframe<p->op->nframesmax;iframe++)
+		for (iframe=0;iframe<p->op->nframesmax;++iframe)
 			for (i=p->op->ncontacts;i<OP_NCONTMAX * p->op->nallocont;++i) p->op->mul[iframe][i] = 0;
 	}
 	#else
@@ -385,7 +385,7 @@ void OP_SamplePotential(struct s_polymer *p, struct s_mc_parms *parms, int ntype
 	}
 	
 	// minimize
-	for (istep=0;istep<parms->op_itermax;istep++)
+	for (istep=0;istep<parms->op_itermax;++istep)
 	{
 		iw = irand(p->op->ncontacts);
 		deltae = (frand()-0.5) * parms->op_step;
@@ -409,7 +409,7 @@ void OP_SamplePotential(struct s_polymer *p, struct s_mc_parms *parms, int ntype
 		// reject
 		else
 		{	
-			for (ifr=0;ifr<p->op->nframes;ifr++)			// return to previous value
+			for (ifr=0;ifr<p->op->nframes;++ifr)			// return to previous value
 				p->op->enew[ifr] -= deltae * p->op->mul[ifr][iw];	
 		}
 
@@ -451,9 +451,9 @@ void OP_SamplePotential(struct s_polymer *p, struct s_mc_parms *parms, int ntype
 	{
 		p->op->it1[i] = 0;
 		p->op->it2[i] = 0;
-		for (ifr=0;ifr<p->op->nframes;ifr++)  p->op->mul[ifr][i] = 0;
+		for (ifr=0;ifr<p->op->nframes;++ifr)  p->op->mul[ifr][i] = 0;
 	}
-	for (ifr=0;ifr<p->op->nframes;ifr++)
+	for (ifr=0;ifr<p->op->nframes;++ifr)
 	{
 		p->op->eold[ifr] = 0;
 		p->op->efix[ifr] = 0;
@@ -471,9 +471,9 @@ void OP_SamplePotential(struct s_polymer *p, struct s_mc_parms *parms, int ntype
 	{
 		p->op->it1[i] = 0;
 		p->op->it2[i] = 0;
-		for (ifr=0;ifr<p->op->nframes;ifr++)  p->op->mul[ifr][i] = 0;
+		for (ifr=0;ifr<p->op->nframes;++ifr)  p->op->mul[ifr][i] = 0;
 	}
-	for (ifr=0;ifr<p->op->nframes;ifr++)
+	for (ifr=0;ifr<p->op->nframes;++ifr)
 	{
 		p->op->eold[ifr] = 0;
 		p->op->efix[ifr] = 0;
@@ -499,10 +499,10 @@ double OP_function(double **e, struct s_optimizepot *x, struct s_optimizepot_inp
 	double chi2,enew,eold,mul,emax=-9E19,z=0.,boltz;
 	int ifr,icont,it1,it2,ir;
 
-	for (ir=0;ir<in->ndata;ir++) x->rest_av[ir]=0.;
+	for (ir=0;ir<in->ndata;++ir) x->rest_av[ir]=0.;
                              
 	// calculate energies
-	for (ifr=0;ifr<x->nframes;ifr++)
+	for (ifr=0;ifr<x->nframes;++ifr)
 	{
 		x->enew[ifr] = x->efix[ifr];			// one-body energy
 		for (icont=0;icont<x->ncontacts;++icont)	// calculate new two-body energy
@@ -520,21 +520,21 @@ double OP_function(double **e, struct s_optimizepot *x, struct s_optimizepot_inp
 	}
                            
 	// calculate thermal averages
-	for (ifr=0;ifr<x->nframes;ifr++)
+	for (ifr=0;ifr<x->nframes;++ifr)
 	{
 		eold = x->eold[ifr];						// total energy with the original matrix
 		enew = x->enew[ifr];
 		boltz = exp(-enew/parms->op_T + eold/x->t[ifr] - emax);
 
 		// make the average
-		for (ir=0;ir<in->ndata;ir++) 
+		for (ir=0;ir<in->ndata;++ir) 
 			x->rest_av[ir] +=  x->restrain[ifr][ir] * boltz;
                                                                                                                             
 		z += boltz;
 	}
 
 
-	for (ir=0;ir<in->ndata;ir++) x->rest_av[ir] /= z;
+	for (ir=0;ir<in->ndata;++ir) x->rest_av[ir] /= z;
 	
 	chi2 = Chi2(x->rest_av,in->expdata,in->sigma,in->ndata);
 
@@ -565,11 +565,11 @@ double OP_functionDiff(int iw, double deltae, struct s_optimizepot *x, struct s_
 	double chi2,enew,eold,emax=-9E19,z=0.,boltz;
 	int ifr,ir;
 
-	for (ir=0;ir<in->ndata;ir++) x->rest_av[ir]=0.;
+	for (ir=0;ir<in->ndata;++ir) x->rest_av[ir]=0.;
 
 
 	// calculate energies
-	for (ifr=0;ifr<x->nframes;ifr++)
+	for (ifr=0;ifr<x->nframes;++ifr)
 	{
 		// if the iw contact is present in the ifr frame, then its energy is affected
 		if ( x->mul[ifr][iw] > 0 )
@@ -581,19 +581,19 @@ double OP_functionDiff(int iw, double deltae, struct s_optimizepot *x, struct s_
 	}
 
 	// calculate thermal averages
-	for (ifr=0;ifr<x->nframes;ifr++)
+	for (ifr=0;ifr<x->nframes;++ifr)
 	{
 		eold = x->eold[ifr];						// total energy with the original matrix
 		enew = x->enew[ifr];
 		boltz = exp(-enew/parms->op_T + eold/x->t[ifr] - emax);
 
 		// make the average
-		for (ir=0;ir<in->ndata;ir++)
+		for (ir=0;ir<in->ndata;++ir)
 			x->rest_av[ir] += x->restrain[ifr][ir] * boltz;
 		z += boltz;
 	}
 
-	for (ir=0;ir<in->ndata;ir++) x->rest_av[ir] /= z;
+	for (ir=0;ir<in->ndata;++ir) x->rest_av[ir] /= z;
 	
 	chi2 = Chi2(x->rest_av,in->expdata,in->sigma,in->ndata);
 
@@ -601,10 +601,10 @@ double OP_functionDiff(int iw, double deltae, struct s_optimizepot *x, struct s_
 	 FILE *fp;
 	 fp = fopen("op_log","a");
 	 fprintf(fp,"minim:  iw=%d deltae=%lf\n",iw,deltae);
- 	 for (ifr=0;ifr<x->nframes;ifr++)
+ 	 for (ifr=0;ifr<x->nframes;++ifr)
 	 	fprintf(fp,"\teold[%d]=%lf enew[%d]=%lf efix[%d]=%lf mul[%d]=%lf",ifr,x->eold[ifr],ifr,x->enew[ifr],ifr,x->efix[ifr],ifr,x->mul[ifr][iw]);
          fprintf(fp,"\nemax=%lf\n",emax);
-         for (ir=0;ir<in->ndata;ir++)
+         for (ir=0;ir<in->ndata;++ir)
 		fprintf(fp,"\t <x>[%d]=%lf\t",ir,x->rest_av[ir]);
          fprintf(fp,"\n");
          fprintf(fp,"\n");

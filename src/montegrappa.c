@@ -343,7 +343,7 @@ int main(int argc, char *argv[])
 	if(parms->chi2start==0)
 		remove("chi2.dat");
 	#endif
-	for (irun=parms->chi2start;irun<parms->nrun;irun++)
+	for (irun=parms->chi2start;irun<parms->nrun;++irun)
 	{
 		if (irun==0 || parms->always_restart)
 		{

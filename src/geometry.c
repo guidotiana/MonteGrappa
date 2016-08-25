@@ -469,7 +469,7 @@ int AddSidechain(struct s_polymer *p, int istart, int istop, int ch)
 //	int flag;
 	//quite slow for a small system #pragma omp parallel for private(iside,irot,ib1,ib2,ib3,b1,b2,b3,ang,out) shared(flag)
 	for (i=istart;i<=istop;++i)
-		for (iside=0;iside<(((p+ch)->back)+i)->nside;iside++)
+		for (iside=0;iside<(((p+ch)->back)+i)->nside;++iside)
 		{
 			irot = (((p+ch)->back)+i)->irot;								// which is the rotamer to insert
 			ib1 = (((((((p+ch)->back)+i)->side)+iside)->rot)+irot)->b1;		// which are the atoms which define the dihedrals

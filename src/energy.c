@@ -223,10 +223,10 @@ double **ContactMap(struct s_parms *parms, struct s_polymer *p, int nchains, int
 	if (debug>2) fprintf(stderr,"Contact map:\n");
 
 	// loop on backbone atoms
-	for (c1=0;c1<nchains;c1++)
-		for (c2=c1;c2<nchains;c2++)
-			for (ib1=0;ib1<(p+c1)->nback;ib1++)
-				for (ib2=0;ib2<(p+c2)->nback;ib2++)
+	for (c1=0;c1<nchains;++c1)
+		for (c2=c1;c2<nchains;++c2)
+			for (ib1=0;ib1<(p+c1)->nback;++ib1)
+				for (ib2=0;ib2<(p+c2)->nback;++ib2)
 					if (c1!=c2 || ib1<=ib2-parms->imin)
 					{
 						// backbone-backbone interactions
@@ -241,7 +241,7 @@ double **ContactMap(struct s_parms *parms, struct s_polymer *p, int nchains, int
 						}
 
 						// sidechain-backbone interactions
-						for (is1=0;is1<(((p+c1)->back)+ib1)->nside;is1++)
+						for (is1=0;is1<(((p+c1)->back)+ib1)->nside;++is1)
 						{
 							d = Dist( (((((p+c1)->back)+ib1)->side)+is1)->pos, (((p+c2)->back)+ib2)->pos );
 							if ( d < parms->rnat )
@@ -254,7 +254,7 @@ double **ContactMap(struct s_parms *parms, struct s_polymer *p, int nchains, int
 
 							}
 						}
-						for (is2=0;is2<(((p+c2)->back)+ib2)->nside;is2++)
+						for (is2=0;is2<(((p+c2)->back)+ib2)->nside;++is2)
 						{
 							d = Dist( (((((p+c2)->back)+ib2)->side)+is2)->pos, (((p+c1)->back)+ib1)->pos );
 							if ( d < parms->rnat )
@@ -268,8 +268,8 @@ double **ContactMap(struct s_parms *parms, struct s_polymer *p, int nchains, int
 							}
 						}
 						// sidechain-sidechain interactions
-						for (is1=0;is1<(((p+c1)->back)+ib1)->nside;is1++)
-							for (is2=0;is2<(((p+c2)->back)+ib2)->nside;is2++)
+						for (is1=0;is1<(((p+c1)->back)+ib1)->nside;++is1)
+							for (is2=0;is2<(((p+c2)->back)+ib2)->nside;++is2)
 							{
 								d = Dist( (((((p+c1)->back)+ib1)->side)+is1)->pos, (((((p+c2)->back)+ib2)->side)+is2)->pos );
 								if ( d < parms->rnat )
@@ -296,7 +296,7 @@ int SetGoTypes(struct s_polymer *p, int nchains, int nat)
 
 	fprintf(stderr,"Set Go types\n");
 
-	for (ic=0;ic<nchains;ic++)
+	for (ic=0;ic<nchains;++ic)
 		for (i=0;i<(p+ic)->nback;++i)
 		{
 			(((p+ic)->back)+i)->itype = (((p+ic)->back)+i)->ia;
@@ -315,7 +315,7 @@ int SetGoBackTypes(struct s_polymer *p, int nchains, int nat)
 	
 	fprintf(stderr,"Set Go types (backbone excluded)\n");
 	
-	for (ic=0;ic<nchains;ic++)
+	for (ic=0;ic<nchains;++ic)
 	for (i=0;i<(p+ic)->nback;++i)
 	{
 		(((p+ic)->back)+i)->itype = 0;
@@ -346,7 +346,7 @@ int ReadTypes(struct s_polymer *p, int nchains, int nat, char *nfile)
 
 	while(fgets(aux,500,fp)!=NULL)
 	{
-		if ( sscanf(aux,"%d %s %s",&(type[it]),atom[it],aa[it]) == 3) it++;
+		if ( sscanf(aux,"%d %s %s",&(type[it]),atom[it],aa[it]) == 3) ++it;
 		if (it>=NTYPEMAX) Error("NTYPEMAX too small in ReadTypes");
 		if (it>nt) nt=it;
 	}	
@@ -355,7 +355,7 @@ int ReadTypes(struct s_polymer *p, int nchains, int nat, char *nfile)
 	fclose(fp);
 
 	// assign types
-	for (ic=0;ic<nchains;ic++)
+	for (ic=0;ic<nchains;++ic)
 		for (i=0;i<(p+ic)->nback;++i)
 		{
 			// backbone
@@ -403,8 +403,8 @@ void DisulphideBonds(struct s_parms *parms, struct s_polymer *p, double **e, dou
 
 	fprintf(stderr,"Adding disulphide bonds...\n");
 
-	for (ic=0;ic<nchains;ic++)
-		for (jc=0;jc<nchains;jc++)
+	for (ic=0;ic<nchains;++ic)
+		for (jc=0;jc<nchains;++jc)
 			for (i=0;i<(p+ic)->nback;++i)
 				for (j=0;j<(p+jc)->nback;++j)
 					if ( !strcmp( (((p+ic)->back)+i)->aa , "CYS" ) )
@@ -471,9 +471,9 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
 	if (!strcmp(kind,"GO_DIST_CA"))
 	{
         int nrest = 0;
-        for (ic=0;ic<nchains;ic++)
+        for (ic=0;ic<nchains;++ic)
 			for (i=0;i<(p+ic)->nback;++i)
-                for (jc=ic;jc<nchains;jc++) {
+                for (jc=ic;jc<nchains;++jc) {
                     // same chain
                     if (ic == jc) {
                         nCA = 0;
@@ -496,9 +496,9 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
         
 		fprintf(fp,"ndata %d\n",nrest);
         
-        for (ic=0;ic<nchains;ic++)
+        for (ic=0;ic<nchains;++ic)
 			for (i=0;i<(p+ic)->nback;++i)
-                for (jc=ic;jc<nchains;jc++) {
+                for (jc=ic;jc<nchains;++jc) {
                     if (ic == jc) {
                         nCA = 0;
                         for (j=i+1;j<(p+jc)->nback;++j) {
@@ -523,10 +523,10 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
 	{
         int nrest = 0;
         int iaa,jaa,iside,jside;
-        for (ic=0;ic<nchains;ic++)
+        for (ic=0;ic<nchains;++ic)
             for (i=0;i<(p+ic)->nback;++i) {
                 iaa = i/3 + 1;  //define aminoacid id
-                for (jc=ic;jc<nchains;jc++) {
+                for (jc=ic;jc<nchains;++jc) {
                     if (ic == jc) {    // same chain
                         nCA = 0;
                         for (j=i;j<(p+jc)->nback;++j) {
@@ -570,10 +570,10 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
         
         fprintf(fp,"ndata %d\n",nrest);
         
-        for (ic=0;ic<nchains;ic++)
+        for (ic=0;ic<nchains;++ic)
             for (i=0;i<(p+ic)->nback;++i) {
                 iaa = i/3 + 1;  //define aminoacid id
-                for (jc=ic;jc<nchains;jc++) {
+                for (jc=ic;jc<nchains;++jc) {
                     if (ic == jc) {    // same chain
                         nCA = 0;
                         for (j=i;j<(p+jc)->nback;++j) {

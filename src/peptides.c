@@ -43,7 +43,7 @@ void MakePeptide(struct s_polymer *p, struct s_mc_parms *parms, int from, int to
 	int i,j,k,ip,q=0,o=1;
 	double dx,dy,dz;
 
-	for (ip=0;ip<npep;ip++)
+	for (ip=0;ip<npep;++ip)
 	{
 		(p+ip+1)->nback = to - from + 1;
 		sprintf((p+ip+1)->title,"peptide #%d",ip+1);

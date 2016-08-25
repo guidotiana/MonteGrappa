@@ -398,7 +398,7 @@ int CreateBackboneFromPDB(struct atom_s *a, int nchains, int na, struct s_polyme
 		}
 	}
 	
-	for(ic=0;ic<nchains;ic++)
+	for(ic=0;ic<nchains;++ic)
 		(polymer+ic)->nback = ib[ic];
 
 	return i;
@@ -416,7 +416,7 @@ int CreateSidechainFromPDB(struct atom_s *a, int nchains, int na, struct s_polym
 	CreateTopology(a,na,top,parms->tthresh,parms->debug);		// matrix indexed on structure atom_s
 
 	// add sidechains
-	for(ic=0;ic<nchains;ic++)
+	for(ic=0;ic<nchains;++ic)
 	{
 		ib = (polymer+ic)->nback;
 		for(i=0;i<(polymer+ic)->nback;++i)
@@ -567,7 +567,7 @@ void SetRotamersSimilarToPDB(int nc, struct s_polymer *p, struct atom_s *a, int 
 
 	fprintf(stderr,"Set rotamers close to those of PDB\n");
 
-	for(ic=0;ic<nc;ic++)
+	for(ic=0;ic<nc;++ic)
 		for(i=0;i<(p+ic)->nback;++i)
 			if (!strcmp( (((p+ic)->back)+i)->type , "CA" ) && (((p+ic)->back)+i)->nside>0)		// loop on all CA atoms
 			{
@@ -577,7 +577,7 @@ void SetRotamersSimilarToPDB(int nc, struct s_polymer *p, struct atom_s *a, int 
 				for(is=1;is< (((p+ic)->back)+i)->nside; ++is)				// loop on sides of polymer, except CB
 				{
 					found=0;
-					for(ipdb=0;ipdb<napdb;ipdb++)
+					for(ipdb=0;ipdb<napdb;++ipdb)
 					{
 						if ( (a+ipdb)->chain == ic && (a+ipdb)->iaa == iaa && 
 							!strcmp((a+ipdb)->atom,((((((p+ic)->back)+i)->side)+is)->type) ) )
@@ -588,7 +588,7 @@ void SetRotamersSimilarToPDB(int nc, struct s_polymer *p, struct atom_s *a, int 
 				// find the best rotamer
 				rmsd2min=99999.;
 				irotmin=0;
-				for(ir=0;ir< (((p+ic)->back)+i)->nrot;ir++)
+				for(ir=0;ir< (((p+ic)->back)+i)->nrot;++ir)
 				{
 					(((p+ic)->back)+i)->irot = ir;
 

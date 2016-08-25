@@ -597,7 +597,7 @@ void ResetAAContacts(struct s_polymer *p, struct s_potential *u, struct s_mc_par
 	for (ci=0;ci<parms->npol;++ci)
 		for (i=0;i<(p+ci)->nback;++i)
 		{
-			for (cont=0;cont<(((p+ci)->back)+i)->naacontacts;cont++)
+			for (cont=0;cont<(((p+ci)->back)+i)->naacontacts;++cont)
 			{
 				(((p+ci)->back)+i)->aacontacts[cont] = 0;
 				(((p+ci)->back)+i)->aacontacts_p[cont] = 0;
@@ -633,7 +633,7 @@ void ResetAAContacts(struct s_polymer *p, struct s_potential *u, struct s_mc_par
 							
 							refcont = (((p+ci)->back)+i+ncac)->naacontacts;
 							// check if the contact is already in the list
-							for(cont=0;cont<refcont;cont++)
+							for(cont=0;cont<refcont;++cont)
 							{
 								// if the contacts is in the list, change the control variable
 								if ((idb == (((p+ci)->back)+i+ncac)->aacontacts[cont]) &&
@@ -672,7 +672,7 @@ void ResetAAContacts(struct s_polymer *p, struct s_potential *u, struct s_mc_par
 								
 								refcont = (((p+ci)->back)+i+ncac)->naacontacts;
 								// check if the contact is already in the list
-								for(cont=0;cont<refcont;cont++)
+								for(cont=0;cont<refcont;++cont)
 								{
 									// if the contacts is in the list, change the control variable
 									if ((idb == (((p+ci)->back)+i+ncac)->aacontacts[cont]) &&
@@ -706,7 +706,7 @@ void ResetAAContacts(struct s_polymer *p, struct s_potential *u, struct s_mc_par
 									
 									refcont = (((p+ci)->back)+i)->naacontacts;
 									// check if the contact is already in the list
-									for(cont=0;cont<refcont;cont++)
+									for(cont=0;cont<refcont;++cont)
 									{
 										// if the contacts is in the list, change the control variable
 										if ((idb == (((p+ci)->back)+i)->aacontacts[cont]) &&
@@ -742,7 +742,7 @@ void ResetAAContacts(struct s_polymer *p, struct s_potential *u, struct s_mc_par
 								
 								refcont = (((p+ci)->back)+i)->naacontacts;
 								// check if the contact is already in the list
-								for(cont=0;cont<refcont;cont++)
+								for(cont=0;cont<refcont;++cont)
 								{
 									// if the contacts is in the list, change the control variable
 									if ((idb == (((p+ci)->back)+i)->aacontacts[cont]) &&
@@ -949,7 +949,7 @@ void UpdateShell(struct s_polymer *p, struct s_mc_parms *parms)
                 for (i=0;i<(p+ci)->nback;++i)
 		{
 			fprintf(stderr,"ip= %d \t back = %d\t nshell = %d \n",ci,i,(((p+ci)->back)+i)->nshell);
-			for(pizza=0;pizza<(((p+ci)->back)+i)->nshell;pizza++)
+			for(pizza=0;pizza<(((p+ci)->back)+i)->nshell;++pizza)
 				fprintf(stderr,"sh %d chain %d\n",pizza,(((p+ci)->back)+i)->shell_p[pizza]);
 		}
 	*/

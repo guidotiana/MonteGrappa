@@ -733,7 +733,7 @@ int ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_p
 		{	
 			if(iproc==i) fprintf(fexchange,"[EX]\t%llu\t%d\t%d\n",istep,i,i+1); 	
 			//fflush(fexchange);
-		for(ipolymer=0;ipolymer<parms->npol;ipolymer++)
+		for(ipolymer=0;ipolymer<parms->npol;++ipolymer)
 		{
 				
 			nback=(polymer+ipolymer)->nback;

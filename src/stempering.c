@@ -785,11 +785,11 @@ void PrintAverageEnergies(FILE *fout, double **h, double *temp, int ntemp, doubl
 	double em,z,e,s;
 
 	fprintf(fout,"#TEMP\t<E>\tsigma_E\tNormalization\n");
-	for (it=0;it<ntemp;it++)
+	for (it=0;it<ntemp;++it)
 	{
 		em = z = s = 0.;
 
-		for (ie=0;ie<nbin;ie++)
+		for (ie=0;ie<nbin;++ie)
 		{
 			e = (double) ie * ebin + emin;
 			em += e * h[it][ie];
@@ -811,13 +811,13 @@ void PrintHistogram(char *filename, double **h, double *t, int ntemp, int nbin, 
 	fh = fopen(filename,"w");
 	if (!fh) FatalError("Cannot open histogram file");
 	fprintf(fh,"%%E\t\t");
-	for (it=0;it<ntemp;it++) fprintf(fh,"T=%lf\t",t[it]);
+	for (it=0;it<ntemp;++it) fprintf(fh,"T=%lf\t",t[it]);
 	fprintf(fh,"\n");
-	for (ie=0;ie<nbin;ie++)
+	for (ie=0;ie<nbin;++ie)
 	{
 		e = (double) ie * ebin + emin;
 		fprintf(fh,"%.8lf\t",e);
-		for (it=0;it<ntemp;it++) fprintf(fh,"%.6e\t",h[it][ie]);
+		for (it=0;it<ntemp;++it) fprintf(fh,"%.6e\t",h[it][ie]);
 		fprintf(fh,"\n");
 	}
 	fclose(fh);

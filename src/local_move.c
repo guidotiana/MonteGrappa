@@ -673,7 +673,7 @@ int localforward(int ip,int iw,struct s_polymer *p, struct s_polymer *oldp,struc
       {
         fprintf(stdout,"DEBUG   after pivoting polymer coordinates backbone %d\t%lf\t%f\t%f\n",j,(((p+ip)->back)+j)->pos.x,(((p+ip)->back)+j)->pos.y,(((p+ip)->back)+j)->pos.z);
       }
-      m++;
+      ++m;
       //if(m==nang)
       //	break;
       
@@ -767,7 +767,7 @@ int LocalMove(struct s_polymer *p, struct s_polymer *oldp,struct s_polymer *frag
 			if( (((p+ip)->back)+iw+i-nmul+2)->move==1)
 			{
 				ok*=PivotForward((p+ip),iw-nmul+i+1,(fragment+ip)->d_ang[m],nmul-i-2,parms);
-				m++;
+				++m;
 				if(m==nang)
 				break;
                   	}
