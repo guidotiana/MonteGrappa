@@ -861,7 +861,7 @@ void CountContacts(FILE *fp,struct s_polymer *polymer,struct s_mc_parms *parms,u
 			matcont[ipol]=0;
 		tempncontacts=0;
 		fprintf(fp,"> Chain %d\n  %d backbone atoms\n",i,(polymer+i)->nback);
-		for(iback=0;iback<(polymer+i)->nback;++iback)
+		for(iback=0;iback<(polymer+i)->nback;ibac++k)
 		{
 			tempncontacts+=((polymer+i)->back+iback)->ncontacts;
 			for(icont=0;icont<((polymer+i)->back+iback)->ncontacts;++icont)
