@@ -2069,7 +2069,7 @@ int MoveClusterRot(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms
 
       ic = irand(ncluster);
 
-     deltaE=0.;
+      deltaE=0.;
 
 
 

@@ -549,9 +549,7 @@ int main(int argc, char *argv[])
      	
 	if(parms->nmul_local !=0 && parms->movetype[7]!=-1)
 	{
-
-				FreeFragment(fragment,parms);	
-
+				FreeFragment(fragment,parms);
 	}
 
 	if(my_rank==0 && strcmp(parms->op_minim,"none"))	

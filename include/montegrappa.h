@@ -153,7 +153,6 @@ void ReadPolymer(char *fname, struct s_polymer *p, FILE *flog, int npol, int deb
 #ifdef STEMPERING
 void ResetStStuff(struct s_mc_parms *x,char *fname);
 #endif
-int PolymerCounter(char* filename);
 int FindKeyword(char *string, char *keyword);
 void PrintPolymer(char *fname, struct s_polymer *p, int nchains);
 void PrintPDBStream(struct s_polymer *p, int npol, FILE *fp);

@@ -183,40 +183,6 @@ void ReadPolymer(char *fname, struct s_polymer *p, FILE *flog, int npol, int deb
 	return;
 }
 
-/********************************************************************
- Given a polymer filename, returns the number of chains
- ********************************************************************/
-int PolymerCounter(char* filename){
-	int npol = 1, chain, old_chain, dummy_d;
-	char dummy_s[10], aux[500];
-	double dummy_lf;
-	
-	FILE *fp = NULL;
-	
-	fp = fopen(filename,"r");
-	while(fgets(aux,500,fp)!=NULL){
-		if(sscanf( aux, "%d %d %s %d %s %d %d %lf %lf %lf %d", \
-				  &dummy_d,&dummy_d,dummy_s,&dummy_d,dummy_s,&dummy_d,&chain,&dummy_lf,&dummy_lf,&dummy_lf,&dummy_d) == 11 )
-		{
-			if (old_chain == chain)
-			{
-				continue;
-			}
-			else
-			{
-				++npol;
-			}
-			old_chain = chain;
-		}
-	}
-	fclose(fp);
-	
-	
-	return npol;
-}
-
-
-
 void SetLookbackTables(struct s_polymer *p, int nc)
 {
 	int iab,iat;
@@ -1847,11 +1813,9 @@ void ReadHFields(char *fname, struct s_potential *u, struct s_polymer *polymer, 
 	
 	int iaa, ncont, idtype=1; //idtype is equal to 1 because hfields is atomtype-based
 	char aatype[3],aux[300];
-	double alpha, hbar, htild, htot, frustr, ht_hmin, e_emin, Z_h, Z_e, T_t, tot, S_f, occ;
+	double hbar, htild, htot, frustr, ht_hmin, e_emin, Z_h, Z_e, T_t, tot, S_f, occ;
 	int i, ci;
-	
-	//alpha = 0.15;		// problems with potential convergence. CHECK
-	
+		
 	// This is for CA atoms
 	u->h_values[0] = 0.;
 	

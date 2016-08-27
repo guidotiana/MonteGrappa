@@ -348,7 +348,7 @@ struct vector Spherical2Cartesian(struct vector A, struct vector B,
  *****************************************************************************/
 struct vector RotateVector(struct vector v, double theta, int w, struct s_tables *tables)
 {
-	double M[3][3],st,ct;
+	double M[3][3]={{0,0,0},{0,0,0},{0,0,0}},st,ct;
 	struct vector u;
 
 	st = FastSin(theta,tables);

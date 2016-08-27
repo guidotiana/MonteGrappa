@@ -8,7 +8,7 @@ CCMP=mpicc
 LFLAGS= -lm -Wall -L/opt/openmpi-1.10.1/lib
 
 #LGSLFLAGS= -lgsl -lgslcblas 
-CFLAGS= -Wall -I/opt/local/include -Iinclude
+CFLAGS= -O2 -Wall -I/opt/local/include -Iinclude
 
 SRCDIR=src
 OBJDIR=obj
