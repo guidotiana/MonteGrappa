@@ -558,6 +558,8 @@ int main(int argc, char *argv[])
 	FreeOptInput(parms->op_input);	
 
 	free(parms);
+	
+	fprintf(stderr,"\n\n\"Monte Grappa, tu sei la mia patria,\nsovra te il nostro sole risplende\"\n\n");
 
 	
 	#ifdef ACTIVE_MPI

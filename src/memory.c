@@ -324,7 +324,6 @@ struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodi
 	x->boxtype = 'n';
 
 	if (!nohfields){
-		fprintf(stderr,"Allocating HFIELDS\n");
 		x->h_values = (double *) calloc(ntypes,sizeof(double));
 		if (!(x->h_values)) Error("Cannot allocate h_values in potential structure");
 	}

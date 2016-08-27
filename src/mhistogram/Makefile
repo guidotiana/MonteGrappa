@@ -1,4 +1,4 @@
-CC= cc
+CC= gcc
 LFLAGS=  -Wall -lgsl -lgslcblas -lm -L/opt/local/lib
 CFLAGS=  -Wall -O3 -funroll-all-loops -finline-functions -I/opt/local/include 
 

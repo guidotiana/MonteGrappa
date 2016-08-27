@@ -173,12 +173,12 @@ double EnergyPair(struct s_polymer *p, struct s_potential *u, int i, int j, int 
 			else etot += LARGE;
 		}
 		if ( r2 < (u->r_2)[a1][a2] && !tooclose)					// if they are close in space but not in sequence
-			if ((u->e)[a1][a2]<-EPSILON || (u->r_2)[a1][a2]>0)			// and their interaction element is defined
+			if ((u->e)[a1][a2]<-EPSILON || 0<(u->r_2)[a1][a2])			// and their interaction element is defined
 			{
 				e = (u->e)[a1][a2];
 				mul=1.;
 				if (u->splice==1)
-					if (r2 > (u->r_2)[a1][a2] * u->kr2_splice) mul = u->ke_splice;
+					if ((u->r_2)[a1][a2] * u->kr2_splice < r2 ) mul = u->ke_splice;
 
 				#ifdef OPTIMIZEPOT
 				if (p->op->record && mul>0) OP_AddEnergy(p,a1,a2,mul);
@@ -216,10 +216,10 @@ double EnergyPair(struct s_polymer *p, struct s_potential *u, int i, int j, int 
 				e = (u->e)[a1][a2];
 				mul = 1.;
 				if (u->splice==1)
-					if (r2 > (u->r_2)[a1][a2] * u->kr2_splice) mul = u->ke_splice;
+					if ((u->r_2)[a1][a2] * u->kr2_splice < r2) mul = u->ke_splice;
 				
 				#ifdef OPTIMIZEPOT
-				if (p->op->record && mul>0) OP_AddEnergy(p,a1,a2,mul);
+				if (p->op->record && 0 < mul) OP_AddEnergy(p,a1,a2,mul);
 				#endif
 				
 				e *= mul;
@@ -250,13 +250,13 @@ double EnergyPair(struct s_polymer *p, struct s_potential *u, int i, int j, int 
 					e = (u->e)[a1][a2];
 					mul = 1;
 					if (u->splice==1)
-						if (r2 > (u->r_2)[a1][a2] * u->kr2_splice) mul =  u->ke_splice;
+						if ((u->r_2)[a1][a2] * u->kr2_splice < r2) mul =  u->ke_splice;
 
 					// calculate hydrogen bond (if any)
 					if (hb)
 					{
 						if (u->splice==1)		// if HB, interacts only the first half of splice
-							if (r2 > (u->r_2)[a1][a2] * u->kr2_splice) mul = 0;
+							if ((u->r_2)[a1][a2] * u->kr2_splice < r2) mul = 0;
 
 						ia1 = (((((p+ci)->back)+i)->side)+is)->ia;
 						ia2 = (((((p+cj)->back)+j)->side)+js)->ia;
@@ -299,7 +299,7 @@ double EnergyPair(struct s_polymer *p, struct s_potential *u, int i, int j, int 
 				else etot += LARGE;
 			}
 			if ( r2 < (u->r_2)[a1][a2] && !tooclose)				// if they are close in space and not in sequence
-				if ((u->e)[a1][a2]<-EPSILON || (u->r_2)[a1][a2]>0)		// and their interaction element is defined
+				if ((u->e)[a1][a2]<-EPSILON || 0<(u->r_2)[a1][a2])		// and their interaction element is defined
 				{
 					e = (u->e)[a1][a2];
 					mul = 1;
@@ -307,7 +307,7 @@ double EnergyPair(struct s_polymer *p, struct s_potential *u, int i, int j, int 
 						if (r2 > (u->r_2)[a1][a2] * u->kr2_splice) mul =  u->ke_splice;
 					
 					#ifdef OPTIMIZEPOT
-					if (p->op->record && mul>0) OP_AddEnergy(p,a1,a2,mul);
+					if (p->op->record && 0 < mul) OP_AddEnergy(p,a1,a2,mul);
 					#endif
 					
 					e *= mul; 
