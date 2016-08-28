@@ -1,5 +1,5 @@
-CC=gcc
-#CC=icc -fopenmp
+CC=gcc 
+#CC=gcc -fopenmp
 CCMP=mpicc
 #CCMP=/usr/lib64/openmpi/bin/mpicc -fopenmp
 #LFLAGS -pg
@@ -8,7 +8,8 @@ CCMP=mpicc
 LFLAGS= -lm -Wall -L/opt/openmpi-1.10.1/lib
 
 #LGSLFLAGS= -lgsl -lgslcblas 
-CFLAGS= -O2 -Wall -I/opt/local/include -Iinclude
+CFLAGS= -Wall -I/opt/local/include -Iinclude
+OPTFLAG= -O2
 
 SRCDIR=src
 OBJDIR=obj
@@ -22,18 +23,18 @@ BINDIR=bin
 ifeq ($(version),MPI)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
-	$(CCMP) $(INCMPIFLAG) $(CFLAGS) -c $< $(INCL) -o $@
-
+	$(CCMP) $(INCMPIFLAG) $(OPTFLAG) $(CFLAGS) -c $< $(INCL) -o $@
 
 montegrappa_MPI: $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/mc.o $(OBJDIR)/local_move.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/optimizepot.o $(OBJDIR)/montegrappa.o $(OBJDIR)/MPIfunc.o
 	$(CCMP) $(INCMPIFLAG) $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/mc.o $(OBJDIR)/local_move.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/optimizepot.o $(OBJDIR)/montegrappa.o $(OBJDIR)/MPIfunc.o -o $(BINDIR)/montegrappa_mpi $(LFLAGS) 
 
-
+$(OBJDIR)/MPIfunc.o: $(SRCDIR)/MPIfunc.c
+	$(CCMP) $(INCMPIFLAG) $(CFLAGS) -c $< $(INCL) -o $@
 
 else ifeq ($(version),STEMPERING) 
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c
-	$(CC) $(INCSMPFLAG) $(CFLAGS) -c $< $(INCL) -o $@
+	$(CC) $(INCSMPFLAG) $(OPTFLAG) $(CFLAGS) -c $< $(INCL) -o $@
 
 
 montegrappa_stemp:	$(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/mc.o $(OBJDIR)/local_move.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/optimizepot.o $(OBJDIR)/montegrappa.o $(OBJDIR)/stempering.o $(OBJDIR)/memory1.o $(OBJDIR)/adjust_st.o $(OBJDIR)/do_mhistogram.o
@@ -42,7 +43,7 @@ montegrappa_stemp:	$(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/mc.o $(OBJDIR)/
 else
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c 
-	$(CC) $(CFLAGS) -c $< $(INCL) -o $@
+	$(CC) $(OPTFLAG) $(CFLAGS) -c $< $(INCL) -o $@
 
 montegrappa:  $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/mc.o $(OBJDIR)/local_move.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/optimizepot.o $(OBJDIR)/montegrappa.o 
 	$(CC) $(OBJDIR)/geometry.o $(OBJDIR)/io.o $(OBJDIR)/mc.o  $(OBJDIR)/local_move.o $(OBJDIR)/memory.o $(OBJDIR)/misc.o $(OBJDIR)/potential.o $(OBJDIR)/optimizepot.o $(OBJDIR)/montegrappa.o -o $(BINDIR)/montegrappa $(LFLAGS)
