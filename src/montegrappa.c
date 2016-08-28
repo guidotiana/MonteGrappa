@@ -178,8 +178,6 @@ int main(int argc, char *argv[])
 	for (i=0;i<parms->npol;++i) (replica+i)->tables = startp->tables; // tables of all polymers point to same address
 	for (i=1;i<parms->npol;++i) (startp+i)->tables = startp->tables;  // tables of all polymers point to same address
 
-        //MPI_Barrier(MPI_COMM_WORLD);
-
 	// Read polymer stuff from file
 	if(parms->nreplicas==1)
 	{

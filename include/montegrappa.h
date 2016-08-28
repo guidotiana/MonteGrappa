@@ -312,8 +312,6 @@ int EnergyBox(struct s_polymer *p, struct s_potential *u, int iw, int ic);
 int EnergyBoxPolymer(struct s_polymer *p, struct s_potential *u, int ic);
 double EnergyHFields(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms, int iw, int ic, int update);
 double GetHFields(struct s_polymer *p, int ip);
-//NAACONTACTS void ResetAAContacts(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms);
-
 
 
 // constants for gaussian random generator

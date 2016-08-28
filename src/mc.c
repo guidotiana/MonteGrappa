@@ -707,7 +707,6 @@ int MoveBackboneFlip(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_par
 	#ifdef DEBUG
 	if (debug>2) fprintf(stderr,"accept=%d\n",ok); fflush(stderr);
 	#endif
-	//fprintf(stderr,"** %lf %lf\n",TotalEnergy(p,pot,parms,parms->npol,0,parms->nosidechains,parms->debug),TotalEnergy(oldp,pot,parms,parms->npol,0,parms->nosidechains,parms->debug));
 	parms->mov ++;
 
 	if (ok == 0) return 0;
@@ -1022,7 +1021,6 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
 	//	if (idir == -1) UpdateMonomerRange(oldp,p,0,iw,ip,parms->shell);				// return to the old position, contacts, etc. (if moved first half)
 		if (idir == -1) UpdateMonomerRange(oldp,p,0,iw,ip,0);
 
-
 		else
 			//UpdateMonomerRange(oldp,p,iw,p->nback-1,ip,parms->shell);				// ... if moved second half
 			UpdateMonomerRange(oldp,p,iw,(p+ip)->nback-1,ip,0);
@@ -1046,8 +1044,6 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
                         CopyShell(p,oldp,parms);
                         parms->ishell=0;
                 }
-
-
  
 		p->etot += deltaE;
 		parms->acc ++;
@@ -1057,7 +1053,7 @@ int MoveMultiplePivot(struct s_polymer *p, struct s_polymer *oldp, struct s_pote
 	if (parms->debug>2) fprintf(stderr,"accept=%d\n",ok); fflush(stderr);
 	#endif
 
-	parms->mov ++;
+	parms->mov++;
 
 	return ok;
 }
@@ -1076,9 +1072,7 @@ int Metropolis(double deltaE, double T, struct s_tables *t)
 	
 	p = FastExp(-deltaE/T,t);
       
-
-    //  fprintf(stderr,"\n %lf < %lf ?",a,p);
-	if (frand()<p) 
+	if (frand()<p)
  	 return 1;
 	
 	return 0;
@@ -1229,15 +1223,10 @@ void UpdateMonomerRange(struct s_polymer *from, struct s_polymer *to, int wfrom,
 				((((to+lp[i])->back)+l[i])->contacts)[j] = ((((from+lp[i])->back)+l[i])->contacts)[j];
                                 ((((to+lp[i])->back)+l[i])->contacts_p)[j] = ((((from+lp[i])->back)+l[i])->contacts_p)[j];
                                 ((((to+lp[i])->back)+l[i])->e)[j] = ((((from+lp[i])->back)+l[i])->e)[j];
-			}	
-
-
+			}
 	}
- 
-
-
-
-//	 Finally, copy w itself
+	
+	// Finally, copy w itself
 	for (w=wfrom;w<=wto;++w)											// w ranges over all changed residues
 		CopyResiduePositions( ((from+p)->back)+w, ((to+p)->back)+w) ;
 
@@ -1293,14 +1282,13 @@ int MoveSidechain(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms 
 
 	if (ok == 0) 			// move rejected
 	{
-		UpdateMonomer(oldp,p,iw,ip,mc_parms->shell);
 		// return to the old position, contacts, etc.
+		UpdateMonomer(oldp,p,iw,ip,mc_parms->shell);
 		//UpdateMonomer(oldp,p,iw,ip,0);
 	}
 	else					// move accepted
 	{
-		//fprintf(stderr,"move accepted\n");
-		UpdateMonomer(p,oldp,iw,ip,mc_parms->shell);			
+		UpdateMonomer(p,oldp,iw,ip,mc_parms->shell);
 		//update oldp
 		//UpdateMonomer(p,oldp,iw,ip,0);
 		p->etot += deltaE;
@@ -1374,7 +1362,6 @@ void CompareStructures(struct s_polymer *a, struct s_polymer *b, int nc, int nat
 	for (ic=0;ic<nc;++ic)
 		for (i=0;i<natoms;++i)
 				{
-				//	if ( ((a+ic)->vback[i]) != ((b+ic)->vback[i]) ) fprintf(stderr,"*** ia=%d different address\n",i);
 					if ( (*((a+ic)->vback[i])).x != (*((b+ic)->vback[i])).x ) fprintf(stderr,"*** ia=%d x=%lf %lf\n",i,(*((a+ic)->vback[i])).x,(*((b+ic)->vback[i])).x);
 					if ( (*((a+ic)->vback[i])).y != (*((b+ic)->vback[i])).y ) fprintf(stderr,"*** ia=%d y=%lf %lf\n",i,(*((a+ic)->vback[i])).y,(*((b+ic)->vback[i])).y);
 					if ( (*((a+ic)->vback[i])).z != (*((b+ic)->vback[i])).z ) fprintf(stderr,"*** ia=%d z=%lf %lf\n",i,(*((a+ic)->vback[i])).z,(*((b+ic)->vback[i])).z);
@@ -1599,7 +1586,6 @@ int MoveMultipleFlip(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_par
 	}
 
 	// check if constrains are violated
-	// MODIFICHE: corretto out nell if
 	if (parms->a_cloose>0)
 	{
 		if (iw1-2>=0)
@@ -1609,7 +1595,6 @@ int MoveMultipleFlip(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_par
 			if ( DAbs( Angle( (((p+ip)->back)+iw2)->pos, (((p+ip)->back)+iw2+1)->pos, (((p+ip)->back)+iw2+2)->pos, (p+ip)->tables, &out)
 					- (((p+ip)->back)+iw2+1)->a_next) > parms->a_cloose  || out==0 ) ok=0;
 	}
-	//FINE MODIFICHE
 	if (parms->d_cloose>0)
 	{
 		if (iw1-3>=0 && (((p+ip)->back)+iw1-1)->move == 0)
@@ -1670,8 +1655,6 @@ int MoveMultipleFlip(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_par
 		#endif
 	}
 
-
-	//fprintf(stderr,"** %lf %lf\n",TotalEnergy(p,pot,parms,parms->npol,0,parms->nosidechains,parms->debug),TotalEnergy(oldp,pot,parms,parms->npol,0,parms->nosidechains,parms->debug));
 	parms->mov ++;
 
 	if (ok == 0) return 0;
@@ -1801,308 +1784,277 @@ int MoveRotation(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms *
 int MoveClusterCoM(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms *parms, struct s_potential *pot,
                   int istep, int debug, double t, FILE *fproc, int iproc)
 {
-      int ip,ok,ic,jc;
-      int k,i;//,ind;
-      int ctrl, old_ctrl;
-      int ncluster,ind_cluster,cont,sum;
-      double dx,dy,dz,deltaE;
-      int adjacency[NCHAINMAX][NCHAINMAX];
-      int cluster[NCHAINMAX][NCHAINMAX];
-      int avector[NCHAINMAX];
-      int npol_cluster[NCHAINMAX];
+	int ip,ok,ic,jc;
+	int k,i;//,ind;
+	int ctrl, old_ctrl;
+	int ncluster,ind_cluster,cont,sum;
+	double dx,dy,dz,deltaE;
+	int adjacency[NCHAINMAX][NCHAINMAX];
+	int cluster[NCHAINMAX][NCHAINMAX];
+	int avector[NCHAINMAX];
+	int npol_cluster[NCHAINMAX];
 
-      for(ic=0;ic<NCHAINMAX;++ic)
-      {
-            for(jc=0;jc<NCHAINMAX;++jc)
+	for(ic=0;ic<NCHAINMAX;++ic)
+	{
+		for(jc=0;jc<NCHAINMAX;++jc)
 	    {
-            	adjacency[ic][jc]=0;
-                cluster[ic][jc]=-1;
-            }
-      }
+			adjacency[ic][jc]=0;
+			cluster[ic][jc]=-1;
+		}
+	}
 
-      for(ic=0;ic<parms->npol;++ic)
-      {
-           for (i=0;i<(p+ic)->nback;++i)
-	   {
-           	for (k=0;k<(((p+ic)->back)+i)->ncontacts;++k)
+	for(ic=0;ic<parms->npol;++ic)
+	{
+		for (i=0;i<(p+ic)->nback;++i)
 		{
-                        adjacency[ic][((((p+ic)->back)+i)->contacts_p)[k]] = 1;
-                }
-            }
-      }
+			for (k=0;k<(((p+ic)->back)+i)->ncontacts;++k)
+			{
+				adjacency[ic][((((p+ic)->back)+i)->contacts_p)[k]] = 1;
+			}
+		}
+	}
 
-      cont=0;
-      ncluster=0;
-      while(1)
-      {
-            
-
+	cont=0;
+	ncluster=0;
+	while(1)
+	{
 		ctrl=99;
-            for(ic=0;ic<parms->npol;++ic)
-                  avector[ic]=adjacency[cont][ic];
+		for(ic=0;ic<parms->npol;++ic)
+			avector[ic]=adjacency[cont][ic];
             
 	    ind_cluster=0;
-            old_ctrl=0;
+		old_ctrl=0;
 
-
-            while( (old_ctrl-ctrl) != 0)
+		while( (old_ctrl-ctrl) != 0)
 	    {
-
-                  old_ctrl=ctrl;
-                  ctrl=0;
-                  for(ic=cont;ic<parms->npol;++ic)
-		  {
-
-                        sum=0;
-                        for(jc=0;jc<parms->npol;++jc)
-                              sum += avector[jc]*adjacency[ic][jc];
-                        if(sum!=0)
+			old_ctrl=ctrl;
+			ctrl=0;
+			for(ic=cont;ic<parms->npol;++ic)
 			{
-                              cluster[ncluster][ind_cluster] = ic;
-                              ind_cluster++;
-                              ++ctrl;
-                              for(jc=0;jc<parms->npol;++jc)
-			      {
-                                    if(avector[jc]+adjacency[ic][jc]>=1)
-				    	avector[jc]=1;
+				sum=0;
+				for(jc=0;jc<parms->npol;++jc)
+					{
+						sum += avector[jc]*adjacency[ic][jc];
+					}
+				if(sum!=0)
+				{
+					cluster[ncluster][ind_cluster] = ic;
+					++ind_cluster;
+					++ctrl;
+					for(jc=0;jc<parms->npol;++jc)
+					{
+						if(avector[jc]+adjacency[ic][jc]>=1)
+							avector[jc]=1;
 
-                                    adjacency[ic][jc]=0;
-                              }
-                        }
-                  }
-            }
+						adjacency[ic][jc]=0;
+					}
+				}
+			}
+		}
 
-            npol_cluster[ncluster]=ind_cluster;
-            ncluster++;
-            ++cont;
+		npol_cluster[ncluster]=ind_cluster;
+		++ncluster;
+		++cont;
 
-            for(i=cont;i<parms->npol;++i)
+		for(i=cont;i<parms->npol;++i)
 	    {
-                  if(adjacency[i][i] == 0)
-		  	++cont;
-                  else 
-		  {
-                        cont=i;
-                        break;
-                  }
-            }
-            if(cont==parms->npol) break;
-      }
+			if(adjacency[i][i] == 0)
+				++cont;
+			else
+			{
+				cont=i;
+				break;
+			}
+		}
+		if(cont==parms->npol) break;
+	}
 
+	ic = irand(ncluster);
 
+	dx = parms->dx_clm * frand() - parms->dx_clm / 2;
+	dy = parms->dx_clm * frand() - parms->dx_clm / 2;
+	dz = parms->dx_clm * frand() - parms->dx_clm / 2;
 
+	deltaE=0.;
+	for(i=0;i<npol_cluster[ic];++i)
+	{
+		ip = cluster[ic][i];
 
-      ic = irand(ncluster);
+		#ifdef DEBUG
+		if (debug>2) fprintf(fproc,"step=%d com ip=%d\n",istep,ip); fflush(stderr);
+		#endif
 
-      dx = parms->dx_clm * frand() - parms->dx_clm / 2;
-      dy = parms->dx_clm * frand() - parms->dx_clm / 2;
-      dz = parms->dx_clm * frand() - parms->dx_clm / 2;
+		deltaE -= GetEnergyMonomerRange(p,0,(p+ip)->nback-1,ip);                                    // old energy  (iw1-1 & iw2+1 because I move their sidechains)
+		DisplaceCoM(p,ip,dx,dy,dz);
 
-      deltaE=0.;
-      for(i=0;i<npol_cluster[ic];++i)
-      {
-
-            ip = cluster[ic][i];
-
-            #ifdef DEBUG
-            if (debug>2) fprintf(fproc,"step=%d com ip=%d\n",istep,ip); fflush(stderr);
-            #endif
-
-
-
-            deltaE -= GetEnergyMonomerRange(p,0,(p+ip)->nback-1,ip);                                    // old energy  (iw1-1 & iw2+1 because I move their sidechains)
-            DisplaceCoM(p,ip,dx,dy,dz);
-
-            //deltaE += EnergyMonomerRange(p,pot,0,(p+ip)->nback,ip,parms->npol,parms->shell,1,parms->nosidechains,parms->disentangle,parms->hb);
+		//deltaE += EnergyMonomerRange(p,pot,0,(p+ip)->nback,ip,parms->npol,parms->shell,1,parms->nosidechains,parms->disentangle,parms->hb);
 	    deltaE += EnergyMonomerRange(p,pot,0,(p+ip)->nback-1,ip,parms->npol,0,1,parms->nosidechains,parms->disentangle,parms->hb);
+	}
 
+	#ifdef DEBUG
+	if (debug>2) fprintf(fproc,"deltaE=%lf\n",deltaE); fflush(stderr);
+	#endif
 
-      }
+	ok = Metropolis(deltaE,t,p->tables);
 
-      #ifdef DEBUG
-      if (debug>2) fprintf(fproc,"deltaE=%lf\n",deltaE); fflush(stderr);
-      #endif
-
-      ok = Metropolis(deltaE,t,p->tables);
-
-      if (ok == 0)                        // move rejected
-      {
-            for(i=0;i<npol_cluster[ic];++i)
+	if (ok == 0)                        // move rejected
+	{
+		for(i=0;i<npol_cluster[ic];++i)
 	    {
-                  ip = cluster[ic][i];
-                  //UpdateMonomerRange(oldp,p,0,(p+ip)->nback,ip,parms->shell);                                     // return to the old position, contacts, etc.
-		  UpdateMonomerRange(oldp,p,0,(p+ip)->nback-1,ip,0);    
-            }
-      }
+			ip = cluster[ic][i];
+			//UpdateMonomerRange(oldp,p,0,(p+ip)->nback,ip,parms->shell);                                     // return to the old position, contacts, etc.
+			UpdateMonomerRange(oldp,p,0,(p+ip)->nback-1,ip,0);
+		}
+	}
 
-      else                          // move accepted
-      {
-            for(i=0;i<npol_cluster[ic];++i)
+	else                          // move accepted
+	{
+		for(i=0;i<npol_cluster[ic];++i)
 	    {
-                  ip = cluster[ic][i];
-                  //UpdateMonomerRange(p,oldp,0,(p+ip)->nback,ip,parms->shell);                                     // update oldp
-                  UpdateMonomerRange(p,oldp,0,(p+ip)->nback-1,ip,0);
+			ip = cluster[ic][i];
+			//UpdateMonomerRange(p,oldp,0,(p+ip)->nback,ip,parms->shell);                                     // update oldp
+			UpdateMonomerRange(p,oldp,0,(p+ip)->nback-1,ip,0);
 
-                  if(parms->shell==1 )            // if shells are active, update them 
-                  {
-                        UpdateShell(p,parms);
-                        CopyShell(p,oldp,parms);
-                        parms->ishell=0;
-                  }
+			if(parms->shell==1 )            // if shells are active, update them
+			{
+				UpdateShell(p,parms);
+				CopyShell(p,oldp,parms);
+				parms->ishell=0;
+			}
   
 
 
-		  p->etot += deltaE;
-                  parms->acc ++;
+			p->etot += deltaE;
+			parms->acc ++;
 
-                  #ifdef DEBUG
-                  if (debug>2) fprintf(fproc,"accept=%d\n",ok); fflush(stderr);
-                  #endif
-            }
-      }
+			#ifdef DEBUG
+			if (debug>2) fprintf(fproc,"accept=%d\n",ok); fflush(stderr);
+			#endif
+		}
+	}
 
-      parms->mov ++;
+	parms->mov ++;
 
-      if (ok == 0) return 0;
-      else return 1;
-
+	if (ok == 0) return 0;
+	else return 1;
 }
 
 
 int MoveClusterRot(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms *parms, struct s_potential *pot,
                   int istep, int npol,int debug, double t, FILE *fproc, int iproc)
 {
-      int ip,ok,ic,jc;
-      int k,i;//,ind;
-      int ctrl, old_ctrl;
-      int ncluster,ind_cluster,cont,sum;
-      //double dx,dy,dz
-      double deltaE;
-      int adjacency[NCHAINMAX][NCHAINMAX];
-      int cluster[NCHAINMAX][NCHAINMAX];
-      int avector[NCHAINMAX];
-      int npol_cluster[NCHAINMAX];
-      double dtheta= parms->dtheta * (0.5 - frand());
+	int ip,ok,ic,jc;
+	int k,i;//,ind;
+	int ctrl, old_ctrl;
+	int ncluster,ind_cluster,cont,sum;
+	//double dx,dy,dz
+	double deltaE;
+	int adjacency[NCHAINMAX][NCHAINMAX];
+	int cluster[NCHAINMAX][NCHAINMAX];
+	int avector[NCHAINMAX];
+	int npol_cluster[NCHAINMAX];
+	double dtheta= parms->dtheta * (0.5 - frand());
 
 
 
-      for(ic=0;ic<NCHAINMAX;++ic)
-      {
-            for(jc=0;jc<NCHAINMAX;++jc)
+	for(ic=0;ic<NCHAINMAX;++ic)
+	{
+		for(jc=0;jc<NCHAINMAX;++jc)
 	    {
-                  adjacency[ic][jc]=0;
-                  cluster[ic][jc]=-1;
-            }
-      }
+			adjacency[ic][jc]=0;
+			cluster[ic][jc]=-1;
+		}
+	}
 
-      for(ic=0;ic<parms->npol;++ic)
-      {
-            for (i=0;i<(p+ic)->nback;++i)
+	for(ic=0;ic<parms->npol;++ic)
+	{
+		for (i=0;i<(p+ic)->nback;++i)
 	    {
-                  for (k=0;k<(((p+ic)->back)+i)->ncontacts;++k)
-		  {
-                        adjacency[ic][((((p+ic)->back)+i)->contacts_p)[k]] = 1;
-                  }
-            }
-      }
-
-      cont=0;
-      ncluster=0;
-      while(1)
-      {
-            ctrl=99;
-            for(ic=0;ic<NCHAINMAX;++ic)
-	    {
-                  avector[ic]=adjacency[cont][ic];
-            }
-
-            ind_cluster=0;
-            old_ctrl=0;
-
-
-
-            while(old_ctrl-ctrl != 0)
-	    {
-	
-                  old_ctrl=ctrl;
-                  ctrl=0;
-                  for(ic=cont;ic<parms->npol;++ic)
-		  {
-
-                        sum=0;
-                        for(jc=0;jc<parms->npol;++jc)
-                        	sum += avector[jc]*adjacency[ic][jc];
-                        if(sum!=0)
+			for (k=0;k<(((p+ic)->back)+i)->ncontacts;++k)
 			{
+				adjacency[ic][((((p+ic)->back)+i)->contacts_p)[k]] = 1;
+			}
+		}
+	}
 
-
-                              cluster[ncluster][ind_cluster] = ic;
-                              ind_cluster++;
-                              ++ctrl;
-                              for(jc=0;jc<parms->npol;++jc)
-			      {
-                                    if(avector[jc]+adjacency[ic][jc]>=1) avector[jc]=1;
-                                    adjacency[ic][jc]=0;
-                              }
-                        }
-                  }
-            }
-
-            npol_cluster[ncluster]=ind_cluster;
-            ncluster++;
-            ++cont;
-            for(i=cont;i<parms->npol;++i)
+	cont=0;
+	ncluster=0;
+	while(1)
+	{
+		ctrl=99;
+		for(ic=0;ic<NCHAINMAX;++ic)
 	    {
-                  if(adjacency[i][i] == 0)
+			avector[ic]=adjacency[cont][ic];
+		}
+
+		ind_cluster=0;
+		old_ctrl=0;
+
+		while(old_ctrl-ctrl != 0)
+	    {
+			old_ctrl=ctrl;
+			ctrl=0;
+			for(ic=cont;ic<parms->npol;++ic)
+			{
+				sum=0;
+				for(jc=0;jc<parms->npol;++jc)
+					sum += avector[jc]*adjacency[ic][jc];
+				if(sum!=0)
+				{
+					cluster[ncluster][ind_cluster] = ic;
+					ind_cluster++;
+					++ctrl;
+					for(jc=0;jc<parms->npol;++jc)
+					{
+						if(avector[jc]+adjacency[ic][jc]>=1) avector[jc]=1;
+						adjacency[ic][jc]=0;
+					}
+				}
+			}
+		}
+
+		npol_cluster[ncluster]=ind_cluster;
+		++ncluster;
+		++cont;
+		for(i=cont;i<parms->npol;++i)
+	    {
+			if(adjacency[i][i] == 0)
 		  	++cont;
-                  else 
-		  {
-                        cont=i;
-                        break;
-                  }
-            }
+			else
+			{
+				cont=i;
+				break;
+			}
+		}
+		if(cont==parms->npol) break;
+	}
 
-            if(cont==parms->npol) break;
-      }
+	ic = irand(ncluster);
+	deltaE=0.;
 
+	for(i=0;i<npol_cluster[ic];++i)
+	{
+		ip = cluster[ic][i];
 
+		#ifdef DEBUG
+		if (debug>2) fprintf(fproc,"step=%d com ip=%d\n",istep,ip); fflush(stderr);
+		#endif
 
-      ic = irand(ncluster);
+		deltaE -= GetEnergyMonomerRange(p,0,(p+ip)->nback-1,ip);                                    // old energy  (iw1-1 & iw2+1 because I move their sidechains)
 
-      deltaE=0.;
-
-
-
-      for(i=0;i<npol_cluster[ic];++i)
-      {
-
-            ip = cluster[ic][i];
-
-            #ifdef DEBUG
-            if (debug>2) fprintf(fproc,"step=%d com ip=%d\n",istep,ip); fflush(stderr);
-            #endif
-
-            deltaE -= GetEnergyMonomerRange(p,0,(p+ip)->nback-1,ip);                                    // old energy  (iw1-1 & iw2+1 because I move their sidechains)
-
-//            deltaE += EnergyMonomerRange(p,pot,0,(p+ip)->nback,ip,parms->npol,parms->shell,1,parms->nosidechains,parms->disentangle,parms->hb);
- //	    deltaE += EnergyMonomerRange(p,pot,0,(p+ip)->nback,ip,parms->npol,0,1,parms->nosidechains,parms->disentangle,parms->hb);
-
-
-
-      }
-
+		// deltaE += EnergyMonomerRange(p,pot,0,(p+ip)->nback,ip,parms->npol,parms->shell,1,parms->nosidechains,parms->disentangle,parms->hb);
+		// deltaE += EnergyMonomerRange(p,pot,0,(p+ip)->nback,ip,parms->npol,0,1,parms->nosidechains,parms->disentangle,parms->hb);
+	}
 
 	int idir=irand(3);
 
-        if(idir==0)
-                RotationClusterX(p,ip,dtheta,ic,cluster,npol_cluster[ic]);
-        else if(idir==1)
-                RotationClusterY(p,ip,dtheta,ic,cluster,npol_cluster[ic]);
-        else
-                RotationClusterZ(p,ip,dtheta,ic,cluster,npol_cluster[ic]);
+	if(idir==0)
+		RotationClusterX(p,ip,dtheta,ic,cluster,npol_cluster[ic]);
+	else if(idir==1)
+		RotationClusterY(p,ip,dtheta,ic,cluster,npol_cluster[ic]);
+	else
+		RotationClusterZ(p,ip,dtheta,ic,cluster,npol_cluster[ic]);
 
-
-	
 	for(i=0;i<npol_cluster[ic];++i)
 	{
 	ip=cluster[ic][i];
@@ -2110,54 +2062,45 @@ int MoveClusterRot(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms
 	deltaE += EnergyMonomerRange(p,pot,0,(p+ip)->nback-1,ip,parms->npol,0,1,parms->nosidechains,parms->disentangle,parms->hb);
 	}
 
+	#ifdef DEBUG
+	if (debug>2) fprintf(fproc,"deltaE=%lf\n",deltaE); fflush(stderr);
+	#endif
 
+	ok = Metropolis(deltaE,t,p->tables);
 
-
-      #ifdef DEBUG
-      if (debug>2) fprintf(fproc,"deltaE=%lf\n",deltaE); fflush(stderr);
-      #endif
-
-      ok = Metropolis(deltaE,t,p->tables);
-
-      if (ok == 0)                        // move rejected
-      {
-            for(i=0;i<npol_cluster[ic];++i)
+	if (ok == 0)                        // move rejected
+	{
+		for(i=0;i<npol_cluster[ic];++i)
 	    {
-                  ip = cluster[ic][i];
-                //  UpdateMonomerRange(oldp,p,0,(p+ip)->nback,ip,parms->shell);                                     // return to the old position, contacts, etc.
-                  UpdateMonomerRange(oldp,p,0,(p+ip)->nback-1,ip,0);    
+			ip = cluster[ic][i];
+			//  UpdateMonomerRange(oldp,p,0,(p+ip)->nback,ip,parms->shell);                                     // return to the old position, contacts, etc.
+			UpdateMonomerRange(oldp,p,0,(p+ip)->nback-1,ip,0);
 	    }
-      }
-      else                          // move accepted
-      {
-            for(i=0;i<npol_cluster[ic];++i)
+	}
+	else                          // move accepted
+	{
+		for(i=0;i<npol_cluster[ic];++i)
 	    {
-                  ip = cluster[ic][i];
- //                 UpdateMonomerRange(p,oldp,0,(p+ip)->nback,ip,parms->shell);                                     // update oldp
-		 UpdateMonomerRange(p,oldp,0,(p+ip)->nback-1,ip,0); 
-                 if(parms->shell==1 )            // if shells are active, update them 
-                 {
-                        UpdateShell(p,parms);
-                        CopyShell(p,oldp,parms);
-                        parms->ishell=0;
-                 }
- 
+			ip = cluster[ic][i];
+			// UpdateMonomerRange(p,oldp,0,(p+ip)->nback,ip,parms->shell);    // update oldp
+			UpdateMonomerRange(p,oldp,0,(p+ip)->nback-1,ip,0);
+			if(parms->shell==1 )            // if shells are active, update them
+			{
+				UpdateShell(p,parms);
+				CopyShell(p,oldp,parms);
+				parms->ishell=0;
+			}
+			p->etot += deltaE;
+			parms->acc ++;
 
+			#ifdef DEBUG
+			if (debug>2) fprintf(fproc,"accept=%d\n",ok); fflush(stderr);
+			#endif
+		}
+	}
 
+	parms->mov ++;
 
-
-                  p->etot += deltaE;
-                  parms->acc ++;
-
-                  #ifdef DEBUG
-                  if (debug>2) fprintf(fproc,"accept=%d\n",ok); fflush(stderr);
-                  #endif
-            }
-      }
-
-      parms->mov ++;
-
-      if (ok == 0) return 0;
-      else return 1;
-
+	if (ok == 0) return 0;
+	else return 1;
 }

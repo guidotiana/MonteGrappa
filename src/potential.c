@@ -173,6 +173,7 @@ double EnergyPair(struct s_polymer *p, struct s_potential *u, int i, int j, int 
 			else etot += LARGE;
 		}
 		if ( r2 < (u->r_2)[a1][a2] && !tooclose)					// if they are close in space but not in sequence
+		{
 			if ((u->e)[a1][a2]<-EPSILON || 0<(u->r_2)[a1][a2])			// and their interaction element is defined
 			{
 				e = (u->e)[a1][a2];
@@ -189,6 +190,7 @@ double EnergyPair(struct s_polymer *p, struct s_potential *u, int i, int j, int 
 				if (update) AddContact(p,i,j,ci,cj,e);
 
 			}
+		}
 	}
 
   	if (nosidechains == 1) return etot;
@@ -245,6 +247,7 @@ double EnergyPair(struct s_polymer *p, struct s_potential *u, int i, int j, int 
 				else etot += LARGE;
 			}
 			if ( r2 < (u->r_2)[a1][a2] && !tooclose)				// if they are close in space anbd not in sequence
+			{
 				if ((u->e)[a1][a2]<-EPSILON || (u->r_2)[a1][a2]>0)		// and their interaction element is defined
 				{
 					e = (u->e)[a1][a2];
@@ -280,42 +283,44 @@ double EnergyPair(struct s_polymer *p, struct s_potential *u, int i, int j, int 
 					etot += e;
 					if (update) AddContact(p,i,j,ci,cj,e);
 				}
+			}
 		}
 	}
 
 	// interaction backbone-sidechain (is-j)
 	for (is=0;is< (((p+ci)->back)+i)->nside;++is)
 	{
-			a1 = (((p+cj)->back)+j)->itype;
-			a2 = (((((p+ci)->back)+i)->side)+is)->itype;
-			r2 = Dist2( (((p+cj)->back)+j)->pos, (((((p+ci)->back)+i)->side)+is)->pos );
+		a1 = (((p+cj)->back)+j)->itype;
+		a2 = (((((p+ci)->back)+i)->side)+is)->itype;
+		r2 = Dist2( (((p+cj)->back)+j)->pos, (((((p+ci)->back)+i)->side)+is)->pos );
 
-			if (tooclose) r02 = u->g_r0hard * u->g_r0hard;
-			else r02 = (u->r0_2)[a1][a2];
+		if (tooclose) r02 = u->g_r0hard * u->g_r0hard;
+		else r02 = (u->r0_2)[a1][a2];
 
-			if ( r2 < r02 )
+		if ( r2 < r02 )
+		{
+			if (!disentangle) return LARGE;
+			else etot += LARGE;
+		}
+		if ( r2 < (u->r_2)[a1][a2] && !tooclose)				// if they are close in space and not in sequence
+		{
+			if ((u->e)[a1][a2]<-EPSILON || 0<(u->r_2)[a1][a2])		// and their interaction element is defined
 			{
-				if (!disentangle) return LARGE;
-				else etot += LARGE;
+				e = (u->e)[a1][a2];
+				mul = 1;
+				if (u->splice==1)
+					if (r2 > (u->r_2)[a1][a2] * u->kr2_splice) mul =  u->ke_splice;
+				
+				#ifdef OPTIMIZEPOT
+				if (p->op->record && 0 < mul) OP_AddEnergy(p,a1,a2,mul);
+				#endif
+				
+				e *= mul;
+				etot += e;
+				if (update) AddContact(p,i,j,ci,cj,e);
 			}
-			if ( r2 < (u->r_2)[a1][a2] && !tooclose)				// if they are close in space and not in sequence
-				if ((u->e)[a1][a2]<-EPSILON || 0<(u->r_2)[a1][a2])		// and their interaction element is defined
-				{
-					e = (u->e)[a1][a2];
-					mul = 1;
-					if (u->splice==1)
-						if (r2 > (u->r_2)[a1][a2] * u->kr2_splice) mul =  u->ke_splice;
-					
-					#ifdef OPTIMIZEPOT
-					if (p->op->record && 0 < mul) OP_AddEnergy(p,a1,a2,mul);
-					#endif
-					
-					e *= mul; 
-					etot += e;
-					if (update) AddContact(p,i,j,ci,cj,e);
-				}
+		}
 	}
-
 	return etot;
 }
 
@@ -344,6 +349,7 @@ double EnergyMonomer(struct s_polymer *p, struct s_potential *u, int i, int ci, 
 	if (shell == 0)
 	{
 		for (cj=0;cj<npol;++cj)
+		{
 			for (j=0;j<(p+cj)->nback;++j)
 			{
 //				if(i==1 && ci == 1 && j == 7 && cj == 1) fprintf(stderr,"interaction atom %d of %d // %d of %d \n distance %lf",i,ci,j,cj, sqrt(Dist2( (((p+ci)->back)+i)->pos, (((p+cj)->back)+j)->pos )));				
@@ -359,6 +365,7 @@ double EnergyMonomer(struct s_polymer *p, struct s_potential *u, int i, int ci, 
 					etot += e;
 				}
 			}
+		}
 	}
 
 	// use shell
@@ -421,10 +428,12 @@ double EnergyMonomerRange(struct s_polymer *p, struct s_potential *u, int from, 
 	// if not shell
 	if (shell == 0)
 	{
-
 		for (i=from;i<=to;++i)
+		{
 			for (cj=0;cj<npol;++cj)
+			{
 				for (j=0;j<(p+cj)->nback;++j)
+				{
 					if ( ip!=cj || j<from || j>to || i<j )				// if j in [from,to] of the same chain, require i<j to count only once
 					{
 						//fprintf(stderr,"energypair atomi %d di %d / %d di %d \n",i,ip,j,cj);
@@ -434,14 +443,17 @@ double EnergyMonomerRange(struct s_polymer *p, struct s_potential *u, int from, 
 						if (e>=LARGE && !disentangle) return LARGE;
 						etot += e;
 					}
+				}
+			}
+		}
 	}
 
 	// if shell
 	else
 	{
-              
 		//slow #pragma omp parallel for private(k,i,j,cj,tooclose,e) reduction(+:etot)		
 		for (i=from;i<=to;++i)
+		{
 			for (k=0;k<(((p+ip)->back)+i)->nshell;++k)
 			{
 				j = ((((p+ip)->back)+i)->shell)[k];							// what is the monomer in the shell
@@ -456,6 +468,7 @@ double EnergyMonomerRange(struct s_polymer *p, struct s_potential *u, int from, 
 					etot += e;
 				}
 			}
+		}
 	}
 	return etot;
 }
@@ -480,7 +493,7 @@ void AddContact(struct s_polymer *p, int i, int j, int ci, int cj, double e)
 		((((p+ci)->back)+i)->contacts_p)[ (((p+ci)->back)+i)->ncontacts ] = cj;			// add contact
 		((((p+ci)->back)+i)->e)[ (((p+ci)->back)+i)->ncontacts ] = e;					// add energy
 		(((p+ci)->back)+i)->ncontacts ++;
-		 if ( (((p+ci)->back)+i)->ncontacts >= NCONTMAX) Error("NCONTMAX too small");
+		if ( (((p+ci)->back)+i)->ncontacts >= NCONTMAX) Error("NCONTMAX too small");
 	}
 	else	// if already a contact, add the associated energy
 	{
@@ -574,14 +587,11 @@ void ResetContactsMonomer(struct s_polymer *p, int i, int ci)
 
 				l--;
 			}
-
 		//reset its energy
 		(((p+ci)->back)+i)->e[k] = 0;
 	}
-
 	// reset the neighbour list of i
 	(((p+ci)->back)+i)->ncontacts = 0;
-
 }
 
 /********************************************************************
@@ -610,7 +620,9 @@ double GetEnergyMonomerRange(struct s_polymer *p, int from, int to, int ip)
 	int i,iw,j,cj;
 	
 	for (iw=from;iw<=to;++iw)
+	{
 		if (iw>=0 && iw<(p+ip)->nback)
+		{
 			for (i=0;i<(((p+ip)->back)+iw)->ncontacts;++i)
 			{
 				j = ((((p+ip)->back)+iw)->contacts)[i];
@@ -618,6 +630,8 @@ double GetEnergyMonomerRange(struct s_polymer *p, int from, int to, int ip)
 				if (ip!=cj || j<from || j>to || iw<j)				// count only once contacts in [from,to] of the same chain
 					e += ((((p+ip)->back)+iw)->e)[i];
 			}
+		}
+	}
 	return e;
 }
 
@@ -701,13 +715,6 @@ void UpdateShell(struct s_polymer *p, struct s_mc_parms *parms)
 	int i,j,is,js,ci,cj;
 	double r2;
 
-	/*
-	#ifdef DEBUG_SHELL
-	for (ci=0;ci<parms->npol;++ci)
-                for (i=0;i<(p+ci)->nback;++i)
-		if(i==100) fprintf(stderr,"atomo %d, prima -> %d\n",i,(((p+ci)->back)+i)->nshell);
-	#endif
-	*/
 	// reset contacts shells
 	for (ci=0;ci<parms->npol;++ci)
 		for (i=0;i<(p+ci)->nback;++i)
@@ -717,11 +724,13 @@ void UpdateShell(struct s_polymer *p, struct s_mc_parms *parms)
 	//  double loop
 	#pragma omp parallel for private(cj,i,j,r2,js,is)
 	for (ci=0;ci<parms->npol;++ci)
-		for (cj=ci;cj<parms->npol;++cj)  
+	{
+		for (cj=ci;cj<parms->npol;++cj)
+		{
 			for (i=0;i<(p+ci)->nback;++i)
+			{
 				for (j=0;j<(p+cj)->nback;++j)
 				{
-			
 					if (ci!=cj || i<j)
 					{
 						// interaction backbone-backbone (i-j)
@@ -752,34 +761,9 @@ void UpdateShell(struct s_polymer *p, struct s_mc_parms *parms)
 						}
 					}
 				}
-	/*
-	#ifdef DEBUG_SHELL
-        for (ci=0;ci<parms->npol;++ci)
-                for (i=0;i<(p+ci)->nback;++i)
-        	if(i==100)        fprintf(stderr,"atomo %d, dopo -> %d\n",i,(((p+ci)->back)+i)->nshell);
-        #endif
-	
-	int pizza;
-	fprintf(stderr,"UPDATE SHELL\n");
-	for (ci=0;ci<parms->npol;++ci)
-                for (i=0;i<(p+ci)->nback;++i)
-		{
-			fprintf(stderr,"ip= %d \t back = %d\t nshell = %d \n",ci,i,(((p+ci)->back)+i)->nshell);
-			for(pizza=0;pizza<(((p+ci)->back)+i)->nshell;++pizza)
-				fprintf(stderr,"sh %d chain %d\n",pizza,(((p+ci)->back)+i)->shell_p[pizza]);
+			}
 		}
-	*/
-/*
-	for(i=0;i<(p+0)->nback;++i)
-	{
-		fprintf(stderr,"back %d nshell = %d\n",i,((p+0)->back+i)->nshell);
-		for(j=0;j<((p+0)->back+i)->nshell;++j)
-			fprintf(stderr,"\t %d \t %d \n",((p+0)->back+i)->shell[j],((p+0)->back+i)->shell_p[j]);
-
-
 	}
-*/
-	return;
 }
 
 
@@ -789,7 +773,8 @@ void CopyShell(struct s_polymer *from,struct s_polymer *to,struct s_mc_parms *pa
 
 	int i,ci,cs;
 	for (ci=0;ci<parms->npol;++ci)
-	        for (i=0;i<(from+ci)->nback;++i)
+	{
+		for (i=0;i<(from+ci)->nback;++i)
 		{
                         (((to+ci)->back)+i)->nshell = (((from+ci)->back)+i)->nshell ;
 			for(cs=0;cs<(((from+ci)->back)+i)->nshell;++cs)
@@ -798,13 +783,7 @@ void CopyShell(struct s_polymer *from,struct s_polymer *to,struct s_mc_parms *pa
 			        (((to+ci)->back)+i)->shell_p[cs]=(((from+ci)->back)+i)->shell_p[cs];	
 			}
 		}
-
-
-
-
-
-
-	return;
+	}
 }
 
 
@@ -873,17 +852,19 @@ double EnergyDihedrals(struct s_polymer *p, struct s_potential *u, int iw, int i
     if(u->dih_ram)
     {
         if((iw+1)%3==0) // psi dihedral
+		{
             for(i=0;i<2;++i)
             { 
                 e += - (u->e_dihram) * (u->ab_propensity[i][iaa]/u->sigma[i][1]) * exp(-0.5*(((dih - u->dih0[i][1])/u->sigma[i][1])*((dih - u->dih0[i][1])/u->sigma[i][1])));
             }
+		}
         if((iw-1)%3==0)   // phi dihedral
+		{
             for(i=0;i<2;++i)
              {
                 e += - (u->e_dihram) * ( (u->ab_propensity[i][iaa]/u->sigma[i][0]) * exp(-0.5*(((dih - u->dih0[i][0])/u->sigma[i][0])*((dih - u->dih0[i][0])/u->sigma[i][0]))) );
              }
-        
-        
+		}
     }
     /*
     //buca infinita sui diedri
@@ -964,26 +945,32 @@ void PrintEnergies(FILE *fp, int nc, unsigned long long step, struct s_polymer *
 	fprintf(fp,"%llu\t%9lf\t%9lf\t%9lf\t%9lf\t%9lf\n",step,epair+eang+edih+ehfs,epair,eang,edih,ehfs);
 }
 
+
+/********************************************************************
+ Print energy terms (MPI routine)
+ ********************************************************************/
 void PrintEnergies_Parallel(FILE *fp, int nc, unsigned long long step, struct s_polymer *p,int my_rank)
 {
-        int i,j;
-        double epair=0,eang=0,edih=0,ehfs=0;
+	int i,j;
+	double epair=0,eang=0,edih=0,ehfs=0;
 
-        for (i=0;i<nc;++i)
-                for (j=0;j<(p+i)->nback;++j)
-                {
-					epair += GetEnergyMonomer(p,i,j)/2.;
-					eang += (((p+i)->back)+j)->e_ang;
-					edih += (((p+i)->back)+j)->e_dih;
-					ehfs += (((p+i)->back)+j)->e_hfs;
-                }
+	for (i=0;i<nc;++i)
+	{
+		for (j=0;j<(p+i)->nback;++j)
+		{
+			epair += GetEnergyMonomer(p,i,j)/2.;
+			eang += (((p+i)->back)+j)->e_ang;
+			edih += (((p+i)->back)+j)->e_dih;
+			ehfs += (((p+i)->back)+j)->e_hfs;
+		}
+	}
 	
 	fprintf(fp,"%d\t%llu\t%9lf\t%9lf\t%9lf\t%9lf\t%9lf\n",my_rank,step,epair+eang+edih+ehfs,epair,eang,edih,ehfs);
-	//fprintf(fp,"%d\t%llu\t%9lf\n",my_rank,step,epair+eang+edih);
-
 }
 
-
+/********************************************************************
+ Potential copy
+ ********************************************************************/
 void CopyPotential(struct s_potential *from, struct s_potential *to, int nat, int ntypes)
 {
 	int i,j;
@@ -1025,136 +1012,136 @@ void CopyPotential(struct s_potential *from, struct s_potential *to, int nat, in
 
 int CheckOverlaps(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms, int npol, int nosidechains, int pr, FILE *fproc)
 {
-      int o=0,tooclose;
-      int i,j,ci,cj,a1,a2,is,js,ia1,ia2,iaa1,iaa2;
-      char atom1[5],am1[5];
-      char atom2[5],am2[5];
-      double r2,r02;
+	int o=0,tooclose;
+	int i,j,ci,cj,a1,a2,is,js,ia1,ia2,iaa1,iaa2;
+	char atom1[5],am1[5];
+	char atom2[5],am2[5];
+	double r2,r02;
 
-      if (pr) fprintf(fproc,"\nChecking overlaps... r0hard = %lf\n",u->g_r0hard);
-           // backbone loop
-      for (ci=0;ci<npol;++ci)                                     // loops on polymers
-            for (cj=ci;cj<npol;++cj)
-                  for (i=0;i<(p+ci)->nback;++i)             // loops on backbone atoms of each polymer
-                        for (j=0;j<(p+cj)->nback;++j)
-                              if (ci!=cj || (i<j && (((p+ci)->back)+i)->iaa != (((p+cj)->back)+j)->iaa))                      // in the same polymer, do not count twice a contact
-                              {
-                                    tooclose = 0;
-                                    if (ci==cj && j-i <= u->g_imin ) tooclose = 1;
+	if (pr) fprintf(fproc,"\nChecking overlaps... r0hard = %lf\n",u->g_r0hard);
+	// backbone loop
+	for (ci=0;ci<npol;++ci)                                     // loops on polymers
+	{
+		for (cj=ci;cj<npol;++cj)
+		{
+			for (i=0;i<(p+ci)->nback;++i)             // loops on backbone atoms of each polymer
+			{
+				for (j=0;j<(p+cj)->nback;++j)
+				{
+					if (ci!=cj || (i<j && (((p+ci)->back)+i)->iaa != (((p+cj)->back)+j)->iaa))                      // in the same polymer, do not count twice a contact
+					{
+						tooclose = 0;
+						if (ci==cj && j-i <= u->g_imin ) tooclose = 1;
 
-                                    // interaction backbone-backbone (i-j)
-                                    if (ci!=cj || (i!=j+1 && i!=j-1))                                                   // if not consecutive (i.e., no covalent interaction)
-                                    {
-                                          a1 = (((p+ci)->back)+i)->itype;
-                                          a2 = (((p+cj)->back)+j)->itype;
-                                          r2 = Dist2( (((p+ci)->back)+i)->pos, (((p+cj)->back)+j)->pos );
-                                          if (tooclose) r02 = u->g_r0hard * u->g_r0hard;
-                                          else r02 = (u->r0_2)[a1][a2];
-                                          if ( r2 < r02 )
-                                          {
-                                                strcpy(atom1, (((p+ci)->back)+i)->type);
-                                                ia1= (((p+ci)->back)+i)->ia;
-                                                strcpy(am1, (((p+ci)->back)+i)->aa);
-                                                iaa1= (((p+ci)->back)+i)->iaa;
-                                                strcpy(atom2,(((p+cj)->back)+j)->type);
-                                                ia2= (((p+cj)->back)+j)->ia;
-                                                strcpy(am2,(((p+cj)->back)+j)->aa);
-                                                iaa2= (((p+cj)->back)+j)->iaa;
+						// interaction backbone-backbone (i-j)
+						if (ci!=cj || (i!=j+1 && i!=j-1)) // if not consecutive (i.e., no covalent interaction)
+						{
+							a1 = (((p+ci)->back)+i)->itype;
+							a2 = (((p+cj)->back)+j)->itype;
+							r2 = Dist2( (((p+ci)->back)+i)->pos, (((p+cj)->back)+j)->pos );
+							if (tooclose) r02 = u->g_r0hard * u->g_r0hard;
+							else r02 = (u->r0_2)[a1][a2];
+							if ( r2 < r02 )
+							{
+								strcpy(atom1, (((p+ci)->back)+i)->type);
+								ia1= (((p+ci)->back)+i)->ia;
+								strcpy(am1, (((p+ci)->back)+i)->aa);
+								iaa1= (((p+ci)->back)+i)->iaa;
+								strcpy(atom2,(((p+cj)->back)+j)->type);
+								ia2= (((p+cj)->back)+j)->ia;
+								strcpy(am2,(((p+cj)->back)+j)->aa);
+								iaa2= (((p+cj)->back)+j)->iaa;
 
-                                                o=1;
-                                                if (pr) fprintf(fproc,"WARNING: overlap between backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d) and backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d): d=%lf d0=%lf\n",
-                                                            i,ci,a1,atom1,ia1,am1,iaa1,j,cj,a2,atom2,ia2,am2,iaa2,sqrt(r2),sqrt((u->r0_2)[a1][a2]));
-                                          }
-                                    }
-
-                                    for (js=0;js< (((p+cj)->back)+j)->nside;++js)
-                                    {
-                                          // interaction backbone-sidechain (i-js)
-                                          a1 = (((p+ci)->back)+i)->itype;
-                                          a2 = (((((p+cj)->back)+j)->side)+js)->itype;
-                                          r2 = Dist2( (((p+ci)->back)+i)->pos, (((((p+cj)->back)+j)->side)+js)->pos );
-                                          if (tooclose) r02 = u->g_r0hard * u->g_r0hard;
-                                          else r02 = (u->r0_2)[a1][a2];
-                                          if ( r2 < r02 )
-                                          {
-                                                strcpy(atom1, (((p+ci)->back)+i)->type);
-                                                ia1= (((p+ci)->back)+i)->ia;
-                                                strcpy(am1, (((p+ci)->back)+i)->aa);
-                                                iaa1= (((p+ci)->back)+i)->iaa;
-                                                strcpy(atom2, (((((p+cj)->back)+j)->side)+js)->type);
-                                                ia2= (((((p+cj)->back)+j)->side)+js)->ia;
-                                                strcpy(am2, (((p+cj)->back)+j)->aa);
-                                                iaa2= (((p+cj)->back)+j)->iaa;
-
-                                                o=1;
-                                                if (pr) fprintf(fproc,"WARNING: overlap between backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d) and sidechain %d of backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d): d=%lf d0=%lf\n",
-                                                                                          i,ci,a1,atom1,ia1,am1,iaa1,js,j,cj,a2,atom2,ia2,am2,iaa2,sqrt(r2),sqrt((u->r0_2)[a1][a2]));
-                                          }
-
-                                          for (is=0;is< (((p+ci)->back)+i)->nside;++is)
-                                          {
-                                                // interaction sidechain-sidechain (is-js)
-                                                a1 = (((((p+ci)->back)+i)->side)+is)->itype;
-                                                a2 = (((((p+cj)->back)+j)->side)+js)->itype;
-                                                r2 = Dist2( (((((p+ci)->back)+i)->side)+is)->pos, (((((p+cj)->back)+j)->side)+js)->pos );
-                                                if (tooclose) r02 = u->g_r0hard * u->g_r0hard;
-                                                else r02 = (u->r0_2)[a1][a2];
-                                                if ( r2 < r02 )
-                                                {
-                                                      strcpy(atom1, (((((p+ci)->back)+i)->side)+is)->type);
-                                                      ia1= (((((p+ci)->back)+i)->side)+is)->ia;
-                                                      strcpy(am1, (((p+ci)->back)+i)->aa);
-                                                      iaa1= (((p+ci)->back)+i)->iaa;
-                                                      strcpy(atom2, (((((p+cj)->back)+j)->side)+js)->type);
-                                                      ia2= (((((p+cj)->back)+j)->side)+js)->ia;
-                                                      strcpy(am2, (((p+cj)->back)+j)->aa);
-                                                      iaa2= (((p+cj)->back)+j)->iaa;
-
-                                                      o=1;
-                                                      if (pr)
-						      {
-						      		fprintf(fproc,"WARNING: overlap between sidechain %d of backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d) and sidechain %d of backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d): d=%lf d0=%lf\n",is,i,ci,a1,atom1,ia1,am1,iaa1,js,j,cj,a2,atom2,ia2,am2,iaa2,sqrt(r2),sqrt((u->r0_2)[a1][a2]));
-						//		fprintf(fproc,"irot 1 = %d \t irot2 = %d \n",(((p+ci)->back)+i)->irot,(((p+cj)->back)+j)->irot);
-						      
-						//		fprintf(fproc,"OVER: move %d\n",parms->mov);	
-
-
+								o=1;
+								if (pr) fprintf(fproc,"WARNING: overlap between backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d) and backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d): d=%lf d0=%lf\n",
+									i,ci,a1,atom1,ia1,am1,iaa1,j,cj,a2,atom2,ia2,am2,iaa2,sqrt(r2),sqrt((u->r0_2)[a1][a2]));
 							}
-                                                }
-				}
+						}
 
-                                    }
+						for (js=0;js< (((p+cj)->back)+j)->nside;++js)
+						{
+							// interaction backbone-sidechain (i-js)
+							a1 = (((p+ci)->back)+i)->itype;
+							a2 = (((((p+cj)->back)+j)->side)+js)->itype;
+							r2 = Dist2( (((p+ci)->back)+i)->pos, (((((p+cj)->back)+j)->side)+js)->pos );
+							if (tooclose) r02 = u->g_r0hard * u->g_r0hard;
+							else r02 = (u->r0_2)[a1][a2];
+							if ( r2 < r02 )
+							{
+								strcpy(atom1, (((p+ci)->back)+i)->type);
+								ia1= (((p+ci)->back)+i)->ia;
+								strcpy(am1, (((p+ci)->back)+i)->aa);
+								iaa1= (((p+ci)->back)+i)->iaa;
+								strcpy(atom2, (((((p+cj)->back)+j)->side)+js)->type);
+								ia2= (((((p+cj)->back)+j)->side)+js)->ia;
+								strcpy(am2, (((p+cj)->back)+j)->aa);
+								iaa2= (((p+cj)->back)+j)->iaa;
+
+								o=1;
+								if (pr) fprintf(fproc,"WARNING: overlap between backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d) and sidechain %d of backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d): d=%lf d0=%lf\n",
+                                                                                          i,ci,a1,atom1,ia1,am1,iaa1,js,j,cj,a2,atom2,ia2,am2,iaa2,sqrt(r2),sqrt((u->r0_2)[a1][a2]));
+							}
+
+							for (is=0;is< (((p+ci)->back)+i)->nside;++is)
+							{
+								// interaction sidechain-sidechain (is-js)
+								a1 = (((((p+ci)->back)+i)->side)+is)->itype;
+								a2 = (((((p+cj)->back)+j)->side)+js)->itype;
+								r2 = Dist2( (((((p+ci)->back)+i)->side)+is)->pos, (((((p+cj)->back)+j)->side)+js)->pos );
+								if (tooclose) r02 = u->g_r0hard * u->g_r0hard;
+								else r02 = (u->r0_2)[a1][a2];
+								if ( r2 < r02 )
+								{
+									strcpy(atom1, (((((p+ci)->back)+i)->side)+is)->type);
+									ia1= (((((p+ci)->back)+i)->side)+is)->ia;
+									strcpy(am1, (((p+ci)->back)+i)->aa);
+									iaa1= (((p+ci)->back)+i)->iaa;
+									strcpy(atom2, (((((p+cj)->back)+j)->side)+js)->type);
+									ia2= (((((p+cj)->back)+j)->side)+js)->ia;
+									strcpy(am2, (((p+cj)->back)+j)->aa);
+									iaa2= (((p+cj)->back)+j)->iaa;
+
+									o=1;
+									if (pr)
+									{
+										fprintf(fproc,"WARNING: overlap between sidechain %d of backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d) and sidechain %d of backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d): d=%lf d0=%lf\n",is,i,ci,a1,atom1,ia1,am1,iaa1,js,j,cj,a2,atom2,ia2,am2,iaa2,sqrt(r2),sqrt((u->r0_2)[a1][a2]));
+									}
+								}
+							}
+
+						}
 
                                     // interaction backbone-sidechain (is-j)
-                                    for (is=0;is< (((p+ci)->back)+i)->nside;++is)
-                                    {
-                                                a1 = (((p+cj)->back)+j)->itype;
-                                                a2 = (((((p+ci)->back)+i)->side)+is)->itype;
-                                                r2 = Dist2( (((p+cj)->back)+j)->pos, (((((p+ci)->back)+i)->side)+is)->pos );
-                                                if (tooclose) r02 = u->g_r0hard * u->g_r0hard;
-                                                else r02 = (u->r0_2)[a1][a2];
-                                                if ( r2 < r02 )
-                                                {
-                                                      strcpy(atom1, (((p+cj)->back)+j)->type);
-                                                      ia1= (((p+cj)->back)+j)->ia;
-                                                      strcpy(am1, (((p+cj)->back)+j)->aa);
-                                                      iaa1= (((p+cj)->back)+j)->iaa;
-                                                      strcpy(atom2, (((((p+ci)->back)+i)->side)+is)->type);
-                                                      ia2= (((((p+ci)->back)+i)->side)+is)->ia;
-                                                      strcpy(am2, (((p+ci)->back)+i)->aa);
-                                                      iaa2= (((p+ci)->back)+i)->iaa;
+						for (is=0;is< (((p+ci)->back)+i)->nside;++is)
+						{
+							a1 = (((p+cj)->back)+j)->itype;
+							a2 = (((((p+ci)->back)+i)->side)+is)->itype;
+							r2 = Dist2( (((p+cj)->back)+j)->pos, (((((p+ci)->back)+i)->side)+is)->pos );
+							if (tooclose) r02 = u->g_r0hard * u->g_r0hard;
+							else r02 = (u->r0_2)[a1][a2];
+							if ( r2 < r02 )
+							{
+								strcpy(atom1, (((p+cj)->back)+j)->type);
+								ia1= (((p+cj)->back)+j)->ia;
+								strcpy(am1, (((p+cj)->back)+j)->aa);
+								iaa1= (((p+cj)->back)+j)->iaa;
+								strcpy(atom2, (((((p+ci)->back)+i)->side)+is)->type);
+								ia2= (((((p+ci)->back)+i)->side)+is)->ia;
+								strcpy(am2, (((p+ci)->back)+i)->aa);
+								iaa2= (((p+ci)->back)+i)->iaa;
 
-                                                      o=1;
-                                                      if (pr) fprintf(fproc,"WARNING: overlap between sidechain %d of backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d) and backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d): d=%lf d0=%lf\n",
-                                                                                                                  is,i,ci,a1,atom1,ia1,am1,iaa1,j,cj,a2,atom2,ia2,am2,iaa2,sqrt(r2),sqrt((u->r0_2)[a1][a2]));
+								o=1;
+								if (pr) fprintf(fproc,"WARNING: overlap between sidechain %d of backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d) and backbone %d (chain %d, type %d, atom %s, id %d of amino acid %s %d): d=%lf d0=%lf\n",
+									is,i,ci,a1,atom1,ia1,am1,iaa1,j,cj,a2,atom2,ia2,am2,iaa2,sqrt(r2),sqrt((u->r0_2)[a1][a2]));
+							}
+						}
 
-						
-                                                }
-                                    }
-
-                              }
-      return o;
-
+					}
+				}
+			}
+		}
+	}
+	return o;
 }
 
 

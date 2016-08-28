@@ -74,10 +74,6 @@ struct s_polymer *AlloPolymer(int npol, int nback, int nside, int nrot, int nato
 			size += NCONTMAX*sizeof(int);
 			(((p+ipol)->back)+ires)->contacts_p = (int *) calloc(NCONTMAX,sizeof(int));
 			size += NCONTMAX*sizeof(int);
-			//NAACONTACTS(((p+ipol)->back)+ires)->aacontacts = (int *) calloc(NCONTMAX,sizeof(int));
-			//NAACONTACTSsize += NCONTMAX*sizeof(int);
-			//NAACONTACTS(((p+ipol)->back)+ires)->aacontacts_p = (int *) calloc(NCONTMAX,sizeof(int));
-			//NAACONTACTSsize += NCONTMAX*sizeof(int);
 			(((p+ipol)->back)+ires)->e = (double *) calloc(NCONTMAX,sizeof(double));
 			size += NCONTMAX*sizeof(double);
 			if (shell)
@@ -193,9 +189,6 @@ void FreePolymer(struct s_polymer *p,int npol, int nback, int nside, int shell, 
 
 			free((((p+ipol)->back)+ires)->contacts);
 			free((((p+ipol)->back)+ires)->contacts_p);
-			//NAACONTACTSfree((((p+ipol)->back)+ires)->aacontacts);
-			//NAACONTACTSfree((((p+ipol)->back)+ires)->aacontacts_p);
-
 
 			free((((p+ipol)->back)+ires)->e) ;
 		}
