@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 			fprintf(stderr,"Opening h_fields file %s...\n",p->h_fieldsfile);
 			fflush(stderr);
 			// Read and rescale the hfields file
-			ReadHFields(p->h_fieldsfile,u,polymer,nchain,p->hfs_alpha);
+			ReadHFields(p->h_fieldsfile,p->maxcontfile,u,polymer,nchain,p->hfs_alpha);
 			// Print the potential file
 			PrintPotential(u,p->eoutfile,npdb,ntypes,0,0,0,0);
 		}
@@ -237,6 +237,7 @@ void Parse(FILE *fp, struct s_parms *p)
 		ReadParS(aux,"coevofile",p->coevofile);
         ReadParS(aux,"propensityfile",p->ab_propensityfile);
 		ReadParS(aux,"h_fieldsfile",p->h_fieldsfile);
+		ReadParS(aux,"maxcontfile",p->maxcontfile);
 		ReadParS(aux,"model",p->model);
 		ReadParN(aux,"hydrogens",&(p->hydrogens));
 		ReadParF(aux,"r_hardcore",&(p->rhard));

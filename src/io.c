@@ -1803,9 +1803,9 @@ void ReadPropensity(char *fname, struct s_potential *u)
  Read the file of H fields obtained from CoCaInE
  *****************************************************************************/
 
-void ReadHFields(char *fname, struct s_potential *u, struct s_polymer *polymer, int nchain, double hfs_alpha)
+void ReadHFields(char *fname, char *contstat, struct s_potential *u, struct s_polymer *polymer, int nchain, double hfs_alpha)
 {
-	FILE *fp;
+	FILE *fp, *contfp;
 	fp = fopen(fname,"r");
 	if (!fp) Error("Cannot open H fields file");
 	fprintf(stderr,"Reading H fields File....\n");
@@ -1813,11 +1813,29 @@ void ReadHFields(char *fname, struct s_potential *u, struct s_polymer *polymer, 
 	
 	int iaa, ncont, idtype=1; //idtype is equal to 1 because hfields is atomtype-based
 	char aatype[3],aux[300];
+	int maxcont[20];
+	const char* residuenames[] = {"ALA","ARG","ASN","ASP","CYS","GLN","GLU",\
+								"GLY","HIS","ILE","LEU","LYS","MET","PHE",\
+								"PRO","SER","THR","TRP","TYR","VAL"};
 	double hbar, htild, htot, frustr, ht_hmin, e_emin, Z_h, Z_e, T_t, tot, S_f, occ;
-	int i, ci;
+	int i;
 		
 	// This is for CA atoms
 	u->h_values[0] = 0.;
+	
+	// Read the rescaling factors
+	contfp = fopen(contstat,"r");
+	if (!contfp) Error("Cannot open contact statistics file");
+	fprintf(stderr,"Reading contact statistics file....\n");
+	
+	i=0;
+	while(1)
+	{
+		if(fscanf(contfp,"%d",&(maxcont[i]))==1);
+		++i;
+		if(i==20) break;
+	}
+	
 	
 	while(fgets(aux,500,fp)!=NULL)
 	{
@@ -1831,31 +1849,24 @@ void ReadHFields(char *fname, struct s_potential *u, struct s_polymer *polymer, 
 		{
 			if (strcmp(aatype,"type")){	// Ignore first row
 				// ignore glicines
-				if (strcmp("GLY",aatype)) {
-					u->h_values[idtype] = htild/hfs_alpha; // h/(alpha)
+				if (strcmp("GLY",aatype))
+				{
+					for(i=0;i<20;++i)
+					{
+						if (!strcmp(residuenames[i],aatype))
+						{
+							u->h_values[idtype] = htild/hfs_alpha/(double)maxcont[i]; // h/(alpha)
+							break;
+						}
+					}
 					idtype++;
 				}
 			}
 		}
 	}
 	
-	// Reset the counter
-	idtype = 1;
-	
-	// Rescale hfields value using the contact number of CA atom
-	for (ci=0;ci<nchain;++ci)                           // loops on polymers
-		for (i=0;i<(polymer+ci)->nback;++i)             // loops on backbone atoms of each polymer
-			if ( (!strcmp((((polymer+ci)->back)+i)->type, "CA")) && strcmp((((polymer+ci)->back)+i)->aa,"GLY") )
-			{
-				// If native contacts are greater than 0, we rescale them
-				if ((((polymer+ci)->back)+i)->ncontacts != 0 )
-				{
-					u->h_values[idtype] /= (double)((((polymer+ci)->back)+i)->ncontacts);
-				}
-				idtype++;
-			}
-	
 	fclose(fp);
+	fclose(contfp);
 	
 	return;
 }

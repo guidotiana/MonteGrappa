@@ -27,6 +27,7 @@ struct s_parms
 	char coevofile[200];
 	char ab_propensityfile[200];
 	char h_fieldsfile[200];
+	char maxcontfile[200];
 
 	char potential[50];
 	char atomtypes[50];
@@ -195,5 +196,5 @@ int Rot2Polymer(int nrot_kinds, int nchains, struct s_polymer *p, struct rot_inp
 
 //io.c
 void ReadPropensity(char *fname, struct s_potential *u);
-void ReadHFields(char *fname, struct s_potential *u, struct s_polymer *p, int nchain, double hfs_alpha);
+void ReadHFields(char *fname, char *contstat, struct s_potential *u, struct s_polymer *p, int nchain, double hfs_alpha);
 void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, int noangpot, int nodihpot, int hb, int nohfields);
