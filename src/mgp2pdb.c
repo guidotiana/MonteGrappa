@@ -117,7 +117,7 @@ void mgp2pdbHeader(){
 }
 
 int polymercounter(char* filename){
-	int npol = 1, chain, old_chain, dummy_d;
+	int npol = 0, chain=-1, old_chain=-1, dummy_d;
 	char dummy_s[10], aux[500];
 	double dummy_lf;
 	
