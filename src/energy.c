@@ -108,21 +108,51 @@ void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r
 
 }
 
-void Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02)
+double Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02)
 {
-	int i,j,k=0,iaa1,iaa2,itype1,itype2;
-	double energy,r;
+	int i,j,k=0,iaa1,iaa2,itype1,itype2,lines=0;
+	double energy,r,mean=0,stdev=0;
 	char aux[500],aa1[3],aa2[3];
 	FILE *fp;
 	
+	//calculate std deviation of contact energies
 	fprintf(stderr,"Reading coevolutionary contact file\n");
 	fp = fopen(parms->coevofile,"r");
 	if (!fp) Error("Coevolutionary contact file does not exist");
 
-	
 	while(fgets(aux,500,fp)!=NULL)
 	{
-		if ( sscanf(aux,"%d %s %d %s %lf",&iaa1,aa1,&iaa2,aa2,&energy) == 5);
+		if((sscanf(aux,"%d %s %d %s %lf",&iaa1,aa1,&iaa2,aa2,&energy) == 5) && (lines>0))
+		{
+			mean+=energy;
+		}	
+		++lines;
+	}
+	lines-=1;
+	mean/=(double)lines;
+
+	fclose(fp);
+
+	fp = fopen(parms->coevofile,"r");
+
+	i=0;
+	while(fgets(aux,500,fp)!=NULL)
+	{
+		if((sscanf(aux,"%d %s %d %s %lf",&iaa1,aa1,&iaa2,aa2,&energy) == 5) && i!=0)
+		{
+			stdev+=(mean-energy)*(mean-energy);
+		}	
+		++i;
+	}
+	stdev=sqrt(stdev/(double)(lines-1));	
+	fclose(fp);
+
+
+	fp = fopen(parms->coevofile,"r");
+
+	while(fgets(aux,500,fp)!=NULL)
+	{
+		if ( sscanf(aux,"%d %s %d %s %lf",&iaa1,aa1,&iaa2,aa2,&energy) == 5)
 		{
 			for(i=0;i<p->nback;++i)
 			{
@@ -148,8 +178,8 @@ void Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **
 						r02[itype1][itype2] = r;
 						r02[itype2][itype1] = r02[itype1][itype2];
 						
-						// set the interaction energy
-						e[itype1][itype2] = energy;
+						// set the interaction energy (such that std deviation=1)
+						e[itype1][itype2] = energy/stdev;
 						e[itype2][itype1] = e[itype1][itype2];
 					}
 				}
@@ -159,8 +189,8 @@ void Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **
 	fclose(fp);
 	
 	if (parms->debug>0) fprintf(stderr,"Found %d contacts in coevolutionary contact file\n",k);
-	
-
+	fprintf(stderr,"mean=%lf     stdev=%lf\n",mean,stdev);
+	return stdev;
 }
 
 void Go_Dihedrals(struct s_parms *parms, struct s_polymer *p, int nc, double *dih01, double *dih03, struct s_potential *u)

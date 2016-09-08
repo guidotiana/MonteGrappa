@@ -1803,7 +1803,7 @@ void ReadPropensity(char *fname, struct s_potential *u)
  Read the file of H fields obtained from CoCaInE
  *****************************************************************************/
 
-void ReadHFields(char *fname, char *contstat, struct s_potential *u, struct s_polymer *polymer, int nchain, double hfs_alpha)
+void ReadHFields(char *fname, char *contstat, struct s_potential *u, struct s_polymer *polymer, int nchain, double hfs_alpha, double stdev)
 {
 	FILE *fp, *contfp;
 	fp = fopen(fname,"r");
@@ -1855,7 +1855,7 @@ void ReadHFields(char *fname, char *contstat, struct s_potential *u, struct s_po
 					{
 						if (!strcmp(residuenames[i],aatype))
 						{
-							u->h_values[idtype] = htild/hfs_alpha/(double)maxcont[i]; // h/(alpha)
+							u->h_values[idtype] = htild/hfs_alpha/stdev/(double)maxcont[i]; // h/(alpha)
 							break;
 						}
 					}

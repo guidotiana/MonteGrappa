@@ -172,7 +172,7 @@ int SimplifyPDB(struct atom_s *x, int n, char *model);
 // energy.c
 double **ContactMap(struct s_parms *parms, struct s_polymer *p, int nchains, int nat, int debug);
 void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r, double **r0, int nchains, int natoms, double **cm);
-void Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02);
+double Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02);
 void Go_Dihedrals(struct s_parms *parms, struct s_polymer *p, int nc, double *dih01, double *dih03, struct s_potential *u);
 void Go_Angles(struct s_parms *parms, struct s_polymer *p, int nc, double *ang, struct s_potential *u);
 void Ram_Dihedrals(struct s_parms *p, struct s_potential *u);
@@ -196,5 +196,5 @@ int Rot2Polymer(int nrot_kinds, int nchains, struct s_polymer *p, struct rot_inp
 
 //io.c
 void ReadPropensity(char *fname, struct s_potential *u);
-void ReadHFields(char *fname, char *contstat, struct s_potential *u, struct s_polymer *p, int nchain, double hfs_alpha);
+void ReadHFields(char *fname, char *contstat, struct s_potential *u, struct s_polymer *p, int nchain, double hfs_alpha, double stdev);
 void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, int noangpot, int nodihpot, int hb, int nohfields);
