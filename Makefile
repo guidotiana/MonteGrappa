@@ -1,3 +1,4 @@
+#CC=icc
 CC=gcc 
 #CC=gcc -fopenmp
 CCMP=mpicc

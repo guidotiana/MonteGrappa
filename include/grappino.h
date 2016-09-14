@@ -28,6 +28,8 @@ struct s_parms
 	char ab_propensityfile[200];
 	char h_fieldsfile[200];
 	char maxcontfile[200];
+        char maxcontpairsfile[200];
+
 
 	char potential[50];
 	char atomtypes[50];
@@ -43,7 +45,7 @@ struct s_parms
 	double k_native_r;
 	double k_native_hc;
 	char back_a[100][100];
-    	int move_a[100];
+	int move_a[100];
 	int n_back_a;
 	double tthresh;				// threshold to define a bonded interaction
 	int debug;
@@ -72,7 +74,7 @@ struct s_parms
 	double hydro_e;
 	double hydro_r;
 	char typesfile[100];
-    
+
     int dih_ram;				//energy dihedrals with minimum in Ramachandran dihedrals
 	double e_dihram;
 	double sig_a_phi;
@@ -83,10 +85,10 @@ struct s_parms
 	int phi_0_b;
 	int psi_0_a;
 	int psi_0_b;
-	
+
 	int h_fields;				//H fields for CoCaInE-derived potentials
 	double hfs_alpha;			// alpha parameter
-
+	int coevo_allatom;
 
 };
 
@@ -139,6 +141,13 @@ struct atom_gromacs
 	double mass[50];
 };
 
+struct s_pairscont{
+  int max;
+  char nameaa1[5];
+  char nameaa2[5];
+};
+
+
 void Parse(FILE *fp, struct s_parms *p);
 void AppendPotentialComments(struct s_parms *p, char *eoutfile);
 struct atom_s *AlloAtoms(int n);
@@ -177,7 +186,7 @@ void Go_Dihedrals(struct s_parms *parms, struct s_polymer *p, int nc, double *di
 void Go_Angles(struct s_parms *parms, struct s_polymer *p, int nc, double *ang, struct s_potential *u);
 void Ram_Dihedrals(struct s_parms *p, struct s_potential *u);
 int SetGoTypes(struct s_polymer *p, int nchains, int nat);
-int SetGoBackTypes(struct s_polymer *p, int nchains, int nat);
+int SetGoAATypes(struct s_polymer *p, int nchains, int nat);
 void DisulphideBonds(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02, int nchains, int nat);
 void OP_AddEnergy(struct s_polymer *p, int a1, int a2, double mul);
 int ReadTypes(struct s_polymer *p, int nchains, int nat, char *nfile);

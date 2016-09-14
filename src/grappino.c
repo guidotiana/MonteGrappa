@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 
 	// set atomtypes
 	if (!strcmp(p->atomtypes,"go")) ntypes = SetGoTypes(polymer,nchain,npdb);
-	else if (!strcmp(p->atomtypes,"go_back")) ntypes = SetGoBackTypes(polymer,nchain,npdb);
+	else if (!strcmp(p->atomtypes,"go_aa")) ntypes = SetGoAATypes(polymer,nchain,npdb);
 	else ntypes = ReadTypes(polymer,nchain,npdb,p->atomtypes);
 	
     
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 	}
 	else if (!strcmp(p->potential,"coevo"))
 	{
-		stdev = Ext_Pairs(p,polymer,u->e,u->r_2,u->r0_2);
+	  stdev = Ext_Pairs(p,polymer,u->e,u->r_2,u->r0_2);
 		u->g_r0hard = p->rhard;
 	}
 
@@ -221,6 +221,8 @@ void Parse(FILE *fp, struct s_parms *p)
         ReadParS(aux,"propensityfile",p->ab_propensityfile);
 		ReadParS(aux,"h_fieldsfile",p->h_fieldsfile);
 		ReadParS(aux,"maxcontfile",p->maxcontfile);
+		ReadParN(aux,"coevo_allatom",&(p->coevo_allatom));
+		ReadParS(aux,"maxcontpairsfile",p->maxcontpairsfile);
 		ReadParS(aux,"model",p->model);
 		ReadParN(aux,"hydrogens",&(p->hydrogens));
 		ReadParF(aux,"r_hardcore",&(p->rhard));

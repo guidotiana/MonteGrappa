@@ -42,7 +42,7 @@
  *****************************************************************************/
 void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02, int nchains, int nat, double **cm)
 {
-	int i,j,k=0;
+        int i,j,k=0;
 	double r;
 	FILE *fout;
 
@@ -110,11 +110,26 @@ void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r
 
 double Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02)
 {
-	int i,j,k=0,iaa1,iaa2,itype1,itype2,lines=0;
+	int i,ii,j,k=0,iaa1,iaa2,itype1,itype2,lines=0;
 	double energy,r,mean=0,stdev=0;
 	char aux[500],aa1[3],aa2[3];
-	FILE *fp;
-	
+	FILE *fp, *contfp;
+	int naapairs=210;
+	struct s_pairscont cont[210]; //max contact map between aa types
+
+	// Read the rescaling factors for the aa pairs
+	if(parms->coevo_allatom)
+	{
+		contfp = fopen(parms->maxcontpairsfile,"r");
+		if (!contfp) Error("Cannot open pairs contact statistic file");
+		else fprintf(stderr,"Reading pairs contact statistics file....\n");
+		i=0;
+		while(fscanf(contfp,"%s %s %d",(cont[i].nameaa1),(cont[i].nameaa2),&(cont[i].max))==3)
+	    {
+			++i;
+		}
+		fclose(contfp);
+	}
 	//calculate std deviation of contact energies
 	fprintf(stderr,"Reading coevolutionary contact file\n");
 	fp = fopen(parms->coevofile,"r");
@@ -179,6 +194,16 @@ double Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double 
 						r02[itype2][itype1] = r02[itype1][itype2];
 						
 						// set the interaction energy (such that std deviation=1)
+						if(parms->coevo_allatom)
+						{
+							//normalize energy over max contacts
+							for(ii=0;ii<naapairs;++ii)
+							{
+								if((!strcmp(aa1,cont[ii].nameaa1) && !strcmp(aa2,cont[ii].nameaa2)) || (!strcmp(aa2,cont[ii].nameaa1) && !strcmp(aa1,cont[ii].nameaa2))){
+									energy/=(double)cont[ii].max;
+								}
+							}
+						}
 						e[itype1][itype2] = energy/stdev;
 						e[itype2][itype1] = e[itype1][itype2];
 					}
@@ -337,25 +362,40 @@ int SetGoTypes(struct s_polymer *p, int nchains, int nat)
 }
 
 /*****************************************************************************
- Assign as atom types an incremental number (backbone excluded)
+ Assign as atom types an incremental number on aminoacids
  *****************************************************************************/
-int SetGoBackTypes(struct s_polymer *p, int nchains, int nat)
+int SetGoAATypes(struct s_polymer *p, int nchains, int nat)
 {
-	int ic,i,j,k=1;
+	int ic,i,j,k=1,typecontrol;
 	
-	fprintf(stderr,"Set Go types (backbone excluded)\n");
-	
+	fprintf(stderr,"Set Go types (amino acids based)\n");
+	typecontrol=(((p+0)->back)+0)->iaa;
+
 	for (ic=0;ic<nchains;++ic)
-	for (i=0;i<(p+ic)->nback;++i)
 	{
-		(((p+ic)->back)+i)->itype = 0;
-		for (j=0;j<(((p+ic)->back)+i)->nside;++j)
+		//fprintf(stderr,"%d\n",typecontrol);
+		for (i=0;i<(p+ic)->nback;++i)
 		{
-			(((((p+ic)->back)+i)->side)+j)->itype = k;
-			++k;
+			(((p+ic)->back)+i)->itype = 0;
+			if((((p+ic)->back)+i)->iaa != typecontrol)
+			{
+				++k;
+				typecontrol = (((p+ic)->back)+i)->iaa;
+				//fprintf(stderr,"%d\n",typecontrol);
+			}
+			if (!strcmp((((p+ic)->back)+i)->aa,"GLY"))
+			{
+				for (j=0;j<(((p+ic)->back)+i)->nside;++j)
+					(((((p+ic)->back)+i)->side)+j)->itype = 0;
+			}
+			else{
+				for (j=0;j<(((p+ic)->back)+i)->nside;++j)
+				{
+					(((((p+ic)->back)+i)->side)+j)->itype = k;
+				}
+			}
 		}
 	}
-	
 	return k;
 }
 
