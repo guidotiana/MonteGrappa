@@ -646,7 +646,7 @@ double GetHFields(struct s_polymer *p, int ip)
 	
 	for (iw=0;iw<(p+ip)->nback;++iw)
 	{
-		if ( strcmp((((p+ip)->back)+iw)->type,"GLY") )
+		if ( strcmp((((p+ip)->back)+iw)->aa,"GLY") && !strcmp((((p+ip)->back)+iw)->type,"CA") )
 		{
 			e += (((p+ip)->back)+iw)->e_hfs;
 		}
@@ -905,19 +905,16 @@ double EnergyDihedrals(struct s_polymer *p, struct s_potential *u, int iw, int i
 double EnergyHFields(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms, int iw, int ic, int update){
 
 	double e=0.;
-	int is;
-	
 	
 	// ignore glycine
-	if ( !strcmp((((p+ic)->back)+iw)->aa,"GLY") )
+	if ( !strcmp((((p+ic)->back)+iw)->aa,"GLY") || strcmp((((p+ic)->back)+iw)->type,"CA") )
 	{
 		return 0;
 	}
 	else
 	{
 		// Loop over all the sidechain atoms
-		for (is=0;is< (((p+ic)->back)+iw)->nside;++is)
-			e += (double)(((((p+ic)->back)+iw)->side)+is)->ncontacts * u->h_values[(((((p+ic)->back)+iw)->side)+is)->itype];
+		e += (double)(((p+ic)->back)+iw)->ncontacts * u->h_values[((((p+ic)->back)+iw)->side)->itype];
 	}
 	
 	// Store the energy value on the backbone atom

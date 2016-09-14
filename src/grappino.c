@@ -19,8 +19,8 @@ int main(int argc, char *argv[])
 	double **cm;                            // contact map
 	FILE *fin;
 	double dummy, r2, stdev;							// for contacts calculation
-	int i,j,ci,cj,tooclose;							// for contacts
-
+	int i;
+	
     GrappinoWelcome(stderr);
     
 	if ((argc != 2) || !strcmp(argv[1],"-h") ) {
