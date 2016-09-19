@@ -322,6 +322,7 @@ double **ContactMap(struct s_parms *parms, struct s_polymer *p, int nchains, int
 
 							}
 						}
+
 						// sidechain-sidechain interactions
 						for (is1=0;is1<(((p+c1)->back)+ib1)->nside;++is1)
 							for (is2=0;is2<(((p+c2)->back)+ib2)->nside;++is2)
@@ -373,20 +374,30 @@ int SetGoAATypes(struct s_polymer *p, int nchains, int nat)
 
 	for (ic=0;ic<nchains;++ic)
 	{
-		//fprintf(stderr,"%d\n",typecontrol);
+		//fprintf(stderr,"%d\t%d\n",typecontrol,k);
 		for (i=0;i<(p+ic)->nback;++i)
 		{
 			(((p+ic)->back)+i)->itype = 0;
-			if((((p+ic)->back)+i)->iaa != typecontrol)
+			// If we have a new amino acid, we change the atom type
+			if( ((((p+ic)->back)+i)->iaa != typecontrol) && (strcmp((((p+ic)->back)+i)->aa,"GLY")))
 			{
 				++k;
 				typecontrol = (((p+ic)->back)+i)->iaa;
 				//fprintf(stderr,"%d\n",typecontrol);
+				//fprintf(stderr,"oldk:%d\tnewk:%d\tatomtype:%s\n",typecontrol,k,(((p+ic)->back)+i)->aa);
 			}
-			if (!strcmp((((p+ic)->back)+i)->aa,"GLY"))
+			// Apply the new type
+			// Skip Glycines
+			if (!strcmp((((p+ic)->back)+i)->aa,"GLY") )
 			{
 				for (j=0;j<(((p+ic)->back)+i)->nside;++j)
 					(((((p+ic)->back)+i)->side)+j)->itype = 0;
+			}
+			else if(strcmp((((p+ic)->back)+i)->type,"CA")){
+				for (j=0;j<(((p+ic)->back)+i)->nside;++j)
+				{
+					(((((p+ic)->back)+i)->side)+j)->itype = 0;
+				}
 			}
 			else{
 				for (j=0;j<(((p+ic)->back)+i)->nside;++j)
@@ -396,7 +407,8 @@ int SetGoAATypes(struct s_polymer *p, int nchains, int nat)
 			}
 		}
 	}
-	return k;
+	// k+1 to take into account the backbone type
+	return k+1;
 }
 
 /*****************************************************************************

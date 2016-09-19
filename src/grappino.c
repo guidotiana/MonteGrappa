@@ -79,9 +79,8 @@ int main(int argc, char *argv[])
 	else if (!strcmp(p->atomtypes,"go_aa")) ntypes = SetGoAATypes(polymer,nchain,npdb);
 	else ntypes = ReadTypes(polymer,nchain,npdb,p->atomtypes);
 	
-    
 	cm = ContactMap(p,polymer,nchain,ntypes,p->debug);
-
+	
 	u = AlloPotential(npdb,ntypes,0,0,0,0);
 	u->splice=0;
 	u->g_imin = p->imin;
