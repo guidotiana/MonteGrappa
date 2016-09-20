@@ -111,7 +111,7 @@ void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r
 double Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02)
 {
 	int i,ii,j,k=0,iaa1,iaa2,itype1,itype2,lines=0;
-	double energy,r,mean=0,stdev=0;
+	double energy,r,mean=0,stdev=0,appoenergy;
 	char aux[500],aa1[3],aa2[3];
 	FILE *fp, *contfp;
 	int naapairs=210;
@@ -135,6 +135,7 @@ double Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double 
 	fp = fopen(parms->coevofile,"r");
 	if (!fp) Error("Coevolutionary contact file does not exist");
 
+	// Mean calculation (first cycle)
 	while(fgets(aux,500,fp)!=NULL)
 	{
 		if((sscanf(aux,"%d %s %d %s %lf",&iaa1,aa1,&iaa2,aa2,&energy) == 5) && (lines>0))
@@ -150,6 +151,8 @@ double Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double 
 
 	fp = fopen(parms->coevofile,"r");
 
+	
+	// Standard deviation calculation (second cycle)
 	i=0;
 	while(fgets(aux,500,fp)!=NULL)
 	{
@@ -173,12 +176,11 @@ double Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double 
 			{
 				for(j=i;j<p->nback;++j)
 				{
-					if( ( (((p->back)+i)->iaa == iaa1) && (((p->back)+j)->iaa == iaa2) ) &&
-					  ( (!strcmp(((p->back)+i)->type,"CA")) && (!strcmp(((p->back)+j)->type,"CA")) ) &&
-					   (strcmp(aa1,"GLY")) && (strcmp(aa2,"GLY"))  )
+					// Check the aminoacid id, ignoring the sidechain of the N atom and glicines
+					if( ( ( ((p->back)+i)->iaa == iaa1 ) && ( ((p->back)+j)->iaa == iaa2 ) ) &&
+					   (strcmp(((p->back)+i)->type,"N")) && ( strcmp(((p->back)+j)->type,"N") ) &&
+					  (strcmp(aa1,"GLY")) && (strcmp(aa2,"GLY"))  )
 					{
-						//DEBUG
-						//fprintf(stderr,"%d %s %d %s %lf\n",iaa1,aa1,iaa2,aa2,energy);
 						itype1 = (((p->back)+i)->side)->itype;
 						itype2 = (((p->back)+j)->side)->itype;
 						++k;
@@ -199,12 +201,13 @@ double Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double 
 							//normalize energy over max contacts
 							for(ii=0;ii<naapairs;++ii)
 							{
-								if((!strcmp(aa1,cont[ii].nameaa1) && !strcmp(aa2,cont[ii].nameaa2)) || (!strcmp(aa2,cont[ii].nameaa1) && !strcmp(aa1,cont[ii].nameaa2))){
-									energy/=(double)cont[ii].max;
+								if((!strcmp(aa1,cont[ii].nameaa1) && !strcmp(aa2,cont[ii].nameaa2)) || (!strcmp(aa2,cont[ii].nameaa1) && !strcmp(aa1,cont[ii].nameaa2)))
+								{
+									appoenergy=energy/(double)cont[ii].max;
 								}
 							}
 						}
-						e[itype1][itype2] = energy/stdev;
+						e[itype1][itype2] = appoenergy/stdev;
 						e[itype2][itype1] = e[itype1][itype2];
 					}
 				}
@@ -227,7 +230,7 @@ void Go_Dihedrals(struct s_parms *parms, struct s_polymer *p, int nc, double *di
 		{
 			ia =  (((p+i)->back)+j)->ia;
 			u->dih01[ia] = Dihedral( (((p+i)->back)+j-2)->pos, (((p+i)->back)+j-1)->pos, 
-						(((p+i)->back)+j)->pos, (((p+i)->back)+j+1)->pos, p->tables,&out);
+									 (((p+i)->back)+j)->pos, (((p+i)->back)+j+1)->pos, p->tables,&out);
 			u->e_dih1[ia] = parms->e_dih1;
 			u->dih03[ia] = u->dih01[ia];
 			u->e_dih3[ia] = parms->e_dih3;
@@ -393,21 +396,17 @@ int SetGoAATypes(struct s_polymer *p, int nchains, int nat)
 				for (j=0;j<(((p+ic)->back)+i)->nside;++j)
 					(((((p+ic)->back)+i)->side)+j)->itype = 0;
 			}
-			else if(strcmp((((p+ic)->back)+i)->type,"CA")){
+			// Set the atomtypes to all the remaining sidechains
+			else
+			{
 				for (j=0;j<(((p+ic)->back)+i)->nside;++j)
 				{
-					(((((p+ic)->back)+i)->side)+j)->itype = 0;
-				}
-			}
-			else{
-				for (j=0;j<(((p+ic)->back)+i)->nside;++j)
-				{
-					(((((p+ic)->back)+i)->side)+j)->itype = k;
+				(((((p+ic)->back)+i)->side)+j)->itype = k;
 				}
 			}
 		}
 	}
-	// k+1 to take into account the backbone type
+	// k+1 to take into account the backbone type (0)
 	return k+1;
 }
 
