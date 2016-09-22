@@ -69,8 +69,6 @@ cleanobj:
 	rm -f $(OBJDIR)/*.o 
 	rm -f src/mhistogram/*.o
 
-
-
 all:
 	make cleanobj;
 	make version=STEMPERING;

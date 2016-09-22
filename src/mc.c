@@ -1245,7 +1245,7 @@ void UpdateMonomerRange(struct s_polymer *from, struct s_polymer *to, int wfrom,
 int MoveSidechain(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms *mc_parms, struct s_potential *pot,
 		unsigned long long istep, int debug, double t)
 {
-	int iw,ok=0,chk=0,ir,ip;
+	int iw,ok=0,chk=0,ir,ip,i;
 	double deltaE;
 
 
@@ -1268,12 +1268,26 @@ int MoveSidechain(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms 
 
 	deltaE = - GetEnergyMonomer(p,ip,iw);								// old energy of iw with the others
 
+	if (!mc_parms->nohfields){
+		deltaE -= GetHFields(p,ip);										// old H fields energy
+	}
+	
 	ir = irand( (((p+ip)->back)+iw)->nrot );
 	(((p+ip)->back)+iw)->irot = ir;
 	ok = AddSidechain(p,iw,iw,ip);
 
 	deltaE += EnergyMonomer(p,pot,iw,ip,mc_parms->npol,1,mc_parms->shell,mc_parms->nosidechains,mc_parms->disentangle,mc_parms->hb);			// new energy of iw with the others
 	//deltaE += EnergyMonomer(p,pot,iw,ip,mc_parms->npol,1,0,mc_parms->nosidechains,mc_parms->disentangle,mc_parms->hb); 
+	
+	if (!mc_parms->nohfields)
+	{
+		for(i=0;i<(p+ip)->nback;++i)
+		{
+			deltaE += EnergyHFields(p,pot,mc_parms,i,ip,1);
+		}
+	}
+	
+	
 	#ifdef DEBUG
 	if (debug>2) fprintf(stderr,"deltaE=%lf\n",deltaE); fflush(stderr);
 	#endif
