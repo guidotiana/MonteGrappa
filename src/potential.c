@@ -95,7 +95,7 @@ double TotalEnergy(struct s_polymer *p, struct s_potential *u, struct s_mc_parms
 					if (!parms->nodihpot){
 						edih += EnergyDihedrals(p,u,i,ci,update);					// dihedral potential
  					}
-					if ( (!parms->nohfields) && (!strcmp("CA",(((p+ci)->back)+i)->type)) ){
+					if ( (!parms->nohfields) ){
 						ehfs += EnergyHFields(p,u,parms,i,ci,update);					// H fields potential
 					}
 					if (u->boxtype != 'n')                                                  // box potential
@@ -114,7 +114,7 @@ double TotalEnergy(struct s_polymer *p, struct s_potential *u, struct s_mc_parms
 						eang += EnergyAngles(p,u,i,ci,update);                  // angular potential
 					if (!parms->nodihpot)
 						edih += EnergyDihedrals(p,u,i,ci,update);				// dihedral potential
-					if ( (!parms->nohfields) && (!strcmp("CA",(((p+ci)->back)+i)->type)) )
+					if ( (!parms->nohfields) )
 						ehfs += EnergyHFields(p,u,parms,i,ci,update);					// H fields potential
 					if (u->boxtype != 'n')
 						if (EnergyBox(p,u,i,ci) == 1) ebox = LARGE;				// box potential
@@ -352,14 +352,11 @@ double EnergyMonomer(struct s_polymer *p, struct s_potential *u, int i, int ci, 
 		{
 			for (j=0;j<(p+cj)->nback;++j)
 			{
-//				if(i==1 && ci == 1 && j == 7 && cj == 1) fprintf(stderr,"interaction atom %d of %d // %d of %d \n distance %lf",i,ci,j,cj, sqrt(Dist2( (((p+ci)->back)+i)->pos, (((p+cj)->back)+j)->pos )));				
 				if ( ci!= cj || i!=j )
 				{
 					tooclose = 0;
 					if (ci == cj && Abs(i-j) <= u->g_imin) tooclose = 1;
 					e = EnergyPair(p,u,i,j,ci,cj,update,nosidechains,disentangle,tooclose,hb);
-				//	          if(i==136 && ci == 0 && j == 151 && cj == 0)   
-				//		  fprintf(stderr,"NOSHELL interaction atom %d of %d // %d of %d E=%lf\tirot1=%d\tirot2=\%d\n",i,ci,j,cj,e,(((p+ci)->back)+i)->irot,(((p+cj)->back)+j)->irot);
 
 					if (e>=LARGE && !disentangle) return LARGE;
 					etot += e;
@@ -646,10 +643,7 @@ double GetHFields(struct s_polymer *p, int ip)
 	
 	for (iw=0;iw<(p+ip)->nback;++iw)
 	{
-		if ( strcmp((((p+ip)->back)+iw)->aa,"GLY") && !strcmp((((p+ip)->back)+iw)->type,"CA") )
-		{
-			e += (((p+ip)->back)+iw)->e_hfs;
-		}
+	e += (((p+ip)->back)+iw)->e_hfs;
 	}
 	return e;
 }
@@ -906,16 +900,8 @@ double EnergyHFields(struct s_polymer *p, struct s_potential *u, struct s_mc_par
 
 	double e=0.;
 	
-	// ignore glycine
-	if ( !strcmp((((p+ic)->back)+iw)->aa,"GLY") || strcmp((((p+ic)->back)+iw)->type,"CA") )
-	{
-		return 0;
-	}
-	else
-	{
-		// Loop over all the sidechain atoms
-		e += (double)(((p+ic)->back)+iw)->ncontacts * u->h_values[((((p+ic)->back)+iw)->side)->itype];
-	}
+	// Loop over all the sidechain atoms
+	e += (double)(((p+ic)->back)+iw)->ncontacts * u->h_values[((((p+ic)->back)+iw)->side)->itype];
 	
 	// Store the energy value on the backbone atom
 	if (update)

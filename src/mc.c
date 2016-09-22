@@ -1134,7 +1134,11 @@ void UpdateMonomer(struct s_polymer *from, struct s_polymer *to, int w, int n, i
         (((to+n)->back)+w)->irot = (((from+n)->back)+w)->irot;
 
 	if (w<((from+n)->nback)-2) (((to+n)->back)+w+2)->e_dih = (((from+n)->back)+w+2)->e_dih;
-
+	
+	for(i=0;i<(to+n)->nback;++i){
+		(((to+n)->back)+i)->e_hfs = (((from+n)->back)+i)->e_hfs;
+	}
+	
 	// Finally, copy w itself
 	CopyResiduePositions( (((from+n)->back)+w), (((to+n)->back)+w) );
 
@@ -1260,8 +1264,7 @@ int MoveSidechain(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms 
 		if (chk>(p+ip)->nback*3) {mc_parms->mov++; return -1;}
 	}
 	while ( (((p+ip)->back)+iw)->nside < 1 || (((p+ip)->back)+iw)->nrot ==1 );
-
-
+	
 	#ifdef DEBUG
 	 if (debug>2) fprintf(stderr,"step=%d sidechain iw=%d\n",istep,iw); fflush(stderr);
 	#endif
@@ -1286,7 +1289,6 @@ int MoveSidechain(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms 
 			deltaE += EnergyHFields(p,pot,mc_parms,i,ip,1);
 		}
 	}
-	
 	
 	#ifdef DEBUG
 	if (debug>2) fprintf(stderr,"deltaE=%lf\n",deltaE); fflush(stderr);
