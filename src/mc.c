@@ -1684,7 +1684,7 @@ int MoveMultipleFlip(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_par
 int MoveCoM(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms *parms, struct s_potential *pot,
 		unsigned long long istep, int debug, double t)
 {
-	int ip,ok;
+	int ip,i,ok;
 	double dx,dy,dz,deltaE;
 
 	ip = irand(parms->npol);
@@ -1699,13 +1699,28 @@ int MoveCoM(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms *parms
 	// old energies
 	deltaE=-GetEnergyMonomerRange(p,0,(p+ip)->nback-1,ip);						// old energy  (iw1-1 & iw2+1 because I move their sidechains)
 	
+	if (!parms->nohfields)
+	{
+		deltaE -= GetHFields(p,ip);										// old H fields energy
+	}
+	
+	
 	// move
 	DisplaceCoM(p,ip,dx,dy,dz);
 
 	// new energy
 	deltaE+=EnergyMonomerRange(p,pot,0,(p+ip)->nback-1,ip,parms->npol,0,1,parms->nosidechains,parms->disentangle,parms->hb);
-
- 	#ifdef DEBUG
+	
+	// new hfields
+	if (!parms->nohfields)
+	{
+		for(i=0;i<(p+ip)->nback;++i)
+		{
+			deltaE += EnergyHFields(p,pot,parms,i,ip,1);
+		}
+	}
+	
+#ifdef DEBUG
   	   if (debug>2) fprintf(stderr,"deltaE=%lf\n",deltaE); fflush(stderr);
   	#endif
 
