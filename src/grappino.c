@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 	// H fields
 	if (p->h_fields)
 	{
-		(stderr,"Opening h_fields file %s...\n",p->h_fieldsfile);
+		fprintf(stderr,"Opening h_fields file %s...\n",p->h_fieldsfile);
 		fflush(stderr);
 		// Read and rescale the hfields file
 		ReadHFields(p->h_fieldsfile,p->maxcontfile,u,polymer,nchain,p->hfs_alpha,stdev);

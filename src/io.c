@@ -1831,7 +1831,7 @@ void ReadHFields(char *fname, char *contstat, struct s_potential *u, struct s_po
 	i=0;
 	while(1)
 	{
-		if(fscanf(contfp,"%d",&(maxcont[i]))==1);
+	        if(fscanf(contfp,"%s %d",aatype,&(maxcont[i]))==2);
 		++i;
 		if(i==20) break;
 	}
