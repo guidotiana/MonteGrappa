@@ -1839,11 +1839,8 @@ void ReadHFields(char *fname, char *contstat, struct s_potential *u, struct s_po
 	
 	while(fgets(aux,500,fp)!=NULL)
 	{
-		// With or without occupancy statistics
-		if( (fscanf(fp,"%d %s %lf %lf %lf %d %lf %lf %lf %lf %lf %lf %lf %lf %lf",\
-					&iaa,aatype,&hbar,&htild,&htot,&ncont,&frustr,&ht_hmin, \
-					&e_emin,&Z_h,&Z_e,&T_t,&tot,&S_f,&occ)==15) ||
-		   (fscanf(fp,"%d %s %lf %lf %lf %d %lf %lf %lf %lf %lf %lf %lf %lf",\
+		// WITHOUT occupancy statistics (BE CAREFUL!!!!!!!)
+		if((fscanf(fp,"%d %s %lf %lf %lf %d %lf %lf %lf %lf %lf %lf %lf %lf",\
 				   &iaa,aatype,&hbar,&htild,&htot,&ncont,&frustr,&ht_hmin, \
 				   &e_emin,&Z_h,&Z_e,&T_t,&tot,&S_f)==14) )
 		{
@@ -1856,7 +1853,6 @@ void ReadHFields(char *fname, char *contstat, struct s_potential *u, struct s_po
 						if (!strcmp(residuenames[i],aatype))
 						{
 							u->h_values[idtype] = htild/hfs_alpha/stdev/(double)maxcont[i]; // h/(alpha)
-							break;
 						}
 					}
 					idtype++;
