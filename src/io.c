@@ -1789,8 +1789,8 @@ void ReadPropensity(char *fname, struct s_potential *u)
 	{
 		if(sscanf(aux,"%d %s %s %f %f %f",&i,n,t,&coil,&alfa,&beta)==6)
 		{
-			u->ab_propensity[0][naa]=alfa;
-			u->ab_propensity[1][naa]=beta;
+			u->ab_propensity[0][naa]=u->dih_ka*alfa;
+			u->ab_propensity[1][naa]=u->dih_kb*beta;
 			naa++;
 		}
 	}

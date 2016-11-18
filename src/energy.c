@@ -264,6 +264,9 @@ void Ram_Dihedrals(struct s_parms *p, struct s_potential *u)
 		u->dih0[1][0] = p->phi_0_b;
 		u->dih0[0][1] = p->psi_0_a;
 		u->dih0[1][1] = p->psi_0_b;
+		u->dih_ka = p->dih_ka;
+		u->dih_kb = p->dih_kb;
+		
 	}
 }
 

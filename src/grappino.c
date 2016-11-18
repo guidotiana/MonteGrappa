@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 	// H fields
 	if (p->h_fields)
 	{
-		fprintf(stderr,"Opening h_fields file %s...\n",p->h_fieldsfile);
+		(stderr,"Opening h_fields file %s...\n",p->h_fieldsfile);
 		fflush(stderr);
 		// Read and rescale the hfields file
 		ReadHFields(p->h_fieldsfile,p->maxcontfile,u,polymer,nchain,p->hfs_alpha,stdev);
@@ -205,6 +205,8 @@ void Parse(FILE *fp, struct s_parms *p)
 	p->phi_0_b = -129;
 	p->psi_0_a = -47;
 	p->psi_0_b = 124;
+	p->dih_ka = 1.;
+	p->dih_kb = 1.;
 	
 	p->h_fields = 0;
 	p->hfs_alpha = 0.15;		// Original value in Contini, Tiana JCP (2015)
@@ -217,7 +219,7 @@ void Parse(FILE *fp, struct s_parms *p)
 		ReadParS(aux,"potfile",p->eoutfile);
 		ReadParS(aux,"contactfile",p->cntfile);
 		ReadParS(aux,"coevofile",p->coevofile);
-        ReadParS(aux,"propensityfile",p->ab_propensityfile);
+    ReadParS(aux,"propensityfile",p->ab_propensityfile);
 		ReadParS(aux,"h_fieldsfile",p->h_fieldsfile);
 		ReadParS(aux,"maxcontfile",p->maxcontfile);
 		ReadParN(aux,"coevo_allatom",&(p->coevo_allatom));
@@ -266,6 +268,8 @@ void Parse(FILE *fp, struct s_parms *p)
 		ReadParD(aux,"phi_0_b",&(p->phi_0_b));
 		ReadParD(aux,"psi_0_a",&(p->psi_0_a));
 		ReadParD(aux,"psi_0_b",&(p->psi_0_b));
+		ReadParF(aux,"dih_ka",&(p->dih_ka));
+		ReadParF(aux,"dih_kb",&(p->dih_kb));
 		
 		ReadParN(aux,"h_fields",&(p->h_fields));
 		ReadParF(aux,"hfs_alpha",&(p->hfs_alpha));

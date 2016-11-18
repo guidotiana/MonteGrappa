@@ -85,6 +85,8 @@ struct s_parms
 	int phi_0_b;
 	int psi_0_a;
 	int psi_0_b;
+	double dih_ka,dih_kb; //weight of alpha-beta dihedrals
+	
 
 	int h_fields;				//H fields for CoCaInE-derived potentials
 	double hfs_alpha;			// alpha parameter

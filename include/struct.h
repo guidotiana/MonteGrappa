@@ -141,6 +141,8 @@ struct s_potential
 	double *dih_f_phi_a;
 	double *dih_f_psi_b;
 	double *dih_f_phi_b;
+	double dih_ka,dih_kb; // weight of alpha-beta dihedrals potential
+	
 
 	double g_r0hard;				// global hardcore repulsion
 	double g_ehomo;					// global homopolymer e
