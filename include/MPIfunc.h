@@ -59,10 +59,12 @@ void send_struct_to_proc(int *nback, int iproc, int jproc,int nprocs, int *nat, 
 struct s_polymer *send_pol(int iproc, int nprocs, int nback, MPI_Datatype Backtype, MPI_Datatype Sidetype,  MPI_Datatype Rottype, struct s_polymer *startp, MPI_Status astatus, int npol, int shell, int nosidechains);
 struct s_polymer *send_pol_to_proc(int iproc,int jproc, int nprocs, int nback, MPI_Datatype Backtype, MPI_Datatype Sidetype,  MPI_Datatype Rottype, struct s_polymer *startp, MPI_Status astatus, int npol, int shell, int nosidechains);
 
-struct s_potential *send_pot(int nat, int ntypes, int noangpot, int nodihpot, int hb, int iproc, int nprocs, MPI_Datatype Pottype, struct s_potential *u, MPI_Status astatus);
+struct s_potential *send_pot(int nat, int ntypes, int noangpot, int nodihpot, int nohfields, int hb, int iproc, int nprocs, MPI_Datatype Pottype, struct s_potential *u, MPI_Status astatus);
 void send_double_matrix(int length1, int length2, int iproc, double **m, int source);
 void send_int_matrix(int length1, int length2, int iproc, int **m, int source);
-void send_model_names(int iproc,int nprocs,struct s_mc_parms *parms,MPI_Status astatus);
+void send_double_array(int length, int iproc, double *m, int source);
+
+
 //exchange
 int ExchangePol(struct s_polymer *polymer, struct s_polymer *replica, struct s_polymer *oldp, struct s_mc_parms *parms, struct s_potential *u, int iproc, int ntemp, int even, int *ex_count, int *ex_acc, MPI_Datatype Backtype, MPI_Datatype Sidetype, MPI_Datatype Rottype, MPI_Status astatus,unsigned long long istep,FILE *fexchange);
 //Potential-related

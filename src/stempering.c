@@ -196,7 +196,7 @@ struct st_stuff *InitSTempering(void)
        if (!strncmp(aux,"temperatures",12))
        {
     	   if (p->ntemp == 0) FatalError("You must specify ntemp before listing the temperatures");
-    	   for (i=0;i<p->ntemp;i++)
+    	   for (i=0;i<p->ntemp;++i)
     	   {
     		   r = fscanf(fin,"%lf %lf",&input_temp[i],&dumb);
     		   if (r==2) input_g[i] = dumb;
@@ -322,10 +322,10 @@ struct st_stuff *InitSTempering(void)
 		fprintf(stderr,"ntempmax = \t%d\n",p->ntempmax);
 		fprintf(stderr,"ntemp = \t%d\n",p->ntemp);
 		fprintf(stderr,"temperatures:\n");
-		for (i=0;i<p->ntemp;i++)
+		for (i=0;i<p->ntemp;++i)
 			fprintf(stderr,"T[%d] = %lf\n",i,input_temp[i]);
 		fprintf(stderr,"weights:\n");
-		for (i=0;i<p->ntemp;i++)
+		for (i=0;i<p->ntemp;++i)
 			fprintf(stderr,"g[%d] = %lf\n",i,input_g[i]);
 		fprintf(stderr,"nstep = \t%d\n",p->nstep);
 		if (!strcmp(p->method,"adaptive"))
@@ -406,7 +406,7 @@ struct st_stuff *InitSTempering(void)
 		p->prob_up = AlloDouble(p->ntemp);
 		p->counts = AlloInt(p->ntemp);
 
-		for (i=0;i<p->ntemp;i++)
+		for (i=0;i<p->ntemp;++i)
 		{
 			p->temp[i] = input_temp[i];
 			p->g[i] = input_g[i];
@@ -428,7 +428,7 @@ struct st_stuff *InitSTempering(void)
 		p->reliable_t = AlloDouble(p->ntempmax);
 		p->reliable_g = AlloDouble(p->ntempmax);
 
-		for (i=0;i<p->ntemp;i++)
+		for (i=0;i<p->ntemp;++i)
 			p->g[i] = input_g[i];
 
 		if (p->keepall==1)
@@ -446,7 +446,7 @@ struct st_stuff *InitSTempering(void)
 
 	}
 
-	for (i=0;i<p->ntemp;i++)
+	for (i=0;i<p->ntemp;++i)
 			p->temp[i] = input_temp[i];
 
 	// structure for restart
@@ -722,8 +722,8 @@ int OrderTemperatures(int ntemp, double *temp, double *g, double *prob_up, doubl
   
           
  
-  for (i=0;i<ntemp-1;i++)
-    for (j=i+1;j<ntemp;j++)
+  for (i=0;i<ntemp-1;++i)
+    for (j=i+1;j<ntemp;++j)
       if ( temp[i] < temp[j] )
 	  {
 		 d = temp[i];
@@ -752,7 +752,7 @@ int OrderTemperatures(int ntemp, double *temp, double *g, double *prob_up, doubl
 		 }
 
 		 if (h != NULL)
-			 for (k=0;k<nbin;k++)
+			 for (k=0;k<nbin;++k)
 			 {
 				 d = h[i][k];
 				 h[i][k] = h[j][k];
@@ -770,7 +770,7 @@ int OrderTemperatures(int ntemp, double *temp, double *g, double *prob_up, doubl
 
   if (debug>2) {
 	fprintf(stderr,"\nReordering temperatures\n new order: ");
-	for (i=0;i<ntemp;i++) fprintf(stderr,"%lf ",temp[i]);
+	for (i=0;i<ntemp;++i) fprintf(stderr,"%lf ",temp[i]);
 	fprintf(stderr,"\n");
  }
 	return ntemp;
@@ -785,11 +785,11 @@ void PrintAverageEnergies(FILE *fout, double **h, double *temp, int ntemp, doubl
 	double em,z,e,s;
 
 	fprintf(fout,"#TEMP\t<E>\tsigma_E\tNormalization\n");
-	for (it=0;it<ntemp;it++)
+	for (it=0;it<ntemp;++it)
 	{
 		em = z = s = 0.;
 
-		for (ie=0;ie<nbin;ie++)
+		for (ie=0;ie<nbin;++ie)
 		{
 			e = (double) ie * ebin + emin;
 			em += e * h[it][ie];
@@ -811,13 +811,13 @@ void PrintHistogram(char *filename, double **h, double *t, int ntemp, int nbin, 
 	fh = fopen(filename,"w");
 	if (!fh) FatalError("Cannot open histogram file");
 	fprintf(fh,"%%E\t\t");
-	for (it=0;it<ntemp;it++) fprintf(fh,"T=%lf\t",t[it]);
+	for (it=0;it<ntemp;++it) fprintf(fh,"T=%lf\t",t[it]);
 	fprintf(fh,"\n");
-	for (ie=0;ie<nbin;ie++)
+	for (ie=0;ie<nbin;++ie)
 	{
 		e = (double) ie * ebin + emin;
 		fprintf(fh,"%.8lf\t",e);
-		for (it=0;it<ntemp;it++) fprintf(fh,"%.6e\t",h[it][ie]);
+		for (it=0;it<ntemp;++it) fprintf(fh,"%.6e\t",h[it][ie]);
 		fprintf(fh,"\n");
 	}
 	fclose(fh);
@@ -890,11 +890,11 @@ void Restart(struct st_stuff *p)
 	}
 
 	// read temperatures, weights
-	for (i=0;i<p->st_ntemp;i++) if(fscanf(fr,"%lf %lf",&p->st_temp[i],&p->st_g[i])!=2) FatalError("Wrong format in restart file [2]");
+	for (i=0;i<p->st_ntemp;++i) if(fscanf(fr,"%lf %lf",&p->st_temp[i],&p->st_g[i])!=2) FatalError("Wrong format in restart file [2]");
 	if (p->st_debug>0)
 	{
 		fprintf(stderr,"Read %d temperatures:\n",p->st_ntemp);
-		for (i=0;i<p->st_ntemp;i++) fprintf(stderr,"T=%lf\tg=%lf\n",p->st_temp[i],p->st_g[i]);
+		for (i=0;i<p->st_ntemp;++i) fprintf(stderr,"T=%lf\tg=%lf\n",p->st_temp[i],p->st_g[i]);
 	}
 
 	// if you want to change them, read binning (override STEMPERING.dat)
@@ -915,7 +915,7 @@ void Restart(struct st_stuff *p)
 	// if you want, read density of states
 	if(fscanf(fr,"%lf ",&p->st_reliable_lg[0])==1)
 	{
-		for (i=1;i<p->st_nbin;i++)
+		for (i=1;i<p->st_nbin;++i)
 			if(fscanf(fr,"%lf ",&p->st_reliable_lg[i])!=1) FatalError("Wrong format in restart file [5]");
 		if (p->st_debug>0) fprintf(stderr,"Density of states read from restart file\n");
 	}
@@ -1031,7 +1031,7 @@ int FindClosestT(double t, int ntemp, double *temp)
 	int i,itemp=0;
 	double mindist=9999.;
 
-	for (i=0;i<ntemp;i++)
+	for (i=0;i<ntemp;++i)
 	{
 		if (fabs(temp[i]-t)<mindist)
 		{
@@ -1052,7 +1052,7 @@ void PrintStatistics(struct st_stuff *p, double step)
 
 	fprintf(stderr,"\n\nSIMULATED TEMPERING STATISTICS  (step=%.0lf):\n",step);
 	p_tot = 1.0;
-	for (i=0;i<p->st_ntemp;i++)
+	for (i=0;i<p->st_ntemp;++i)
 	{
 			p_down = p_up = 0.;
 			if (i==0) {p_down = p->st_prob_down[i]/p->st_counts[i]; p_tot *= p_down;}

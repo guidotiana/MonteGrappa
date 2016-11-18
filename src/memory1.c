@@ -47,11 +47,11 @@ double **AlloDoubleMat(int l, int m)
   x = (double **) calloc(l,sizeof(double *));
   if (!x) { fprintf(stderr,"\n\nmatrix %dx%d",l,m); FatalError("Cannot allocate double matrix (1)");}
 
-  for (i=0;i<l;i++)
+  for (i=0;i<l;++i)
     {
       *(x+i) = calloc(m,sizeof(double));
       if (!(*(x+i))) { fprintf(stderr,"\n\nmatrix %dx%d",l,m); FatalError("Cannot allocate double matrix (2)");}
-      for (j=0;j<m;j++) *(*(x+i)+j) = 0.;
+      for (j=0;j<m;++j) *(*(x+i)+j) = 0.;
     }
 
   return x;
@@ -60,7 +60,7 @@ double **AlloDoubleMat(int l, int m)
 
 void FreeDoubleMat(double **x, int l){
 	int i;
-	for (i=0;i<l;i++)	free(*(x+i));
+	for (i=0;i<l;++i)	free(*(x+i));
 	free(x);
 
 }
@@ -76,7 +76,7 @@ double *AlloDouble(int l)
   x = (double *) calloc(l,sizeof(double));
   if (!x) { fprintf(stderr,"\n\nvector %d",l); FatalError("Cannot allocate double vector");}
 
-  for (i=0;i<l;i++) *(x+i) =0;
+  for (i=0;i<l;++i) *(x+i) =0;
 
   return x;
 }
@@ -92,7 +92,7 @@ int *AlloInt(int l)
   x = (int *) calloc(l,sizeof(int));
   if (!x) FatalError("Cannot allocate int");
 
-  for (i=0;i<l;i++) *(x+i) =0;
+  for (i=0;i<l;++i) *(x+i) =0;
 
   return x;
 }
@@ -110,7 +110,7 @@ struct st_restart *AlloRestart(int ntemp, int nbin, int nres)
 	x = (struct st_restart *) calloc(nres,sizeof(struct st_restart));
 	if (!x) FatalError("Cannot allocate st_restart");
 
-	for (i=0;i<nres;i++)
+	for (i=0;i<nres;++i)
 	{
 		(x+i)->temp = calloc(ntemp,sizeof(double));
 		if (!(x+i)->temp) FatalError("Cannot allocate st_restart (1)");
@@ -131,7 +131,7 @@ struct st_restart *AlloRestart(int ntemp, int nbin, int nres)
 
 void FreeRestart(struct st_restart *x, int nres){
 	int i;
-	for (i=0;i<nres;i++){
+	for (i=0;i<nres;++i){
 	
 	free((x+i)->temp);
 	free((x+i)->g);

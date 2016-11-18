@@ -38,6 +38,9 @@
 #include "montegrappa.h"
 #include <time.h>
 
+
+
+
 /*****************************************************************************
  Dumb generator of integer random numbers
  *****************************************************************************/
@@ -73,7 +76,7 @@ long Randomize(int n)
 	  fprintf(stderr,"Random seed = %d\n",n);
   }
  
-  for (i=0;i<n;i++) irand(i); 
+  for (i=0;i<n;++i) irand(i); 
 
   return n;
 }
@@ -300,8 +303,8 @@ void CopyDoubleMatrix(double **from, double **to, int n, int m)
 {
 	int i,j;
 
-	for (i=0;i<n;i++)
-		for (j=0;j<m;j++)
+	for (i=0;i<n;++i)
+		for (j=0;j<m;++j)
 			to[i][j] = from[i][j];
 }
 

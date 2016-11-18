@@ -1,4 +1,4 @@
- /*
+/*
  * Grappino.c
  *
  *  Created on: Sep 24, 2010
@@ -13,15 +13,17 @@ int main(int argc, char *argv[])
 	struct s_parms *p;                      // parameters structure
 	struct atom_s *pdb;                     // atom structure
 	struct s_polymer *polymer;              // polymer structure
-	int npdb, nchain, i, nrot_kinds=0, ntypes=0, nat, nbackmax;
+	int npdb, nchain, nrot_kinds=0, ntypes=0, nat, nbackmax;
 	struct rot_input_s *rotamers;           // rotamers structure
 	struct s_potential *u;                  // potential structure
-	double **cm;                            // ???
+	double **cm;                            // contact map
 	FILE *fin;
-
+	double dummy, r2, stdev;							// for contacts calculation
+	int i;
+	
     GrappinoWelcome(stderr);
     
-	if (argc != 2) {
+	if ((argc != 2) || !strcmp(argv[1],"-h") ) {
         fprintf(stderr,"usage: grappino file.in\n");
         exit(1);
     }
@@ -41,8 +43,8 @@ int main(int argc, char *argv[])
 	pdb = AlloAtoms(NATOMMAX);
 	npdb = ReadPDB(pdb,p->pdbfile,p->hydrogens,&nchain,&nbackmax,p);
 
-    // if needed, simplify the pdb (e.g. CA, CACB, NCAC)
-	if (!strcmp(p->model,"CA") || !strcmp(p->model,"CACB") || !strcmp(p->model,"NCAC"))
+    // if needed, simplify the pdb (e.g. CA, CACB, NCAC, BackCB)
+	if (!strcmp(p->model,"CA") || !strcmp(p->model,"CACB") || !strcmp(p->model,"NCAC") || !strcmp(p->model,"BackCB"))
             npdb = SimplifyPDB(pdb,npdb,p->model);
     
 	// load rotamers
@@ -63,7 +65,7 @@ int main(int argc, char *argv[])
 	fprintf(stderr,"Allocate polymer\n");
 	polymer = AlloPolymer(nchain,nbackmax,NSIDEMAX,NROTMAX,npdb,0,0,stderr);
 	polymer->tables = InitTables(stderr);
-	for (i=1;i<nchain;i++) (polymer+i)->tables = polymer->tables;			// tables of all polymers point to same address
+	for (i=1;i<nchain;++i) (polymer+i)->tables = polymer->tables;			// tables of all polymers point to same address
 
 	// transfer pdb to polymer structure
 	nat = Pdb2Polymer(pdb,nchain,npdb,polymer,p,rotamers,nrot_kinds);		// nat is the total number of atoms
@@ -74,12 +76,12 @@ int main(int argc, char *argv[])
 
 	// set atomtypes
 	if (!strcmp(p->atomtypes,"go")) ntypes = SetGoTypes(polymer,nchain,npdb);
+	else if (!strcmp(p->atomtypes,"go_aa")) ntypes = SetGoAATypes(polymer,nchain,npdb);
 	else ntypes = ReadTypes(polymer,nchain,npdb,p->atomtypes);
 	
-    
 	cm = ContactMap(p,polymer,nchain,ntypes,p->debug);
-
-	u = AlloPotential(npdb,ntypes,0,0,0);
+	
+	u = AlloPotential(npdb,ntypes,0,0,0,0);
 	u->splice=0;
 	u->g_imin = p->imin;
 	fprintf(stderr,"imin = %d\n",u->g_imin);
@@ -87,6 +89,11 @@ int main(int argc, char *argv[])
 	// define go potential
 	if (!strcmp(p->potential,"go")) {
 		Go_Pairs(p,polymer,u->e,u->r_2,u->r0_2,nchain,ntypes,cm);
+		u->g_r0hard = p->rhard;
+	}
+	else if (!strcmp(p->potential,"coevo"))
+	{
+	  stdev = Ext_Pairs(p,polymer,u->e,u->r_2,u->r0_2);
 		u->g_r0hard = p->rhard;
 	}
 
@@ -118,18 +125,30 @@ int main(int argc, char *argv[])
 	{
 		Ram_Dihedrals(p,u);
         fprintf(stderr,"Opening propensity file %s...\n",p->ab_propensityfile);
+		
         fflush(stderr);
 		ReadPropensity(p->ab_propensityfile,u);
 	}
-
-
-
-	// print output
-	PrintPolymer(p->poutfile,polymer,nchain);
-	PrintPotential(u,p->eoutfile,npdb,ntypes,0,0,0);
+	
+	// Print output files
+	// H fields
+	if (p->h_fields)
+	{
+		fprintf(stderr,"Opening h_fields file %s...\n",p->h_fieldsfile);
+		fflush(stderr);
+		// Read and rescale the hfields file
+		ReadHFields(p->h_fieldsfile,p->maxcontfile,u,polymer,nchain,p->hfs_alpha,stdev);
+		// Print the potential file
+		PrintPotential(u,p->eoutfile,npdb,ntypes,0,0,0,0);
+		}
+	else
+		PrintPotential(u,p->eoutfile,npdb,ntypes,0,0,0,1);	// to avoid the h_fields printing
 	AppendPotentialComments(p, p->eoutfile);
 
-	//if you want a file.op to optimize the potential 
+	// print polymer
+	PrintPolymer(p->poutfile,polymer,nchain);
+	
+	//if you want a file.op to optimize the potential
 	if(strcmp(p->op_file,""))
         PrintOpGoFile(p->op_file,cm,polymer,nchain,p->op_kind,p->imin/3); // imin in aa
 
@@ -155,11 +174,12 @@ void Parse(FILE *fp, struct s_parms *p)
 	strcpy(p->poutfile,"polymer.pol");
 	strcpy(p->eoutfile,"potential.pot");
 	strcpy(p->cntfile,"");
+	strcpy(p->coevofile,"");
 	p->n_back_a = 3;
 	strcpy(p->back_a[0],"N");
     strcpy(p->back_a[1],"CA");
     strcpy(p->back_a[2],"C");
-	for(i=0;i<100;i++) p->move_a[i]=1;
+	for(i=0;i<100;++i) p->move_a[i]=1;
 	p->debug=0;
 	p->rotamers=0;
 	p->cb_pdb = 0;
@@ -185,7 +205,12 @@ void Parse(FILE *fp, struct s_parms *p)
 	p->phi_0_b = -129;
 	p->psi_0_a = -47;
 	p->psi_0_b = 124;
-    
+	p->dih_ka = 1.;
+	p->dih_kb = 1.;
+	
+	p->h_fields = 0;
+	p->hfs_alpha = 0.15;		// Original value in Contini, Tiana JCP (2015)
+	
     // read parameters file
 	while(fgets(aux,500,fp)!=NULL)
     {
@@ -193,7 +218,12 @@ void Parse(FILE *fp, struct s_parms *p)
 		ReadParS(aux,"polfile",p->poutfile);
 		ReadParS(aux,"potfile",p->eoutfile);
 		ReadParS(aux,"contactfile",p->cntfile);
-        ReadParS(aux,"propensityfile",p->ab_propensityfile);
+		ReadParS(aux,"coevofile",p->coevofile);
+    		ReadParS(aux,"propensityfile",p->ab_propensityfile);
+		ReadParS(aux,"h_fieldsfile",p->h_fieldsfile);
+		ReadParS(aux,"maxcontfile",p->maxcontfile);
+		ReadParN(aux,"coevo_allatom",&(p->coevo_allatom));
+		ReadParS(aux,"maxcontpairsfile",p->maxcontpairsfile);
 		ReadParS(aux,"model",p->model);
 		ReadParN(aux,"hydrogens",&(p->hydrogens));
 		ReadParF(aux,"r_hardcore",&(p->rhard));
@@ -238,7 +268,13 @@ void Parse(FILE *fp, struct s_parms *p)
 		ReadParD(aux,"phi_0_b",&(p->phi_0_b));
 		ReadParD(aux,"psi_0_a",&(p->psi_0_a));
 		ReadParD(aux,"psi_0_b",&(p->psi_0_b));
+		ReadParF(aux,"dih_ka",&(p->dih_ka));
+		ReadParF(aux,"dih_kb",&(p->dih_kb));
+		
+		ReadParN(aux,"h_fields",&(p->h_fields));
+		ReadParF(aux,"hfs_alpha",&(p->hfs_alpha));
 
+		
         // read explicitly declared backbone atoms
 		if (!strncmp(aux,"backbone_atoms",14)) {
             (p->n_back_a)=0;
@@ -250,7 +286,7 @@ void Parse(FILE *fp, struct s_parms *p)
                       p->back_a[18],p->back_a[19])<1 ) Error("Cannot read backbone_atoms in inputfile");
             // backbone atoms manually entered are unlocked by default,
             // one must specify if they need to be locked
-            for(i=0;i<p->n_back_a;i++) p->move_a[i]=1;
+            for(i=0;i<p->n_back_a;++i) p->move_a[i]=1;
         }
 
 
@@ -262,8 +298,8 @@ void Parse(FILE *fp, struct s_parms *p)
                 locked_a[6],locked_a[7], locked_a[8],locked_a[9],locked_a[10],locked_a[11],
                 locked_a[12],locked_a[13],locked_a[14],locked_a[15],locked_a[16],locked_a[17],
                 locked_a[18],locked_a[19])>=1 ) {
-                    for (j=0;j<(p->n_back_a);j++)
-                        for (i=0;i<(p->n_back_a);i++)
+                    for (j=0;j<(p->n_back_a);++j)
+                        for (i=0;i<(p->n_back_a);++i)
                             if (!strcmp(locked_a[j],p->back_a[i])) p->move_a[i]=0;
             }
             else Error("Cannot read locked_atoms in inputfile");
@@ -280,14 +316,14 @@ void Parse(FILE *fp, struct s_parms *p)
     
     // print backbone atoms
 	fprintf(stderr, "%d backbone atoms found. They are: ",p->n_back_a);
-	for (i=0;i<(p->n_back_a);i++)
+	for (i=0;i<(p->n_back_a);++i)
         fprintf(stderr, "%s",p->back_a[i]);
     // print locked atoms
     fprintf(stderr, "\n these backbone atoms are locked: ");
-	for (i=0;i<(p->n_back_a);i++)
+	for (i=0;i<(p->n_back_a);++i)
         if (p->move_a[i]==0) fprintf(stderr, "	%s",p->back_a[i]);
     
-	for (j=0;j<(p->n_back_a);j++)
+	for (j=0;j<(p->n_back_a);++j)
         sum += p->move_a[j];
     if (sum==p->n_back_a)
         fprintf(stderr,"\n\n** WARNING: all backbone atoms are UNLOCKED ==> EVERYTHING can be MOVED\n"
@@ -335,6 +371,7 @@ void AppendPotentialComments(struct s_parms *p, char *eoutfile)
 		fprintf(fout,"# potential type %s\n",p->potential);
 		if(p->go_dih) fprintf(fout,"# energy of dihedral e_dih1 = %lf\te_dih3 = %lf\n",p->e_dih1,p->e_dih3);
         if(p->dih_ram) fprintf(fout,"# energy of ramachandran dihedrals e_dihram = %lf\n",p->e_dihram);
+		if(p->h_fields) fprintf(fout,"# h_fields potential term activated\n");
 		if(p->go_ang) fprintf(fout,"# energy of angles e_ang = %lf\n",p->e_ang);
 		fprintf(fout,"# energy of global hohomopolymeric interaction e_homo = %lf\t and its radius r_homo = %lf\n",p->e_homo,p->r_homo);
 		fprintf(fout,"# threshold to define a bonded interaction = %lf\n",p->tthresh);
@@ -381,7 +418,7 @@ void GrappinoWelcome(FILE *fp) {
     fprintf(fp,"\n\n");
     fprintf(fp,"       [=]\n");
     fprintf(fp,"       | |\t*Grappino*\n");
-    fprintf(fp,"       }@{\t\tv1.2\n");
+    fprintf(fp,"       }@{\t\tv1.3\n");
     fprintf(fp,"      /   \\ \n");
     fprintf(fp,"     /     \\ \n");
     fprintf(fp,"    /       \\ \n");
@@ -391,6 +428,6 @@ void GrappinoWelcome(FILE *fp) {
     fprintf(fp,"    |-------|     |\n");
     fprintf(fp,"    '_______'   __|__\n");
     fprintf(fp,"\n\n");
-    fprintf(fp,"\nG. Tiana, 2014\n");
+    fprintf(fp,"\nG. Tiana, 2016\n");
     
 }

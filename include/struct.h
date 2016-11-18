@@ -85,13 +85,15 @@ struct s_back
 	int ncontacts;			// number of backbone atoms whose atom (including sidechain) are in contact with this
 	int *contacts;			// list of atoms in contact
 	int *contacts_p;		// ... which chain it belongs to
+	
 	double *e;			// interaction energy of this with the others residues
 	double e_ang;			// angular energy
 	double e_dih;			// dihedral energy
+	double e_hfs;			// H fields energy
 	int nshell;			// number of backbone atoms in the shell
 	int *shell;			// atoms in the shell
 	int *shell_p;			// ... which chain it belongs to
-
+	bool shellflag;
 	double d2_next;			// square distance to the next backbone
 	double a_next;			// angle
 	double d_next;			// dihedral
@@ -139,6 +141,8 @@ struct s_potential
 	double *dih_f_phi_a;
 	double *dih_f_psi_b;
 	double *dih_f_phi_b;
+	double dih_ka,dih_kb; // weight of alpha-beta dihedrals potential
+	
 
 	double g_r0hard;				// global hardcore repulsion
 	double g_ehomo;					// global homopolymer e
@@ -173,6 +177,9 @@ struct s_potential
 	int dih_ram;
 	double e_dihram;
 	double **ab_propensity;
+	
+	int h_fields;				//h-fields for CoCaInE potential
+	double *h_values;
 };
 
 ////////struct st_restart
@@ -313,6 +320,7 @@ struct s_mc_parms
 	int nosidechains;	//0=there are, 1=no sidechains
 	int noangpot;		//0=there is a potential on angles, 1; there is not
 	int nodihpot;		//0=there is a potential on dihedrals, 1; there is not
+	int nohfields;		//0=there is a H fields potential, 1: there is not
 	int nrun;		// number of repetitions of the MC
 	int always_restart;	//1=in different irun, start always from input structure
 	int record_native; //1=records the input (native( structure as first snapshot
@@ -326,7 +334,8 @@ struct s_mc_parms
 	double r_cloose;	// constrains in the bond distance,
 	double a_cloose;	// angles
 	double d_cloose;	// and dihedral, relative to the initial position (-1 to disable)
-	int hb;			// activate hydrogen bonds
+	int hb;				// activate hydrogen bonds
+	double r_contact;	// threshold for contact distance in residue-residue interaction (H Field)
 	#ifdef OPTIMIZEPOT
 	 struct s_optimizepot_input *op_input;
 	 char fnop[50];		// name of file of experimental restrains

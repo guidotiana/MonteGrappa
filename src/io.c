@@ -77,7 +77,7 @@ void ReadPolymer(char *fname, struct s_polymer *p, FILE *flog, int npol, int deb
 
 	*iamax = -1;
 	*itypemax = -1;
-	for (ch=0;ch<npol;ch++) (p+ch)->nback = 0;
+	for (ch=0;ch<npol;++ch) (p+ch)->nback = 0;
 
 	while(fgets(aux,500,fp)!=NULL)
     	{
@@ -163,15 +163,15 @@ void ReadPolymer(char *fname, struct s_polymer *p, FILE *flog, int npol, int deb
 	if (ichmax+1 != npol) Error("Number of chains contained in polymer file is different from that indicated in parameter file");
 
 	// assign addresses of sidechain position to lookback table
-	for (ch=0;ch<=ichmax;ch++)
-		for (iab=0;iab<(p+ch)->nback;iab++)
-			for (iat=0;iat<(((p+ch)->back)+iab)->nside;iat++)
+	for (ch=0;ch<=ichmax;++ch)
+		for (iab=0;iab<(p+ch)->nback;++iab)
+			for (iat=0;iat<(((p+ch)->back)+iab)->nside;++iat)
 				((p+ch)->vback)[ (((((p+ch)->back)+iab)->side)+iat)->ia ] = &((((((p+ch)->back)+iab)->side)+iat)->pos);
 
 	(*iamax) ++;		// number of atoms and of atomtypes
 	(*itypemax)++;
 
-	for (ch=0;ch<ichmax;ch++)
+	for (ch=0;ch<ichmax;++ch)
 
 	if (p->nback==0) Error("No backbone atoms read");
 	fprintf(flog,"Read %d backbone atoms in %s\n",nat_back,fname);
@@ -188,11 +188,11 @@ void SetLookbackTables(struct s_polymer *p, int nc)
 	int iab,iat;
 
 	// assign addresses of backbone position
-	for (iab=0;iab<(p+nc)->nback;iab++)
+	for (iab=0;iab<(p+nc)->nback;++iab)
 	{
 		// given the atom, find the pointer to the position vector
 		((p+nc)->vback)[ (((p+nc)->back)+iab)->ia ] = &(((((p+nc)->back)+iab)->pos));
-		for (iat=0;iat<(((p+nc)->back)+iab)->nside;iat++)
+		for (iat=0;iat<(((p+nc)->back)+iab)->nside;++iat)
 			((p+nc)->vback)[ (((((p+nc)->back)+iab)->side)+iat)->ia ] = &((((((p+nc)->back)+iab)->side)+iat)->pos);
 	}
 
@@ -215,9 +215,9 @@ int FindKeyword(char *string, char *keyword)
 		   if (key==1 && c!=' ' && c!='[')
 		   {
 			   keyword[k] = c;
-			   k++;
+			   ++k;
 		   }
-		   i++;
+		   ++i;
 
 	   } while ( c != '\0' && i<500 );
 
@@ -249,11 +249,12 @@ void PrintPolymer(char *fname, struct s_polymer *p, int nchains)
 	fprintf(fout,"[ backbone ]\n");
 	fprintf(fout,"back\tia\ttype\titype\taa\tiaa\tch\tx\t\ty\t\tz\t\ttomove\n");
 	
-	for (ic=0;ic<nchains;ic++)
-		for (i=0;i<(p+ic)->nback;i++)
+	for (ic=0;ic<nchains;++ic)
+		for (i=0;i<(p+ic)->nback;++i)
 		{
 			fprintf(fout, "%d\t %d\t%s\t%d\t%s\t%d\t%d\t%lf\t%lf\t%lf\t%d\n",i,(((p+ic)->back)+i)->ia,(((p+ic)->back)+i)->type,(((p+ic)->back)+i)->itype,(((p+ic)->back)+i)->aa,
 					(((p+ic)->back)+i)->iaa,ic,((((p+ic)->back)+i)->pos).x,((((p+ic)->back)+i)->pos).y,((((p+ic)->back)+i)->pos).z, (((p+ic)->back)+i)->move );
+			
 //			fprintf(stderr, "%d\t %d\t%s\t%d\t%s\t%d\t%d\t%lf\t%lf\t%lf\t%d\n",i,(((p+ic)->back)+i)->ia,(((p+ic)->back)+i)->type,(((p+ic)->back)+i)->itype,(((p+ic)->back)+i)->aa,
   //                                      (((p+ic)->back)+i)->iaa,ic,((((p+ic)->back)+i)->pos).x,((((p+ic)->back)+i)->pos).y,((((p+ic)->back)+i)->pos).z, (((p+ic)->back)+i)->move );
 
@@ -267,10 +268,10 @@ void PrintPolymer(char *fname, struct s_polymer *p, int nchains)
 
 	fprintf(fout,"\n[ rotamers ]\n");
 	fprintf(fout,"back ch rot at\t b1  b2   b3\tia type itype\tang\t    dih\t      r\n");
-	for (ic=0;ic<nchains;ic++)
-		for (i=0;i<(p+ic)->nback;i++)
-			for (j=0;j<(((p+ic)->back)+i)->nside;j++)
-				for (k=0;k<(((p+ic)->back)+i)->nrot;k++)
+	for (ic=0;ic<nchains;++ic)
+		for (i=0;i<(p+ic)->nback;++i)
+			for (j=0;j<(((p+ic)->back)+i)->nside;++j)
+				for (k=0;k<(((p+ic)->back)+i)->nrot;++k)
 					fprintf(fout, "%3d %3d %2d %2d\t%3d %3d %3d\t%3d %3s %3d\t%lf %lf %lf\n",i,ic,k,j,(((((((p+ic)->back)+i)->side)+j)->rot)+k)->b1,
 							(((((((p+ic)->back)+i)->side)+j)->rot)+k)->b2,(((((((p+ic)->back)+i)->side)+j)->rot)+k)->b3,
 							(((((p+ic)->back)+i)->side)+j)->ia,(((((p+ic)->back)+i)->side)+j)->type,(((((p+ic)->back)+i)->side)+j)->itype,
@@ -279,8 +280,8 @@ void PrintPolymer(char *fname, struct s_polymer *p, int nchains)
 
 	fprintf(fout,"\n[ sidechains ]\n");
 	fprintf(fout,"back\tch\tirot\n");
-	for (ic=0;ic<nchains;ic++)
-		for (i=0;i<(p+ic)->nback;i++)
+	for (ic=0;ic<nchains;++ic)
+		for (i=0;i<(p+ic)->nback;++i)
 			if ((((p+ic)->back)+i)->nrot > 0)
 				fprintf(fout,"%d\t%d\t%d\n",i,ic,(((p+ic)->back)+i)->irot);
 
@@ -298,19 +299,19 @@ void PrintPDBStream(struct s_polymer *p, int npol, FILE *fp)
 
 	fprintf(fp,"TITLE %s\n",p->title);
 
-	for (ch=0;ch<npol;ch++)
+	for (ch=0;ch<npol;++ch)
 	{
-		for (i=0;i<(p+ch)->nback;i++)
+		for (i=0;i<(p+ch)->nback;++i)
 	      {
 			  if (npol<24) cc = ch+65;
 			  else cc=' ';
 
-	          fprintf(fp,"ATOM  %5d %-4s%3s %c%4d    %8.3lf%8.3lf%8.3lf\n",(((p+ch)->back)+i)->ia,(((p+ch)->back)+i)->type,
+	          fprintf(fp,"ATOM  %5d  %-4s%3s %c%4d   %8.3lf%8.3lf%8.3lf\n",(((p+ch)->back)+i)->ia,(((p+ch)->back)+i)->type,
 	        		  (((p+ch)->back)+i)->aa,cc,(((p+ch)->back)+i)->iaa,((((p+ch)->back)+i)->pos).x,((((p+ch)->back)+i)->pos).y,
 	        		  ((((p+ch)->back)+i)->pos).z );
 
-	          for (j=0;j<(((p+ch)->back)+i)->nside;j++)
-	        	  fprintf(fp,"ATOM %5d  %-4s%3s %c%4d    %8.3lf%8.3lf%8.3lf\n", (((((p+ch)->back)+i)->side)+j)->ia,
+	          for (j=0;j<(((p+ch)->back)+i)->nside;++j)
+	        	  fprintf(fp,"ATOM  %5d  %-4s%3s %c%4d   %8.3lf%8.3lf%8.3lf\n", (((((p+ch)->back)+i)->side)+j)->ia,
 	        			  (((((p+ch)->back)+i)->side)+j)->type, (((p+ch)->back)+i)->aa,cc,(((p+ch)->back)+i)->iaa,
 	        			  ((((((p+ch)->back)+i)->side)+j)->pos).x,((((((p+ch)->back)+i)->side)+j)->pos).y,
 	        			  ((((((p+ch)->back)+i)->side)+j)->pos).z);
@@ -418,11 +419,12 @@ struct s_mc_parms *ReadMcParms(char *fname)
 	x->nmul_mpivot = 3;
 	x->nmul_lpivot = 3;
 	x->nmul_mflip=100;
-	for (i=0;i<NMOVES;i++) x->movetype[i] = -1;
+	for (i=0;i<NMOVES;++i) x->movetype[i] = -1;
 	x->nosidechains=0;
 	strcpy(nlog,"montegrappa.log");
 	x->noangpot=0;
 	x->nodihpot=0;
+	x->nohfields=0;
 	strcpy(x->fne,"energy");
 	strcpy(x->flastp,"last");
 	strcpy(x->fnproc,"proc");	
@@ -438,6 +440,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
 	x->ishell =0;
 	x->bgs_a=2;
 	x->bgs_b=1;
+	x->r_contact=5.;
 	#ifdef OPTIMIZEPOT
 	strcpy(x->fnop,"");
 	strcpy(x->op_minim,"none");
@@ -457,7 +460,6 @@ struct s_mc_parms *ReadMcParms(char *fname)
 	#ifdef ACTIVE_MPI
 	x->nstep_exchange = 10000;
 	#endif
-	
 	x->nreplicas=1;
 //ASTEMPERING	
 	x->nconf=-1;
@@ -489,6 +491,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
 		ReadParS(aux,"efile",x->fne);
 		ReadParS(aux,"procfile",x->fnproc);
 		ReadParF(aux,"r2shell",&(x->r2shell));
+		ReadParF(aux,"r_contact",&(x->r_contact));
 		ReadParD(aux,"ntemp",&(x->ntemp));
 		ReadParD(aux,"debug",&(x->debug));
 		ReadParN(aux,"shell",&(x->shell));
@@ -515,6 +518,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
 		ReadParN(aux,"noangpot",&(x->noangpot));
 		ReadParN(aux,"stempering",&(x->stempering));
 		ReadParN(aux,"nodihpot",&(x->nodihpot));
+		ReadParN(aux,"nohfields",&(x->nohfields));
 		ReadParN(aux,"disentangle",&(x->disentangle));
 		ReadParD(aux,"nrun",&(x->nrun));
 		ReadParN(aux,"always_restart",&(x->always_restart));
@@ -565,7 +569,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
 	 if (!strncmp(aux,"st_temperatures",15))
        {
            if ((x->p)->st_ntemp == 0) FatalError("You must specify ntemp before listing the temperatures");
-           for (i=0;i<(x->p)->st_ntemp;i++)
+           for (i=0;i<(x->p)->st_ntemp;++i)
            {
                    r = fscanf(fp,"%lf %lf",&input_temp[i],&dumb);
                    if (r==2) input_g[i] = dumb;
@@ -709,7 +713,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
 			if(x->ntemp>NREPMAX) Error("NREPMAX too small");
 			int r;
 			fprintf(stderr, "- PT Temperatures:\n");
-			for(i=0;i<x->ntemp;i++)
+			for(i=0;i<x->ntemp;++i)
 			{
 				r = fscanf(fp,"%lf",&(x->T[i]));
 				if(r!=1) Error("Cannot read temperature in inputfile");
@@ -718,8 +722,6 @@ struct s_mc_parms *ReadMcParms(char *fname)
 			fprintf(stderr,"\n");
       		}
 
-		x->iT_bias=x->ntemp;
-		
 		 if (!strncmp(aux,"replicas",8)&& x->nreplicas!=1)
                 {
                         if (x->ntemp==0) Error("You must specify ntemp before listing the replicas");
@@ -727,11 +729,11 @@ struct s_mc_parms *ReadMcParms(char *fname)
                         int r;
 			
                         fprintf(stderr, "- PT Replicas:\n");
-                        for(i=0;i<x->ntemp;i++)
+                        for(i=0;i<x->ntemp;++i)
                         {
-                                r=fscanf(fp,"%30s",( x->input_names[i]));
+                                r=fscanf(fp,"%s",&( x->input_names[i]));
                                 if(r!=1) Error("Cannot read replica");
-                                fprintf(stderr,"  rank %d\t%s\n",i,(x->input_names[i]));
+                                fprintf(stderr,"  rank %d\t%s\t",i,(x->input_names[i]));
                         }
                         fprintf(stderr,"\n");
                 }
@@ -753,7 +755,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
 	if (x->npol<1) Error("no chain defined in parameter file");
 	if (x->npol>NCHAINMAX) Error("Too many chains defined in parameter file");
 	chk=-1;
-	for (i=0;i<NMOVES;i++) if ( x->movetype[i] != -1 ) chk=1;
+	for (i=0;i<NMOVES;++i) if ( x->movetype[i] != -1 ) chk=1;
 	if (chk==-1) Error("No move type defined");
 
 
@@ -785,10 +787,10 @@ struct s_mc_parms *ReadMcParms(char *fname)
                 fprintf(stderr,"ntempmax = \t%d\n",(x->p)->st_ntempmax);
                 fprintf(stderr,"ntemp = \t%d\n",(x->p)->st_ntemp);
                 fprintf(stderr,"temperatures:\n");
-                for (i=0;i<(x->p)->st_ntemp;i++)
+                for (i=0;i<(x->p)->st_ntemp;++i)
                         fprintf(stderr,"T[%d] = %lf\n",i,input_temp[i]);
                 fprintf(stderr,"weights:\n");
-                for (i=0;i<(x->p)->st_ntemp;i++)
+                for (i=0;i<(x->p)->st_ntemp;++i)
                         fprintf(stderr,"g[%d] = %lf\n",i,input_g[i]);
                 fprintf(stderr,"nstep = \t%d\n",(x->p)->st_nstep);
                 if (!strcmp((x->p)->st_method,"adaptive"))
@@ -873,7 +875,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
                 (x->p)->st_prob_up = AlloDouble((x->p)->st_ntemp);
                 (x->p)->st_counts = AlloInt((x->p)->st_ntemp);
 
-                for (i=0;i<(x->p)->st_ntemp;i++)
+                for (i=0;i<(x->p)->st_ntemp;++i)
                 {
                         (x->p)->st_temp[i] = input_temp[i];
                         (x->p)->st_g[i] = input_g[i];
@@ -895,7 +897,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
                 (x->p)->st_reliable_t = AlloDouble((x->p)->st_ntempmax);
                 (x->p)->st_reliable_g = AlloDouble((x->p)->st_ntempmax);
 
-                for (i=0;i<(x->p)->st_ntemp;i++)
+                for (i=0;i<(x->p)->st_ntemp;++i)
                         (x->p)->st_g[i] = input_g[i];
 
                 if ((x->p)->st_keepall==1)
@@ -913,7 +915,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
 
         }
 
-        for (i=0;i<(x->p)->st_ntemp;i++)
+        for (i=0;i<(x->p)->st_ntemp;++i)
                         (x->p)->st_temp[i] = input_temp[i];
 
 	// structure for restart
@@ -1042,7 +1044,7 @@ void ResetStStuff(struct s_mc_parms *x,char *fname){
 	 if (!strncmp(aux,"st_temperatures",15))
        {
            if ((x->p)->st_ntemp == 0) FatalError("You must specify ntemp before listing the temperatures");
-           for (i=0;i<(x->p)->st_ntemp;i++)
+           for (i=0;i<(x->p)->st_ntemp;++i)
            {
                    r = fscanf(fp,"%lf %lf",&input_temp[i],&dumb);
                    if (r==2) input_g[i] = dumb;
@@ -1170,10 +1172,10 @@ void ResetStStuff(struct s_mc_parms *x,char *fname){
                 fprintf(stderr,"ntempmax = \t%d\n",(x->p)->st_ntempmax);
                 fprintf(stderr,"ntemp = \t%d\n",(x->p)->st_ntemp);
                 fprintf(stderr,"temperatures:\n");
-                for (i=0;i<(x->p)->st_ntemp;i++)
+                for (i=0;i<(x->p)->st_ntemp;++i)
                         fprintf(stderr,"T[%d] = %lf\n",i,input_temp[i]);
                 fprintf(stderr,"weights:\n");
-                for (i=0;i<(x->p)->st_ntemp;i++)
+                for (i=0;i<(x->p)->st_ntemp;++i)
                         fprintf(stderr,"g[%d] = %lf\n",i,input_g[i]);
                 fprintf(stderr,"nstep = \t%d\n",(x->p)->st_nstep);
                 if (!strcmp((x->p)->st_method,"adaptive"))
@@ -1258,7 +1260,7 @@ void ResetStStuff(struct s_mc_parms *x,char *fname){
                 (x->p)->st_prob_up = AlloDouble((x->p)->st_ntemp);
                 (x->p)->st_counts = AlloInt((x->p)->st_ntemp);
 
-                for (i=0;i<(x->p)->st_ntemp;i++)
+                for (i=0;i<(x->p)->st_ntemp;++i)
                 {
                         (x->p)->st_temp[i] = input_temp[i];
                         (x->p)->st_g[i] = input_g[i];
@@ -1280,7 +1282,7 @@ void ResetStStuff(struct s_mc_parms *x,char *fname){
                 (x->p)->st_reliable_t = AlloDouble((x->p)->st_ntempmax);
                 (x->p)->st_reliable_g = AlloDouble((x->p)->st_ntempmax);
 
-                for (i=0;i<(x->p)->st_ntemp;i++)
+                for (i=0;i<(x->p)->st_ntemp;++i)
                         (x->p)->st_g[i] = input_g[i];
 
                 if ((x->p)->st_keepall==1)
@@ -1298,7 +1300,7 @@ void ResetStStuff(struct s_mc_parms *x,char *fname){
 
         }
 
-        for (i=0;i<(x->p)->st_ntemp;i++)
+        for (i=0;i<(x->p)->st_ntemp;++i)
                         (x->p)->st_temp[i] = input_temp[i];
 
 	// structure for restart
@@ -1332,7 +1334,7 @@ void ReadParD(char *s, char key[20], int *par)
 	{
 		r = sscanf(s,"%*s %d",par);
 		if (r<1) { fprintf(stderr,"ERROR: Cannot read %s in parameter file (r=%d)\n",key,r); exit(1); }
-		fprintf(stderr,"- %s  \t%d\n",key,*par);
+		fprintf(stderr,"- %s  \t\t%d\n",key,*par);
 	}
 
 }
@@ -1346,7 +1348,7 @@ void ReadParLLU(char *s, char key[20], unsigned long long *par)
 	{
 		r = sscanf(s,"%*s %llu",par);
 		if (r<1) { fprintf(stderr,"ERROR: Cannot read %s in parameter file (r=%d)\n",key,r); exit(1); }
-		fprintf(stderr,"- %s  \t%llu\n",key,*par);
+		fprintf(stderr,"- %s  \t\t%llu\n",key,*par);
 	}
 
 }
@@ -1361,7 +1363,7 @@ void ReadParL(char *s, char key[20], long *par)
 	{
 		r = sscanf(s,"%*s %ld",par);
 		if (r<1) { fprintf(stderr,"ERROR: Cannot read %s in parameter file (r=%d)\n",key,r); exit(1); }
-		fprintf(stderr,"- %s  \t%ld\n",key,*par);
+		fprintf(stderr,"- %s \t\t%ld\n",key,*par);
 	}
 
 }
@@ -1375,7 +1377,7 @@ void ReadParF(char *s, char key[20], double *par)
 	{
 		r = sscanf(s,"%*s %lf",par);
 		if (r<1) { fprintf(stderr,"ERROR: Cannot read %s in parameter file\n",key); exit(1); }
-		fprintf(stderr,"- %s  \t%lf\n",key,*par);
+		fprintf(stderr,"- %s \t\t%lf\n",key,*par);
 	}
 }
 
@@ -1388,7 +1390,7 @@ void ReadParS(char *s, char key[20], char *par)
 	{
 		r = sscanf(s,"%*s %s",par);
 		if (r<1) { fprintf(stderr,"ERROR: Cannot read %s in parameter file\n",key); exit(1); }
-		fprintf(stderr,"- %s  \t%s\n",key,par);
+		fprintf(stderr,"- %s \t\t%s\n",key,par);
 	}
 }
 
@@ -1400,7 +1402,7 @@ void ReadParN(char *s, char key[20], int *par)
 	if (!strncmp(s,key,l))
 	{
 		*par=1;
-		fprintf(stderr,"- %s  \n",key);
+		fprintf(stderr,"- %s \n",key);
 	}
 }
 
@@ -1410,8 +1412,8 @@ void ReadParN(char *s, char key[20], int *par)
  ********************************************************************/
 int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, int na, int ntype)
 {
-	int i,j,k=0,chapt=0,ab,dihtype,iaa,dih0;
-	double e,r,r0,k0,d1,d3,d01,d03,kr_splice,pa,pb,sigma;//r0vec[ntype];
+	int i,j,k=0,chapt=0,ab,dihtype,iaa,dih0,idtype;
+	double e,r,r0,k0,d1,d3,d01,d03,kr_splice,pa,pb,sigma,h_value;//r0vec[ntype];
 	char aux[500],keyword[100],ccc,c_ab,c_dihtype;
 	FILE *fp;
 	int c_d=0,c_a=0;
@@ -1424,7 +1426,8 @@ int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, 
 	u->dih_ram=0;
 	u->e_dihram=1;
 
-	//for (j=0;j<ntype;j++) r0vec[j]=-1;
+
+	//for (j=0;j<ntype;++j) r0vec[j]=-1;
 
 	fprintf(parms->flog,"Read potential from %s\n",fname);
 
@@ -1491,6 +1494,16 @@ int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, 
 				chapt=0; 
 			}
 		}
+		
+		if ( FindKeyword(aux,keyword)==1 && !strcmp(keyword,"hfields") )
+		{
+			chapt = 11;
+			if (parms->nohfields)
+			{
+				fprintf(stderr,"WARNING: you defined nohfields in par file, but pot file contains h_fields potential (ignoring latter)\n");
+				chapt=0;
+			}
+		}
 	 
 	    /////////////////////////
 	    // read pairs interaction
@@ -1507,7 +1520,7 @@ int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, 
 				(u->e)[j][i] = e;				// if the whole matrix is completely defined, these are useless
 				(u->r_2)[j][i] = r*r;
 				(u->r0_2)[j][i] = r0*r0;
-				k++;
+				++k;
 		}
 	    }
 
@@ -1551,8 +1564,8 @@ int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, 
 	    	// hardcore
 	    	if (sscanf(aux,"hardcore %lf",&(u->g_r0hard))==1)
 	    	{
-	    		for (i=0;i<ntype;i++)
-	    			for(j=0;j<ntype;j++)
+	    		for (i=0;i<ntype;++i)
+	    			for(j=0;j<ntype;++j)
 	    				/*if (i != j )*/ (u->r0_2)[j][i] = u->g_r0hard * u->g_r0hard;
 	    		fprintf(parms->flog,"Global hardcore = %lf\n",u->g_r0hard);
 	    	}
@@ -1581,8 +1594,8 @@ int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, 
 	    	// attractive well
 	    	if (sscanf(aux,"homopolymeric %lf %lf",&(u->g_ehomo),&(u->g_rhomo))==1)
 	    	{
-	    		for (i=0;i<ntype;i++)
-	    			for(j=0;j<ntype;j++)
+	    		for (i=0;i<ntype;++i)
+	    			for(j=0;j<ntype;++j)
 	    				if (i != j )
 	    				{
 								(u->r_2)[j][i] = u->g_rhomo*u->g_rhomo;
@@ -1594,7 +1607,7 @@ int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, 
 	    	// angular potential
 	    	if (sscanf(aux,"angle %lf %lf",&(u->g_anglek),&(u->g_angle0))==2)
 	    	{
-	    	    for (i=0;i<na;i++)
+	    	    for (i=0;i<na;++i)
 	    	    {
 	    	    	(u->e_ang)[i] = u->g_anglek;
 	    	    	(u->ang0)[i] = u->g_angle0;
@@ -1605,7 +1618,7 @@ int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, 
 	    	// dihedral potential
 	    	if (sscanf(aux,"dihedral1 %lf %lf",&(u->g_dihk1),&(u->g_dih01))==2)
 	    	{
-	    		for (i=0;i<na;i++)
+	    		for (i=0;i<na;++i)
 	    		{
 	    			(u->e_dih1)[i] = u->g_dihk1;
 	    	    	(u->dih01)[i] = u->g_dih01;
@@ -1614,7 +1627,7 @@ int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, 
 	    	}
 	    	if (sscanf(aux,"dihedral3 %lf %lf",&(u->g_dihk3),&(u->g_dih03))==2)
 	    	{
-	    		for (i=0;i<na;i++)
+	    		for (i=0;i<na;++i)
 	    		{
 	    			(u->e_dih3)[i] = u->g_dihk3;
 	    			(u->dih03)[i] = u->g_dih03;
@@ -1735,7 +1748,17 @@ int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, 
 				(u->ab_propensity)[1][iaa] = pb;
 	    	}
 	    }
-        
+		
+		/////////////////////////////
+		// read hfields
+		/////////////////////////////
+		if (chapt==11)
+		{
+			if (sscanf(aux,"%d %lf",&idtype,&h_value)==2)
+			{
+				(u->h_values)[idtype] = h_value;
+			}
+		}
 	}
 	fclose(fp);
 
@@ -1744,6 +1767,104 @@ int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, 
 	else fprintf(parms->flog,"Read %d pair interaction in potential file\n",k);
 
 	return k;
+}
+
+/****************************************************************************
+ Read the file of the propensity alfa/beta
+ *****************************************************************************/
+
+void ReadPropensity(char *fname, struct s_potential *u)
+{
+	FILE *fp;
+	fflush(stderr);
+	fp = fopen(fname,"r");
+	if (!fp) Error("Cannot open propensity file");
+	fprintf(stderr,"Reading Propensity File....\n");
+	
+	int naa=0, i;
+	char n[5], t[5], aux[500];
+	float coil, alfa, beta;
+	
+	while(fgets(aux,500,fp)!=NULL)
+	{
+		if(sscanf(aux,"%d %s %s %f %f %f",&i,n,t,&coil,&alfa,&beta)==6)
+		{
+			u->ab_propensity[0][naa]=u->dih_ka*alfa;
+			u->ab_propensity[1][naa]=u->dih_kb*beta;
+			naa++;
+		}
+	}
+	fclose(fp);
+	
+	return;
+}
+
+/****************************************************************************
+ Read the file of H fields obtained from CoCaInE
+ *****************************************************************************/
+
+void ReadHFields(char *fname, char *contstat, struct s_potential *u, struct s_polymer *polymer, int nchain, double hfs_alpha, double stdev)
+{
+	FILE *fp, *contfp;
+	fp = fopen(fname,"r");
+	if (!fp) Error("Cannot open H fields file");
+	fprintf(stderr,"Reading H fields File....\n");
+	
+	
+	int iaa, ncont, idtype=1; //idtype is equal to 1 because hfields is atomtype-based
+	char aatype[3],aux[500];
+	int maxcont[20];
+	const char* residuenames[] = {"ALA","ARG","ASN","ASP","CYS","GLN","GLU",\
+								"GLY","HIS","ILE","LEU","LYS","MET","PHE",\
+								"PRO","SER","THR","TRP","TYR","VAL"};
+	double hbar, htild, htot, frustr, ht_hmin, e_emin, Z_h, Z_e, T_t, tot, S_f;
+	int i;
+		
+	// This is for CA atoms
+	u->h_values[0] = 0.;
+	
+	// Read the rescaling factors
+	contfp = fopen(contstat,"r");
+	if (!contfp) Error("Cannot open contact statistics file");
+	fprintf(stderr,"Reading contact statistics file....\n");
+	
+	i=0;
+	while(1)
+	{
+	        if(fscanf(contfp,"%s %d",aatype,&(maxcont[i]))==2);
+		++i;
+		if(i==20) break;
+	}
+	
+	
+	while(fgets(aux,500,fp)!=NULL)
+	{
+		// WITHOUT occupancy statistics (BE CAREFUL!!!!!!!)
+		if((fscanf(fp,"%d %s %lf %lf %lf %d %lf %lf %lf %lf %lf %lf %lf %lf",\
+				   &iaa,aatype,&hbar,&htild,&htot,&ncont,&frustr,&ht_hmin, \
+				   &e_emin,&Z_h,&Z_e,&T_t,&tot,&S_f)==14) )
+		{
+			if (strcmp(aatype,"type")){	// Ignore first row
+				// ignore glicines
+				if (strcmp("GLY",aatype))
+				{
+					for(i=0;i<20;++i)
+					{
+						if (!strcmp(residuenames[i],aatype))
+						{
+							u->h_values[idtype] = htild/hfs_alpha/stdev/(double)maxcont[i]; // h/(alpha)
+						}
+					}
+					idtype++;
+				}
+			}
+		}
+	}
+	
+	fclose(fp);
+	fclose(contfp);
+	
+	return;
 }
 
 /********************************************************************
@@ -1767,18 +1888,18 @@ void PrintStructure(struct s_polymer *p, int npol, FILE *fp, int shell)
 {
 	int i,j,k;//chk=0;
 
-	for (i=0;i<npol;i++)
+	for (i=0;i<npol;++i)
 	{
 		fprintf(fp,"Polymer %d\n",i);
-		for (j=0;j<(p+i)->nback;j++)
+		for (j=0;j<(p+i)->nback;++j)
 		{
 			fprintf(fp,"\tch=%d back=%d%s at=%d%s\n",i,j,(((p+i)->back)+j)->aa,(((p+i)->back)+j)->ia,(((p+i)->back)+j)->type);
 			fprintf(fp,"\t  Contacts: (%d)\t",(((p+i)->back)+j)->ncontacts);
-			for (k=0;k<(((p+i)->back)+j)->ncontacts;k++)
+			for (k=0;k<(((p+i)->back)+j)->ncontacts;++k)
 			{
 				//chk=0;
 				fprintf(fp,"%d(ch=%d e=%lf) ",*(((((p+i)->back)+j)->contacts)+k),*(((((p+i)->back)+j)->contacts_p)+k),*(((((p+i)->back)+j)->e)+k) );
-				//for (l=0;l<(((p+ *(((((p+i)->back)+j)->contacts_p)+k) )->back)+ *(((((p+i)->back)+j)->contacts)+k) )->ncontacts;l++)
+				//for (l=0;l<(((p+ *(((((p+i)->back)+j)->contacts_p)+k) )->back)+ *(((((p+i)->back)+j)->contacts)+k) )->ncontacts;++l)
 				// if ( *(((((p+ *(((((p+i)->back)+j)->contacts_p)+k) )->back)+ *(((((p+i)->back)+j)->contacts)+k) )->contacts)+l) == j) chk=1;
 				//if (chk==0) fprintf(stderr,"\nWARNING: asymmetry between residues %d and %d\n",j,*(((((p+i)->back)+j)->contacts)+k));
 			}
@@ -1786,14 +1907,14 @@ void PrintStructure(struct s_polymer *p, int npol, FILE *fp, int shell)
 			if (shell>0)
 			{
 				fprintf(fp,"\t  Shell: ");
-				for (k=0;k<(((p+i)->back)+j)->nshell;k++) fprintf(fp,"%d(ch=%d) ",*(((((p+i)->back)+j)->shell)+k),
+				for (k=0;k<(((p+i)->back)+j)->nshell;++k) fprintf(fp,"%d(ch=%d) ",*(((((p+i)->back)+j)->shell)+k),
 									*(((((p+i)->back)+j)->shell_p)+k) );
 				fprintf(fp,"\n");
 			}
 			if ((((p+i)->back)+j)->nside>0)
 			{
 				fprintf(fp,"\t  Sidechains (rot=%d): ",(((p+i)->back)+j)->irot);
-				for (k=0;k<(((p+i)->back)+j)->nside;k++) fprintf(fp,"%d%s ",(((((p+i)->back)+j)->side)+k)->ia,
+				for (k=0;k<(((p+i)->back)+j)->nside;++k) fprintf(fp,"%d%s ",(((((p+i)->back)+j)->side)+k)->ia,
 						(((((p+i)->back)+j)->side)+k)->type );
 				fprintf(fp,"\n");
 			}
@@ -1808,7 +1929,7 @@ void PrintStructure(struct s_polymer *p, int npol, FILE *fp, int shell)
 /********************************************************************
  Print potential file
  ********************************************************************/
-void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, int noangpot, int nodihpot, int hb)
+void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, int noangpot, int nodihpot, int hb, int nohfields)
 {
 	int i,j;
 	char ccc=' ';
@@ -1852,15 +1973,15 @@ void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, 
 	{
 		fprintf(fout,"[ hardcores ]\n");
 
-		for (i=0;i<u->hc_number;i++)
+		for (i=0;i<u->hc_number;++i)
 			fprintf(fout,"%d\t%lf\n",u->hc_type[i],u->hc_r0[i]);
 	}
 
 	// print pairs
 	fprintf(fout,"[ pairs ]\n");
 
-	for (i=0;i<ntypes;i++)
-		for (j=i;j<ntypes;j++)
+	for (i=0;i<ntypes;++i)
+		for (j=i;j<ntypes;++j)
 			if (u->e[i][j]<-EPSILON || u->e[i][j]>EPSILON)
 			{
 				fprintf(fout,"%3d\t%3d\t\t%lf\t%lf\t%lf\n",i,j,u->e[i][j],sqrt(u->r_2[i][j]),sqrt(u->r0_2[i][j]));
@@ -1871,7 +1992,7 @@ void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, 
 	{
 		fprintf(fout,"[ angles ]\n");
 
-		for (i=1;i<nat;i++)
+		for (i=1;i<nat;++i)
 			if (u->e_ang[i]<-EPSILON || u->e_ang[i]>EPSILON)
 				fprintf(fout,"%d %lf %lf\n",i,u->e_ang[i],u->ang0	[i]);
 	}
@@ -1880,7 +2001,7 @@ void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, 
 	{
 		fprintf(fout,"[ dihedrals ]\n");
 
-		for (i=1;i<nat;i++)
+		for (i=1;i<nat;++i)
 			if (u->e_dih1[i]<-EPSILON || u->e_dih1[i]>EPSILON || u->e_dih3[i]<-EPSILON || u->e_dih3[i]>EPSILON)
 				fprintf(fout,"%d %lf %lf %lf %lf\n",i,u->e_dih1[i],u->dih01[i],u->e_dih3[i],u->dih03[i]);
 	
@@ -1892,8 +2013,8 @@ void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, 
 			//	  2. phi=0/psi=1
 			//	  3. sigma
 			//	  4. dih0
-			for(i=0; i<2; i++) {
-				for(j=0;j<2;j++) {
+			for(i=0; i<2; ++i) {
+				for(j=0;j<2;++j) {
                     if (i == 0) {
                         if (j == 0) fprintf(fout,"a\tf\t%f\t%d\n",u->sigma[i][j],u->dih0[i][j]);
                         else fprintf(fout,"a\tp\t%f\t%d\n",u->sigma[i][j],u->dih0[i][j]);
@@ -1907,11 +2028,21 @@ void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, 
 			fprintf(fout,"[ Alfa/Beta_propensity ]\n");
             fprintf(fout,"ia\tp_a\tp_b\n");
 			//stampo:	iaa	prop_a[iaa]	prop_b[iaa]
-			for(i=0;i<NAAMAX;i++)
+			for(i=0;i<NAAMAX;++i)
 				if(u->ab_propensity[0][i]<2)
 					fprintf(fout,"%d\t%lf\t%lf\n",i,u->ab_propensity[0][i],u->ab_propensity[1][i]);
 		}
         
+	}
+	
+	if (!nohfields)
+	{
+		fprintf(fout,"[ hfields ]\n");
+		fprintf(fout,"types\th_tot\n");
+		for(i=0;i<ntypes;++i)
+		{
+			fprintf(fout,"%d\t%lf\n",i,u->h_values[i]);
+		}
 	}
 
 
@@ -1919,7 +2050,7 @@ void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, 
 	{
 	fprintf(fout,"[ hydrogen_bonds ]\n");
 
-		for (i=0;i<nat;i++)
+		for (i=0;i<nat;++i)
 		{
 			if ((u->hb)[i]==1) ccc='d';
 			if ((u->hb)[i]==2) ccc='a';
@@ -1942,10 +2073,10 @@ void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, 
 void	ComputeIAPDB(struct s_polymer *p,struct s_mc_parms *parms){
 	int ipol;
 	int i;
-	for(ipol=0;ipol<parms->npol;ipol++)
+	for(ipol=0;ipol<parms->npol;++ipol)
 	{
 	//	fprintf(stderr,"IADB: setting up polymer n. %d\n",ipol);
-		for(i=0;i<(p+ipol)->nback;i++)
+		for(i=0;i<(p+ipol)->nback;++i)
 		{	
 			if( !strcmp( (((p+ipol)->back)+i)->type,"N") )
                         (((p+ipol)->back)+i)->iapdb=0;
@@ -1954,7 +2085,7 @@ void	ComputeIAPDB(struct s_polymer *p,struct s_mc_parms *parms){
 			if( !strcmp( (((p+ipol)->back)+i)->type,"C") )
                         (((p+ipol)->back)+i)->iapdb=2;
 		}
-		for(i=0;i<(p+ipol)->nback;i++)
+		for(i=0;i<(p+ipol)->nback;++i)
                 {
           //              fprintf(stderr,"%d\t%d\n",i,(((p+ipol)->back)+i)->iapdb);
                 }

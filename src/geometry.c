@@ -277,7 +277,7 @@ struct vector Spherical2Cartesian(struct vector A, struct vector B,
   int i,j;
 
   *out = 0;
-  for (i=0;i<3;i++) dumb[i]=0.;
+  for (i=0;i<3;++i) dumb[i]=0.;
 
   /* From angular internal coords to cartesian internal coords */
   sb = FastSin(W.ang,tables);
@@ -317,7 +317,7 @@ struct vector Spherical2Cartesian(struct vector A, struct vector B,
   if (l2<EPSILON)  { fprintf(stderr,"WARNING: l2=0 in Spherical2Cartesian\t(move rejected)\n");  return Z; } //PARANOID
   inv_l = 1. / l2;
   if (inv_l<EPSILON)  { fprintf(stderr,"WARNING: inv_l=0 in Spherical2Cartesian\t(move rejected)\n"); return Z; } //PARANOID
-  for (i=0;i<3;i++) M[2][i] *= inv_l;
+  for (i=0;i<3;++i) M[2][i] *= inv_l;
 
   /* E_y */
   M[1][0] = -M[0][1]*M[2][2] + M[2][1]*M[0][2];
@@ -328,11 +328,11 @@ struct vector Spherical2Cartesian(struct vector A, struct vector B,
   if (l1<EPSILON)  { fprintf(stderr,"WARNING: l1=0 in Spherical2Cartesian\t(move rejected)\n"); return Z; } //PARANOID
   inv_l = 1. / l1;
   if (inv_l<EPSILON)  { fprintf(stderr,"WARNING: inv_l=0 Spherical2Cartesian\t(move rejected)\n"); return Z; } //PARANOID
-  for (i=0;i<3;i++) M[1][i] *= inv_l;
+  for (i=0;i<3;++i) M[1][i] *= inv_l;
 
   /* Absolute coords = Transpose[M] * relative coords */
-  for (i=0;i<3;i++)
-   for (j=0;j<3;j++)
+  for (i=0;i<3;++i)
+   for (j=0;j<3;++j)
     dumb[i] += M[j][i] * ZR[j];
 
   Z.x = C.x + dumb[0];
@@ -348,7 +348,7 @@ struct vector Spherical2Cartesian(struct vector A, struct vector B,
  *****************************************************************************/
 struct vector RotateVector(struct vector v, double theta, int w, struct s_tables *tables)
 {
-	double M[3][3],st,ct;
+	double M[3][3]={{0,0,0},{0,0,0},{0,0,0}},st,ct;
 	struct vector u;
 
 	st = FastSin(theta,tables);
@@ -434,8 +434,8 @@ int PivotForward(struct s_polymer *p, int iw, double dw, int n, struct s_mc_parm
 	
 	#pragma omp parallel for private (U,W)
 	// move n atoms from iw+2 to iw+2+n
-	for (i=iw+2;i<iw+2+n;i++)
-     // for(i=iw;i<iw+n;i++)
+	for (i=iw+2;i<iw+2+n;++i)
+     // for(i=iw;i<iw+n;++i)
 	{
 //		fprintf(stderr,"\ni = %d \n",i);
             // shift each to be centred in C
@@ -466,29 +466,22 @@ int AddSidechain(struct s_polymer *p, int istart, int istop, int ch)
 	struct vector b1,b2,b3;
 	struct angles ang;
 	int i,iside,irot,ib1,ib2,ib3,out;
-	int flag=1;
+//	int flag;
 	//quite slow for a small system #pragma omp parallel for private(iside,irot,ib1,ib2,ib3,b1,b2,b3,ang,out) shared(flag)
-
-	for (i=istart;i<=istop;i++)
-		for (iside=0;iside<(((p+ch)->back)+i)->nside;iside++)
+	for (i=istart;i<=istop;++i)
+		for (iside=0;iside<(((p+ch)->back)+i)->nside;++iside)
 		{
-		//	fprintf(stderr,"i= %d, iside = %d\n",i,iside);	
 			irot = (((p+ch)->back)+i)->irot;								// which is the rotamer to insert
-			
 			ib1 = (((((((p+ch)->back)+i)->side)+iside)->rot)+irot)->b1;		// which are the atoms which define the dihedrals
 			ib2 = (((((((p+ch)->back)+i)->side)+iside)->rot)+irot)->b2;
 			ib3 = (((((((p+ch)->back)+i)->side)+iside)->rot)+irot)->b3;
-	
 			b1 = *(*(((p+ch)->vback)+ib1));
 			b2 = *(*(((p+ch)->vback)+ib2));
 			b3 = *(*(((p+ch)->vback)+ib3));
-			
 			ang = (((((((p+ch)->back)+i)->side)+iside)->rot)+irot)->ang;
- 			
-			(((((p+ch)->back)+i)->side)+iside)->pos = Spherical2Cartesian(b1,b2,b3,ang,p->tables,&out);
-		//	fprintf(stderr,"Spherical 2 cartesian ok\n");
-			if (out==0) return 0; 
-			
+ 			(((((p+ch)->back)+i)->side)+iside)->pos = Spherical2Cartesian(b1,b2,b3,ang,p->tables,&out);
+			//if (out==0) flag=0; 
+			if(out==0)	return 0;
 		}
 	//if(flag==0) return flag; else return 1;
 	return 1;
@@ -596,7 +589,7 @@ int Pivot(struct s_polymer *p, int iw, double dw, int ip, struct s_mc_parms *par
 /********************************************************************
  Square distance between two vectors
  ********************************************************************/
-double Dist2(struct vector a, struct vector b)
+inline double Dist2(struct vector a, struct vector b)
 {
 	return (a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) + (a.z-b.z)*(a.z-b.z);
 }
@@ -731,7 +724,7 @@ int FlipFragment(struct s_polymer *p, int ifrom, int ito, double dw)
 	b.y -= a.y;
 	b.z -= a.z;
 
-	for (iw=ifrom;iw<=ito;iw++)
+	for (iw=ifrom;iw<=ito;++iw)
 	{
 		// atom to be moved around the axis passing by a and b
 		u.x = (((p->back)+iw)->pos).x;
@@ -807,7 +800,7 @@ void CopyPolymer(struct s_polymer *from, struct s_polymer *to, int cfrom, int ct
 	(to+cto)->etot = (from+cfrom)->etot;
 	strcpy((to+cto)->title,(from+cfrom)->title);
 	#pragma omp parallel for private(j,k)
-	for (i=0;i<(from+cfrom)->nback;i++)
+	for (i=0;i<(from+cfrom)->nback;++i)
 	{
 		(((to+cto)->back)+i)->ia = (((from+cfrom)->back)+i)->ia;
 		(((to+cto)->back)+i)->itype = (((from+cfrom)->back)+i)->itype;
@@ -826,12 +819,15 @@ void CopyPolymer(struct s_polymer *from, struct s_polymer *to, int cfrom, int ct
 		(((to+cto)->back)+i)->nrot = (((from+cfrom)->back)+i)->nrot;
 		(((to+cto)->back)+i)->e_ang = (((from+cfrom)->back)+i)->e_ang;
 		(((to+cto)->back)+i)->e_dih = (((from+cfrom)->back)+i)->e_dih;
+		(((to+cto)->back)+i)->e_hfs = (((from+cfrom)->back)+i)->e_hfs;
 		(((to+cto)->back)+i)->d2_next = (((from+cfrom)->back)+i)->d2_next;
+		(((to+cto)->back)+i)->d_next = (((from+cfrom)->back)+i)->d_next;
 		(((to+cto)->back)+i)->iapdb = (((from+cfrom)->back)+i)->iapdb;
-            	(((to+cto)->back)+i)->a_next = (((from+cfrom)->back)+i)->a_next;
+                (((to+cto)->back)+i)->a_next = (((from+cfrom)->back)+i)->a_next;
+
 
 		if (!noside)
-		for (j=0;j<(((from+cfrom)->back)+i)->nside;j++)
+		for (j=0;j<(((from+cfrom)->back)+i)->nside;++j)
 		{
  			strcpy( (((((to+cto)->back)+i)->side)+j)->type, (((((from+cfrom)->back)+i)->side)+j)->type );
  			(((((to+cto)->back)+i)->side)+j)->itype = (((((from+cfrom)->back)+i)->side)+j)->itype;
@@ -840,7 +836,7 @@ void CopyPolymer(struct s_polymer *from, struct s_polymer *to, int cfrom, int ct
 			((((((to+cto)->back)+i)->side)+j)->pos).y = ((((((from+cfrom)->back)+i)->side)+j)->pos).y;
 			((((((to+cto)->back)+i)->side)+j)->pos).z = ((((((from+cfrom)->back)+i)->side)+j)->pos).z;
 			if (!norot)
-			for (k=0;k<(((from+cfrom)->back)+i)->nrot;k++)
+			for (k=0;k<(((from+cfrom)->back)+i)->nrot;++k)
 			{
 				(((((((to+cto)->back)+i)->side)+j)->rot)+k)->b1 = (((((((from+cfrom)->back)+i)->side)+j)->rot)+k)->b1;
 				(((((((to+cto)->back)+i)->side)+j)->rot)+k)->b2 = (((((((from+cfrom)->back)+i)->side)+j)->rot)+k)->b2;
@@ -851,14 +847,14 @@ void CopyPolymer(struct s_polymer *from, struct s_polymer *to, int cfrom, int ct
 			}
 		}
 		(((to+cto)->back)+i)->ncontacts = (((from+cfrom)->back)+i)->ncontacts;
-		for (j=0;j<(((from+cfrom)->back)+i)->ncontacts;j++)
+		for (j=0;j<(((from+cfrom)->back)+i)->ncontacts;++j)
 		{
 			*(((((to+cto)->back)+i)->contacts)+j) = *(((((from+cfrom)->back)+i)->contacts)+j);
 			*(((((to+cto)->back)+i)->contacts_p)+j) = *(((((from+cfrom)->back)+i)->contacts_p)+j);
 			*(((((to+cto)->back)+i)->e)+j) = *(((((from+cfrom)->back)+i)->e)+j);
 		}
 		(((to+cto)->back)+i)->nshell = (((from+cfrom)->back)+i)->nshell;
-		for (j=0;j<(((from+cfrom)->back)+i)->nshell;j++)
+		for (j=0;j<(((from+cfrom)->back)+i)->nshell;++j)
 		{
 				*(((((to+cto)->back)+i)->shell)+j) = *(((((from+cfrom)->back)+i)->shell)+j);
 				*(((((to+cto)->back)+i)->shell_p)+j) = *(((((from+cfrom)->back)+i)->shell_p)+j);
@@ -881,7 +877,7 @@ void CopyAllPolymers(struct s_polymer *from, struct s_polymer *to, int n, int no
 {
 	int i;
 
-	for (i=0;i<n;i++)
+	for (i=0;i<n;++i)
 		CopyPolymer(from,to,i,i,noside,norot);
 }
 
@@ -889,13 +885,13 @@ void DisplaceCoM(struct s_polymer *p, int ip, double dx, double dy, double dz)
 {
 	int i,j;
 
-	for (i=0;i<(p+ip)->nback;i++)
+	for (i=0;i<(p+ip)->nback;++i)
 	{
 		((((p+ip)->back)+i)->pos).x += dx;
 		((((p+ip)->back)+i)->pos).y += dy;
 		((((p+ip)->back)+i)->pos).z += dz;
 
-		for (j=0;j<(((p+ip)->back)+i)->nside;j++)
+		for (j=0;j<(((p+ip)->back)+i)->nside;++j)
 		{
 			((((((p+ip)->back)+i)->side)+j)->pos).x += dx;
 			((((((p+ip)->back)+i)->side)+j)->pos).y += dy;
@@ -913,7 +909,7 @@ void	RotationX(struct s_polymer *p,int ip,double dtheta)
         double fact=1./(p+ip)->nback;
         double y,z,ys,zs;
 
-        for(i=0;i<(p+ip)->nback;i++)
+        for(i=0;i<(p+ip)->nback;++i)
         {
                 cmy+=((((p+ip)->back)+i)->pos).y;
                 cmz+=((((p+ip)->back)+i)->pos).z;
@@ -922,7 +918,7 @@ void	RotationX(struct s_polymer *p,int ip,double dtheta)
         cmy=cmy*fact;
         cmz=cmz*fact;
 
-        for (i=0;i<(p+ip)->nback;i++)
+        for (i=0;i<(p+ip)->nback;++i)
         {
                 y=((((p+ip)->back)+i)->pos).y-cmy;
                 z=((((p+ip)->back)+i)->pos).z-cmz;
@@ -930,7 +926,7 @@ void	RotationX(struct s_polymer *p,int ip,double dtheta)
                 ((((p+ip)->back)+i)->pos).z = cmz+ (sin(dtheta)*y)+(cos(dtheta)*z);
     
 
-                for (j=0;j<(((p+ip)->back)+i)->nside;j++)
+                for (j=0;j<(((p+ip)->back)+i)->nside;++j)
                 {	
                         ys=((((((p+ip)->back)+i)->side)+j)->pos).y -cmy;
                         zs=((((((p+ip)->back)+i)->side)+j)->pos).z -cmz ;
@@ -949,7 +945,7 @@ void    RotationY(struct s_polymer *p,int ip,double dtheta)
 	double fact=1./(p+ip)->nback;
         double x,z,xs,zs;
 
-	for(i=0;i<(p+ip)->nback;i++)
+	for(i=0;i<(p+ip)->nback;++i)
 	{
 		cmx+=((((p+ip)->back)+i)->pos).x;
 		cmz+=((((p+ip)->back)+i)->pos).z;
@@ -958,14 +954,14 @@ void    RotationY(struct s_polymer *p,int ip,double dtheta)
 	cmx=cmx*fact;
 	cmz=cmz*fact;
 
-        for (i=0;i<(p+ip)->nback;i++)
+        for (i=0;i<(p+ip)->nback;++i)
         {
 		x=((((p+ip)->back)+i)->pos).x-cmx;
 		z=((((p+ip)->back)+i)->pos).z-cmz;
                 ((((p+ip)->back)+i)->pos).x = cmx+ (cos(dtheta)*x) + (sin(dtheta)*z);
                 ((((p+ip)->back)+i)->pos).z = cmz+ (-sin(dtheta)*x)+(cos(dtheta)*z);
 
-                for (j=0;j<(((p+ip)->back)+i)->nside;j++)
+                for (j=0;j<(((p+ip)->back)+i)->nside;++j)
                 {
 			xs=((((((p+ip)->back)+i)->side)+j)->pos).x-cmx ;
 	                zs=((((((p+ip)->back)+i)->side)+j)->pos).z -cmz;
@@ -984,7 +980,7 @@ void    RotationZ(struct s_polymer *p,int ip,double dtheta)
         double fact=1./(p+ip)->nback;
         double x,y,xs,ys;
 
-        for(i=0;i<(p+ip)->nback;i++)
+        for(i=0;i<(p+ip)->nback;++i)
         {
                 cmx+=((((p+ip)->back)+i)->pos).x;
                 cmy+=((((p+ip)->back)+i)->pos).y;
@@ -993,14 +989,14 @@ void    RotationZ(struct s_polymer *p,int ip,double dtheta)
         cmx=cmx*fact;
         cmy=cmy*fact;
      
-        for (i=0;i<(p+ip)->nback;i++)
+        for (i=0;i<(p+ip)->nback;++i)
         {
                 x=((((p+ip)->back)+i)->pos).x-cmx;
                 y=((((p+ip)->back)+i)->pos).y-cmy;
                 ((((p+ip)->back)+i)->pos).x = cmx+(cos(dtheta)*x) - (sin(dtheta)*y);
                 ((((p+ip)->back)+i)->pos).y = cmy+(sin(dtheta)*x)+(cos(dtheta)*y);
  
-                for (j=0;j<(((p+ip)->back)+i)->nside;j++)
+                for (j=0;j<(((p+ip)->back)+i)->nside;++j)
                 {
 		      	 xs=((((((p+ip)->back)+i)->side)+j)->pos).x -cmx; 
                          ys=((((((p+ip)->back)+i)->side)+j)->pos).y -cmy;
@@ -1023,15 +1019,19 @@ void RotationClusterX(struct s_polymer *p,int ip,double dtheta,int icluster,int 
         double fact=0;
         double y,z,ys,zs;
 
-        for(i=0;i<npol_cluster;i++)
+        for(i=0;i<npol_cluster;++i)
                 fact+=(p+cluster[icluster][i])->nback;
         fact=1./fact;
 
 
 
-        for(j=0;j<npol_cluster;j++)
+        for(j=0;j<npol_cluster;++j)
         {
-	        for(i=0;i<(p+cluster[icluster][j])->nback;i++)
+
+
+
+
+	        for(i=0;i<(p+cluster[icluster][j])->nback;++i)
        		 {
                 	cmy+=((((p+cluster[icluster][j])->back)+i)->pos).y;
                 	cmz+=((((p+cluster[icluster][j])->back)+i)->pos).z;
@@ -1044,13 +1044,14 @@ void RotationClusterX(struct s_polymer *p,int ip,double dtheta,int icluster,int 
         cmz=cmz*fact;
 
 
-        for(k=0;k<npol_cluster;k++)
+
+        for(k=0;k<npol_cluster;++k)
         {
 
 
 
 
-	        for (i=0;i<(p+cluster[icluster][k])->nback;i++)
+	        for (i=0;i<(p+cluster[icluster][k])->nback;++i)
        		{
                 	y=((((p+cluster[icluster][k])->back)+i)->pos).y-cmy;
                 	z=((((p+cluster[icluster][k])->back)+i)->pos).z-cmz;
@@ -1059,7 +1060,7 @@ void RotationClusterX(struct s_polymer *p,int ip,double dtheta,int icluster,int 
 		
 	
 
-	                for (j=0;j<(((p+cluster[icluster][k])->back)+i)->nside;j++)
+	                for (j=0;j<(((p+cluster[icluster][k])->back)+i)->nside;++j)
         	        {
                 	        ys=((((((p+cluster[icluster][k])->back)+i)->side)+j)->pos).y -cmy;
                        		zs=((((((p+cluster[icluster][k])->back)+i)->side)+j)->pos).z -cmz ;
@@ -1083,15 +1084,15 @@ void RotationClusterY(struct s_polymer *p,int ip,double dtheta,int icluster,int 
 	double fact=0;
         double x,z,xs,zs;
 
-        for(i=0;i<npol_cluster;i++)
+        for(i=0;i<npol_cluster;++i)
                 fact+=(p+cluster[icluster][i])->nback;
         fact=1./fact;
 
-        for(j=0;j<npol_cluster;j++)
+        for(j=0;j<npol_cluster;++j)
         {
 
 
-	        for(i=0;i<(p+cluster[icluster][j])->nback;i++)
+	        for(i=0;i<(p+cluster[icluster][j])->nback;++i)
         	{
                 	cmx+=((((p+cluster[icluster][j])->back)+i)->pos).x;
                 	cmz+=((((p+cluster[icluster][j])->back)+i)->pos).z;
@@ -1102,18 +1103,18 @@ void RotationClusterY(struct s_polymer *p,int ip,double dtheta,int icluster,int 
         cmz=cmz*fact;
 
 
-        for(k=0;k<npol_cluster;k++)
+        for(k=0;k<npol_cluster;++k)
         {
 
 
-	        for (i=0;i<(p+cluster[icluster][k])->nback;i++)
+	        for (i=0;i<(p+cluster[icluster][k])->nback;++i)
         	{
                 	x=((((p+cluster[icluster][k])->back)+i)->pos).x-cmx;
                 	z=((((p+cluster[icluster][k])->back)+i)->pos).z-cmz;
                 	((((p+cluster[icluster][k])->back)+i)->pos).x = cmx+ (cos(dtheta)*x) + (sin(dtheta)*z);
                 	((((p+cluster[icluster][k])->back)+i)->pos).z = cmz+ (-sin(dtheta)*x)+(cos(dtheta)*z);
 
-                	for (j=0;j<(((p+cluster[icluster][k])->back)+i)->nside;j++)
+                	for (j=0;j<(((p+cluster[icluster][k])->back)+i)->nside;++j)
                 	{
                         	xs=((((((p+cluster[icluster][k])->back)+i)->side)+j)->pos).x-cmx ;
                         	zs=((((((p+cluster[icluster][k])->back)+i)->side)+j)->pos).z -cmz;
@@ -1130,14 +1131,14 @@ void RotationClusterZ(struct s_polymer *p,int ip,double dtheta,int icluster,int 
         double cmy=0;
 	double fact=0;
         int i,j,k;
-	for(i=0;i<npol_cluster;i++)
+	for(i=0;i<npol_cluster;++i)
 		fact+=(p+cluster[icluster][i])->nback;
         fact=1./fact;
         double x,y,xs,ys;
 
-	for(j=0;j<npol_cluster;j++)
+	for(j=0;j<npol_cluster;++j)
 	{
-        	for(i=0;i<(p+cluster[icluster][j])->nback;i++)
+        	for(i=0;i<(p+cluster[icluster][j])->nback;++i)
         	{
                 	cmx+=((((p+cluster[icluster][j])->back)+i)->pos).x;
                 	cmy+=((((p+cluster[icluster][j])->back)+i)->pos).y;
@@ -1147,16 +1148,16 @@ void RotationClusterZ(struct s_polymer *p,int ip,double dtheta,int icluster,int 
         cmx=cmx*fact;
         cmy=cmy*fact;
 
-	for(k=0;k<npol_cluster;k++)
+	for(k=0;k<npol_cluster;++k)
 	{
-        	for (i=0;i<(p+cluster[icluster][k])->nback;i++)
+        	for (i=0;i<(p+cluster[icluster][k])->nback;++i)
         	{	
                 	x=((((p+cluster[icluster][k])->back)+i)->pos).x-cmx;
                 	y=((((p+cluster[icluster][k])->back)+i)->pos).y-cmy;
                 	((((p+cluster[icluster][k])->back)+i)->pos).x = cmx+(cos(dtheta)*x) - (sin(dtheta)*y);
                 	((((p+cluster[icluster][k])->back)+i)->pos).y = cmy+(sin(dtheta)*x)+(cos(dtheta)*y);
 
-                	for (j=0;j<(((p+cluster[icluster][k])->back)+i)->nside;j++)
+                	for (j=0;j<(((p+cluster[icluster][k])->back)+i)->nside;++j)
                 	{
                          	xs=((((((p+cluster[icluster][k])->back)+i)->side)+j)->pos).x -cmx;
                          	ys=((((((p+cluster[icluster][k])->back)+i)->side)+j)->pos).y -cmy;

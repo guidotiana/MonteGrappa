@@ -44,12 +44,12 @@ struct rot_input_s *AlloRotamer(int naa, FILE *flog)
   size += sizeof(struct rot_input_s);
   if (!x) Error("Cannot allocate rotamers");
 
-  for (i=0;i<naa;i++)
+  for (i=0;i<naa;++i)
     {
        ((x+i)->atom) = (struct rot_atom_s **) calloc(ROTMAX,sizeof(struct rot_atom_s *));
        size += sizeof(struct rot_atom_s *);
        if (!(((x+i)->atom))) Error("Cannot allocate rotamers (2)");
-       for (j=0;j<ROTMAX;j++)
+       for (j=0;j<ROTMAX;++j)
            {
               *(((x+i)->atom)+j) = (struct rot_atom_s *) calloc(ROT_ATMAX,sizeof(struct rot_atom_s));
               size += sizeof(struct rot_atom_s);
@@ -87,8 +87,8 @@ int ReadRotamers(char *fname, struct rot_input_s *x, int debug)
        (x+naa)->nrot = nrot;
        (x+naa)->nat = nat;
        strcpy( (x+naa)->aa,aa);
-       for (i=0;i<nrot;i++)
-        for (j=0;j<nat;j++)
+       for (i=0;i<nrot;++i)
+        for (j=0;j<nat;++j)
           {
              if (fscanf(fp,"%s %s %s %s %lf %lf %lf",a1,a2,a3,at,&ang,&dih,&r)!=7) Error("Error in reading rotamer file");
              else
@@ -105,8 +105,8 @@ int ReadRotamers(char *fname, struct rot_input_s *x, int debug)
           }
 
        if ( debug > 1)
-         for (i=0;i<nrot;i++)
-           for (j=0;j<nat;j++)
+         for (i=0;i<nrot;++i)
+           for (j=0;j<nat;++j)
                 fprintf(stderr,"%3s %2d %2d\t%4s %4s %4s\t%4s     %11lf %11lf %11lf\n",(x+naa)->aa,i,j,(*(((x+naa)->atom)+i)+j)->A1,(*(((x+naa)->atom)+i)+j)->A2,(*(((x+naa)->atom)+i)+j)->A3,(*(((x+naa)->atom)+i)+j)->kind,(*(((x+naa)->atom)+i)+j)->ang,(*(((x+naa)->atom)+i)+j)->dih,(*(((x+naa)->atom)+i)+j)->r);
 
        naa++;
@@ -127,17 +127,17 @@ int Rot2PolymerScratch(int nrot_kinds, int nchains, struct s_polymer *p, struct 
 
 	fprintf(stderr,"\nAdd sidechains from rotamers library (neglecting pdb)...\n");
 	
-	for (i=0;i<NRESMAX;i++) CA[i] = -1;
-	for (ic=0;ic<nchains;ic++) natomback += (p+ic)->nback;
+	for (i=0;i<NRESMAX;++i) CA[i] = -1;
+	for (ic=0;ic<nchains;++ic) natomback += (p+ic)->nback;
 
 	// find main backbone atoms
-	for (ic=0;ic<nchains;ic++)
+	for (ic=0;ic<nchains;++ic)
 	{
 		iaa0 = (((p+ic)->back)+0)->iaa;			// id of first aa of this chain
-		for (i=0;i<NRESMAX;i++) { CA[i] = -1; C[i] = -1; N[i] = -1; } 
+		for (i=0;i<NRESMAX;++i) { CA[i] = -1; C[i] = -1; N[i] = -1; } 
 
 		// find the iback corresponding to N, CA, C
-		for (i=0;i<(p+ic)->nback;i++)
+		for (i=0;i<(p+ic)->nback;++i)
 		{
 			if ( (((p+ic)->back)+i)->iaa -iaa0 > NRESMAX ) Error("NRESMAX too small in Rot2PolymerScratch");
 			if (!strcmp( (((p+ic)->back)+i)->type,"N") )  N[ (((p+ic)->back)+i)->iaa -iaa0] =  (((p+ic)->back)+i)->ia;
@@ -148,7 +148,7 @@ int Rot2PolymerScratch(int nrot_kinds, int nchains, struct s_polymer *p, struct 
 		if (parms->debug>2) fprintf(stderr,"ic=%d\tiaa0=%d naa=%d\n",ic,iaa0,aamax+1);
 
 		// check if all aa have N, CA, C
-		for (i=0;i<=aamax;i++)
+		for (i=0;i<=aamax;++i)
 		{
 			if ( N[ (((p+ic)->back)+i)->iaa -iaa0 ] == -1 ) { fprintf(stderr,"chain=%d amino acid=%d\n",ic,(((p+ic)->back)+i)->iaa); 
 										Error("Cannot find N atom in Rot2PolymerScratch"); }
@@ -158,7 +158,7 @@ int Rot2PolymerScratch(int nrot_kinds, int nchains, struct s_polymer *p, struct 
 										Error("Cannot find CA atom in Rot2PolymerScratch"); }
 		}
 
-		for (i=0;i<(p+ic)->nback;i++)
+		for (i=0;i<(p+ic)->nback;++i)
 		{
 			(((p+ic)->back)+i)->nside = 0;
 		}
@@ -168,7 +168,7 @@ int Rot2PolymerScratch(int nrot_kinds, int nchains, struct s_polymer *p, struct 
 
 		// add sidechain atoms other than CB
 		fprintf(stderr,"Adding the rotamers of the atoms other than CB\n");
-		for (i=0;i<(p+ic)->nback;i++)
+		for (i=0;i<(p+ic)->nback;++i)
 			if (!strcmp( (((p+ic)->back)+i)->type , "CA" ))										// loop on all CA atoms
 			{
 				if (parms->debug>1) fprintf(stderr,"Back=%3d\tchain=%d\taa=%s\t",i,ic,(((p+ic)->back)+i)->aa);
@@ -178,7 +178,7 @@ int Rot2PolymerScratch(int nrot_kinds, int nchains, struct s_polymer *p, struct 
 
 				if (iaa>NRESMAX) Error("NRESMAX too small in Rot2PolymerScratch");
 				rot_kind=-1;
-				for (k=0;k<nrot_kinds;k++)
+				for (k=0;k<nrot_kinds;++k)
 					if (!strcmp((((p+ic)->back)+i)->aa,(r+k)->aa)) rot_kind = k;
 				if (rot_kind==-1 && parms->debug >1) fprintf(stderr,"  no rotamer");
 				if (parms->debug>1) fprintf(stderr,"\tRotamer id is %d\n",rot_kind);
@@ -186,7 +186,7 @@ int Rot2PolymerScratch(int nrot_kinds, int nchains, struct s_polymer *p, struct 
 
 				//propagate CB, which is defined only for rotamer 0, to all rotamers
 				if (strcmp( (((p+ic)->back)+i)->aa , "GLY" ))
-					for (irot=1;irot< (r+rot_kind)->nrot ;irot++)
+					for (irot=1;irot< (r+rot_kind)->nrot ;++irot)
 					{
 						(((((((p+ic)->back)+i)->side)+0)->rot)+irot)->b1 = (((((((p+ic)->back)+i)->side)+0)->rot)+0)->b1;
 						(((((((p+ic)->back)+i)->side)+0)->rot)+irot)->b2 = (((((((p+ic)->back)+i)->side)+0)->rot)+0)->b2;
@@ -199,7 +199,7 @@ int Rot2PolymerScratch(int nrot_kinds, int nchains, struct s_polymer *p, struct 
 
 				// add sidechain atoms
 				if (rot_kind>-1)
-				for (is=0;is<(r+rot_kind)->nat;is++)												// over atoms to be put
+				for (is=0;is<(r+rot_kind)->nat;++is)												// over atoms to be put
 				{
 					// append new sidechain	
 					(((((p+ic)->back)+i)->side)+is+1)->ia = nat;
@@ -208,7 +208,7 @@ int Rot2PolymerScratch(int nrot_kinds, int nchains, struct s_polymer *p, struct 
 					strcpy( (((((p+ic)->back)+i)->side)+is+1)->type , (*(((r+rot_kind)->atom)+0)+is)->kind );		// assumes that all rotamers have the same atom (the 0th)
 					if (parms->debug>1) fprintf(stderr,"\tAtom=%d (%d of %d)\tnside=%d",nat,is,(r+rot_kind)->nat,(((p+ic)->back)+i)->nside);
 
-					for (irot=0;irot<(r+rot_kind)->nrot;irot++)									// over rotamers
+					for (irot=0;irot<(r+rot_kind)->nrot;++irot)									// over rotamers
 					{ 
 						((((((((p+ic)->back)+i)->side)+is+1)->rot)+irot)->ang).ang = (*(((r+rot_kind)->atom)+irot)+is)->ang;
 						((((((((p+ic)->back)+i)->side)+is+1)->rot)+irot)->ang).dih = (*(((r+rot_kind)->atom)+irot)+is)->dih;
@@ -221,7 +221,7 @@ int Rot2PolymerScratch(int nrot_kinds, int nchains, struct s_polymer *p, struct 
 						else if ( !strcmp((*(((r+rot_kind)->atom)+irot)+is)->A1 , "CA") ) b1 = CA[iaa];
 						else if ( !strcmp((*(((r+rot_kind)->atom)+irot)+is)->A1 , "C") ) b1 = C[iaa];
 						else
-							for (m=0;m<(((p+ic)->back)+i)->nside;m++)							// over atoms of the sidechain
+							for (m=0;m<(((p+ic)->back)+i)->nside;++m)							// over atoms of the sidechain
 								if (!strcmp( (*(((r+rot_kind)->atom)+irot)+is)->A1, (((((p+ic)->back)+i)->side)+m)->type ))
 									b1 = (((((p+ic)->back)+i)->side)+m)->ia;					// b1 is the atom id of the basis set
 						if (b1 == -1) { fprintf(stderr,"ic=%d i=%d is=%d irot=%d A1=%s\n",ic,i,is,irot,(*(((r+rot_kind)->atom)+irot)+is)->A1); Error("Cannot find atom to build rotamer (1)"); }
@@ -232,7 +232,7 @@ int Rot2PolymerScratch(int nrot_kinds, int nchains, struct s_polymer *p, struct 
 						else if ( !strcmp((*(((r+rot_kind)->atom)+irot)+is)->A2 , "CA") ) b2 = CA[iaa];
 						else if ( !strcmp((*(((r+rot_kind)->atom)+irot)+is)->A2 , "C") ) b2 = C[iaa];
 						else
-							for (m=0;m<(((p+ic)->back)+i)->nside;m++)							// over atoms of the sidechain
+							for (m=0;m<(((p+ic)->back)+i)->nside;++m)							// over atoms of the sidechain
 								if (!strcmp( (*(((r+rot_kind)->atom)+irot)+is)->A2, (((((p+ic)->back)+i)->side)+m)->type ))
 									b2 = (((((p+ic)->back)+i)->side)+m)->ia;					// b2 is the atom id of the basis set
 						if (b2 == -1) { fprintf(stderr,"ic=%d i=%d is=%d irot=%d A2=%s\n",ic,i,is,irot,(*(((r+rot_kind)->atom)+irot)+is)->A2); Error("Cannot find atom to build rotamer (2)"); }
@@ -243,7 +243,7 @@ int Rot2PolymerScratch(int nrot_kinds, int nchains, struct s_polymer *p, struct 
 						else if ( !strcmp((*(((r+rot_kind)->atom)+irot)+is)->A3 , "CA") ) b3 =CA[iaa];
 						else if ( !strcmp((*(((r+rot_kind)->atom)+irot)+is)->A3 , "C") ) b3 = C[iaa];
 						else
-							for (m=0;m<(((p+ic)->back)+i)->nside;m++)							// over atoms of the sidechain
+							for (m=0;m<(((p+ic)->back)+i)->nside;++m)							// over atoms of the sidechain
 								if (!strcmp( (*(((r+rot_kind)->atom)+irot)+is)->A3, (((((p+ic)->back)+i)->side)+m)->type ))
 										b3 = (((((p+ic)->back)+i)->side)+m)->ia;				// b3 is the atom id of the basis set
 						if (b3 == -1) { fprintf(stderr,"ic=%d i=%d is=%d irot=%d A3=%s\n",ic,i,is,irot,(*(((r+rot_kind)->atom)+irot)+is)->A3); Error("Cannot find atom to build rotamer (3)"); }
@@ -276,7 +276,7 @@ int AddDefaultCB(struct s_polymer *p, int ic, int *N, int *CA, int *C, int naa, 
 
 	fprintf(stderr,"Building default CB for chain %d\n",ic);
 
-	for (i=0;i<naa;i++)
+	for (i=0;i<naa;++i)
 		if (CA[i] != -1 && strcmp((((p+ic)->back)+CA[i])->aa,"GLY") )
 		{
 			(((((p+ic)->back)+CA[i])->side)+ 0)->ia = nat;
@@ -327,9 +327,9 @@ void SubstituteDefaultCB(struct s_polymer *p, int nc)
 
 	fprintf(stderr,"Substituting default CB\n");
 
-	for (ic=0;ic<nc;ic++)
-		for (i=0;i<(p+ic)->nback;i++)
-			for (is=0;is<(((p+ic)->back)+i)->nside;is++)
+	for (ic=0;ic<nc;++ic)
+		for (i=0;i<(p+ic)->nback;++i)
+			for (is=0;is<(((p+ic)->back)+i)->nside;++is)
 				if (!strcmp((((((p+ic)->back)+i)->side)+is)->type,"CB"))
 				{
 					if (!strcmp((((p+ic)->back)+i)->aa,"PRO"))
@@ -363,11 +363,11 @@ int Rot2Polymer(int nrot_kinds, int nchains, struct s_polymer *p, struct rot_inp
 
 	fprintf(stderr,"\nAdd rotamers from rotamers library...\n");
 
-	for (i=0;i<NRESMAX;i++) CA[i] = -1;
+	for (i=0;i<NRESMAX;++i) CA[i] = -1;
 
 	// find main backbone atoms
-	for (ic=0;ic<nchains;ic++)
-		for (i=0;i<(p+ic)->nback;i++)
+	for (ic=0;ic<nchains;++ic)
+		for (i=0;i<(p+ic)->nback;++i)
 		{
 			if (!strcmp( (((p+ic)->back)+i)->type,"N") ) { N[ (((p+ic)->back)+i)->iaa ] = (((p+ic)->back)+i)->ia; }
 			if (!strcmp( (((p+ic)->back)+i)->type,"C") ) { C[ (((p+ic)->back)+i)->iaa ] = (((p+ic)->back)+i)->ia; }
@@ -378,28 +378,26 @@ int Rot2Polymer(int nrot_kinds, int nchains, struct s_polymer *p, struct rot_inp
 	if (!parms->cb_pdb) SubstituteDefaultCB(p,nchains);
 
 	// if required, keep the sidechain of the pdb as rotamer 0
-	if (parms->pdb_rot) {
-				fprintf(stderr,"keep pdb sidechains as rotamer 0...\n");			
-				keeppdb=1;
-	}
+	if (parms->pdb_rot) keeppdb=1;
+
 	// add sidechain atoms other than CB
 	fprintf(stderr,"Adding the rotamers of the atoms other than CB\n");
-	for (ic=0;ic<nchains;ic++)
-		for (i=0;i<(p+ic)->nback;i++)
+	for (ic=0;ic<nchains;++ic)
+		for (i=0;i<(p+ic)->nback;++i)
 			if (!strcmp( (((p+ic)->back)+i)->type , "CA" ))										// loop on all CA atoms
 			{
 				if (parms->debug>1) fprintf(stderr,"Back=%3d\taa=%s\t",i,(((p+ic)->back)+i)->aa);
 				// find which amino acid (i.e. which element of rotamer structure)
 				iaa = (((p+ic)->back)+i)->iaa;
 				rot_kind=-1;
-				for (k=0;k<nrot_kinds;k++)
+				for (k=0;k<nrot_kinds;++k)
 					if (!strcmp((((p+ic)->back)+i)->aa,(r+k)->aa)) rot_kind = k;
 				if (rot_kind==-1 && parms->debug >1) fprintf(stderr,"  no rotamer");
 				if (parms->debug>1 && (r+rot_kind)->nat >0) fprintf(stderr,"\tRotamer id is %d\n",rot_kind);
 
 				//propagate CB, which in the pdb are defined only for rotamer 0, to all  rotamers
 				if ( rot_kind>-1)
-					for (irot=1;irot< (r+rot_kind)->nrot + keeppdb;irot++)
+					for (irot=1;irot< (r+rot_kind)->nrot + keeppdb;++irot)
 					{
 						(((((((p+ic)->back)+i)->side)+0)->rot)+irot)->b1 = (((((((p+ic)->back)+i)->side)+0)->rot)+0)->b1;
 						(((((((p+ic)->back)+i)->side)+0)->rot)+irot)->b2 = (((((((p+ic)->back)+i)->side)+0)->rot)+0)->b2;
@@ -412,16 +410,16 @@ int Rot2Polymer(int nrot_kinds, int nchains, struct s_polymer *p, struct rot_inp
 				(((p+ic)->back)+i)->nrot = (r+rot_kind)->nrot + keeppdb;
 
 				// add new spherical coordinates to rotamers
-				for (j=1;j<(((p+ic)->back)+i)->nside;j++)						// over atoms to be put except CB (j=0)
+				for (j=1;j<(((p+ic)->back)+i)->nside;++j)						// over atoms to be put except CB (j=0)
 					if (strcmp((((((p+ic)->back)+i)->side)+j)->type,"CB") && rot_kind > -1)
 					{
 						//if (parms->debug>1) fprintf(stdout,"\tSide atom=%d (%d of %d)\tnside=%d",nat,j,(r+rot_kind)->nat,(((p+ic)->back)+i)->nside);
 
-						for (irot=0;irot<(r+rot_kind)->nrot;irot++)									// over rotamers
+						for (irot=0;irot<(r+rot_kind)->nrot;++irot)									// over rotamers
 						{
 							// find atom within rotamer
 							iar=-1;
-							for (m=0;m<(r+rot_kind)->nat;m++)										// over atoms of the rotamer
+							for (m=0;m<(r+rot_kind)->nat;++m)										// over atoms of the rotamer
 								if (!strcmp( (*(((r+rot_kind)->atom)+irot)+m)->kind, (((((p+ic)->back)+i)->side)+j)->type ))
 									iar = m;														// iar is the correct element of rotamer array
 							if (iar == -1)
@@ -442,7 +440,7 @@ int Rot2Polymer(int nrot_kinds, int nchains, struct s_polymer *p, struct rot_inp
 							else if ( !strcmp((*(((r+rot_kind)->atom)+irot)+iar)->A1 , "CA") ) b1 =CA[iaa];
 							else if ( !strcmp((*(((r+rot_kind)->atom)+irot)+iar)->A1 , "C") ) b1 =C[iaa];
 							else
-								for (m=0;m<(((p+ic)->back)+i)->nside;m++)							// over atoms of the sidechain
+								for (m=0;m<(((p+ic)->back)+i)->nside;++m)							// over atoms of the sidechain
 									if (!strcmp( (*(((r+rot_kind)->atom)+irot)+iar)->A1, (((((p+ic)->back)+i)->side)+m)->type ))
 										b1 = (((((p+ic)->back)+i)->side)+m)->ia;					// b1 is the atom id of the basis set
 							if (b1 == -1) { fprintf(stderr,"ic=%d i=%d iar=%d irot=%d A1=%s\n",ic,i,iar,irot,(*(((r+rot_kind)->atom)+irot)+iar)->A1); Error("Cannot find atom to build rotamer (1)"); }
@@ -453,7 +451,7 @@ int Rot2Polymer(int nrot_kinds, int nchains, struct s_polymer *p, struct rot_inp
 							else if ( !strcmp((*(((r+rot_kind)->atom)+irot)+iar)->A2 , "CA") ) b2 = CA[iaa];
 							else if ( !strcmp((*(((r+rot_kind)->atom)+irot)+iar)->A2 , "C") ) b2 = C[iaa];
 							else
-								for (m=0;m<(((p+ic)->back)+i)->nside;m++)							// over atoms of the sidechain
+								for (m=0;m<(((p+ic)->back)+i)->nside;++m)							// over atoms of the sidechain
 									if (!strcmp( (*(((r+rot_kind)->atom)+irot)+iar)->A2, (((((p+ic)->back)+i)->side)+m)->type ))
 										b2 = (((((p+ic)->back)+i)->side)+m)->ia;					// b1 is the atom id of the basis set
 							if (b2 == -1) { fprintf(stderr,"ic=%d i=%d iar=%d irot=%d A2=%s\n",ic,i,iar,irot,(*(((r+rot_kind)->atom)+irot)+iar)->A2); Error("Cannot find atom to build rotamer (1)"); }
@@ -465,7 +463,7 @@ int Rot2Polymer(int nrot_kinds, int nchains, struct s_polymer *p, struct rot_inp
 							else if ( !strcmp((*(((r+rot_kind)->atom)+irot)+iar)->A3 , "CA") ) b3 = CA[iaa];
 							else if ( !strcmp((*(((r+rot_kind)->atom)+irot)+iar)->A3 , "C") ) b3 = C[iaa];
 							else
-								for (m=0;m<(((p+ic)->back)+i)->nside;m++)							// over atoms of the sidechain
+								for (m=0;m<(((p+ic)->back)+i)->nside;++m)							// over atoms of the sidechain
 									if (!strcmp( (*(((r+rot_kind)->atom)+irot)+iar)->A3, (((((p+ic)->back)+i)->side)+m)->type ))
 										b3 = (((((p+ic)->back)+i)->side)+m)->ia;					// b1 is the atom id of the basis set
 							if (b3 == -1) { fprintf(stderr,"ic=%d i=%d iar=%d irot=%d A3=%s\n",ic,i,iar,irot,(*(((r+rot_kind)->atom)+irot)+iar)->A3); Error("Cannot find atom to build rotamer (1)"); }

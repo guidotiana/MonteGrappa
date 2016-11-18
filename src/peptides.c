@@ -43,14 +43,14 @@ void MakePeptide(struct s_polymer *p, struct s_mc_parms *parms, int from, int to
 	int i,j,k,ip,q=0,o=1;
 	double dx,dy,dz;
 
-	for (ip=0;ip<npep;ip++)
+	for (ip=0;ip<npep;++ip)
 	{
 		(p+ip+1)->nback = to - from + 1;
 		sprintf((p+ip+1)->title,"peptide #%d",ip+1);
 
 		// copy segment of polymer wp as new polymers
 		q=0;
-		for (i=from;i<=to;i++)
+		for (i=from;i<=to;++i)
 		{
 			(((p+ip+1)->back)+q)->ia = (((p+wp)->back)+i)->ia;
 			(((p+ip+1)->back)+q)->itype = (((p+wp)->back)+i)->itype;
@@ -69,7 +69,7 @@ void MakePeptide(struct s_polymer *p, struct s_mc_parms *parms, int from, int to
 			(((p+ip+1)->back)+q)->nrot = (((p+wp)->back)+i)->nrot;
 			(((p+ip+1)->back)+q)->d2_next = (((p+wp)->back)+i)->d2_next;
 
-			for (j=0;j<(((p+wp)->back)+i)->nside;j++)
+			for (j=0;j<(((p+wp)->back)+i)->nside;++j)
 			{
 				strcpy( (((((p+ip+1)->back)+q)->side)+j)->type, (((((p+wp)->back)+i)->side)+j)->type );
 				(((((p+ip+1)->back)+q)->side)+j)->itype = (((((p+wp)->back)+i)->side)+j)->itype;
@@ -77,7 +77,7 @@ void MakePeptide(struct s_polymer *p, struct s_mc_parms *parms, int from, int to
 				((((((p+ip+1)->back)+q)->side)+j)->pos).x = ((((((p+wp)->back)+i)->side)+j)->pos).x;
 				((((((p+ip+1)->back)+q)->side)+j)->pos).y = ((((((p+wp)->back)+i)->side)+j)->pos).y;
 				((((((p+ip+1)->back)+q)->side)+j)->pos).z = ((((((p+wp)->back)+i)->side)+j)->pos).z;
-				for (k=0;k<(((p+wp)->back)+i)->nrot;k++)
+				for (k=0;k<(((p+wp)->back)+i)->nrot;++k)
 				{
 					(((((((p+ip+1)->back)+q)->side)+j)->rot)+k)->b1 = (((((((p+wp)->back)+i)->side)+j)->rot)+k)->b1;
 					(((((((p+ip+1)->back)+q)->side)+j)->rot)+k)->b2 = (((((((p+wp)->back)+i)->side)+j)->rot)+k)->b2;
@@ -93,7 +93,7 @@ void MakePeptide(struct s_polymer *p, struct s_mc_parms *parms, int from, int to
 	}
 
 	// shift peptides
-	for (i=(*npol);i<(*npol)+npep;i++)
+	for (i=(*npol);i<(*npol)+npep;++i)
 	{
 		do
 		{

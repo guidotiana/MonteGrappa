@@ -41,13 +41,12 @@
 #include <math.h>
 #include <time.h>
 #include <signal.h>
+#include <stdbool.h>
 
+        #define NVER		1
+        #define NSUBVER	 	3	
 
-
-        #define NVER		0
-        #define NSUBVER	 	11	
-
-        #define NRESMAX		1000		// maximum number of backbone atoms
+        #define NRESMAX		3000		// maximum number of backbone atoms
         #define NATOMMAX	60000		// maximum number of atoms
         #define NSIDEMAX	15		// maximum number of sidechain atoms for a given backbone atom
         #define NROTMAX		40		// maximum number of rotamers allowed
@@ -169,14 +168,14 @@ void ReadParF(char *s, char key[20], double *par);
 void ReadParS(char *s, char key[20], char *par);
 void ReadParN(char *s, char key[20], int *par);
 void ReadParLLU(char *s, char key[20], unsigned long long *par);
-void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, int noangpot, int nodihpot, int hb);
 void ComputeIAPDB(struct s_polymer *p,struct s_mc_parms *mc_parms);
+void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, int noangpot, int nodihpot, int hb, int nohfields);
 
 
 // memory.c
 struct s_polymer *AlloPolymer(int npol, int n, int nside, int nrot, int natoms, int shell, int noside, FILE *flog);
 struct s_tables *InitTables(FILE *fp);
-struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodihpot, int hb);
+struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodihpot, int hb, int nohfields);
 int **AlloIntMatrix(int l, int m);
 int *AlloInt(int l);
 double **AlloDoubleMatrix(int l, int m);
@@ -232,7 +231,7 @@ void CopyResidueCoordinates(struct s_back *from,struct s_back *to);
 int ComputeG(double **g,struct s_polymer *fragment,struct s_polymer *p,int ip,int k,int n,int npol,struct s_mc_parms *parms);
 int MoveBiasedGaussian(struct s_polymer *p,struct s_polymer *oldp,struct s_polymer *fragment,struct s_potential *pot,int nmul,struct s_mc_parms *mc_parms,double t);
 int MoveReallyLocal(struct s_polymer *p,struct s_polymer *oldp,struct s_potential *pot,int nmul,struct s_mc_parms *mc_parms,double t);
-int CopyFragment(struct s_polymer *p,struct s_polymer *f,int iw,int nmul,int natom_fragment,int ip);
+void CopyFragment(struct s_polymer *p,struct s_polymer *f,int iw,int natom_fragment,int ip);
 int B_Metropolis(double deltaE,double T,double WN,double WD,struct s_tables *t);
 //local_move.c
 struct s_polymer *Allo_Fragment(int npol, int nback,int nang, FILE *flog);
@@ -299,6 +298,9 @@ void CountContacts(FILE *fp,struct s_polymer *polymer,struct s_mc_parms *parms,u
 double EnergyMonomerShell(struct s_polymer *p, struct s_potential *u, int i,int ip, int update);
 void UpdateShell(struct s_polymer *p, struct s_mc_parms *parms);
 void CopyShell(struct s_polymer *from,struct s_polymer *to, struct s_mc_parms *parms);
+void SetTrueShellFlags(struct s_polymer *p,struct s_mc_parms *parms);
+void SetFalseShellFlags(struct s_polymer *p,struct s_mc_parms *parms);
+void UpdateShellFlags(struct s_polymer *p,int ip,int ifrom,int ito);
 double GetEnergyMonomerRange(struct s_polymer *p, int from, int to, int ip);
 double EnergyMonomerRange(struct s_polymer *p, struct s_potential *u, int from, int to, int ip, int npol, int shell, int update, int nosidechains, int disentangle, int hb);
 double EnergyPair(struct s_polymer *p, struct s_potential *u, int i, int j, int ci, int cj, int update, int sidechains, int disentangle, int tooclose, int hb);
@@ -311,6 +313,8 @@ int CheckOverlaps(struct s_polymer *p, struct s_potential *u, struct s_mc_parms 
 void CompareStructures(struct s_polymer *a, struct s_polymer *b, int nc, int natoms);
 int EnergyBox(struct s_polymer *p, struct s_potential *u, int iw, int ic);
 int EnergyBoxPolymer(struct s_polymer *p, struct s_potential *u, int ic);
+double EnergyHFields(struct s_polymer *p, struct s_potential *u, struct s_mc_parms *parms, int iw, int ic, int update);
+double GetHFields(struct s_polymer *p, int ip);
 
 
 // constants for gaussian random generator

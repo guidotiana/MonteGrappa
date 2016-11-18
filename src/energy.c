@@ -42,7 +42,7 @@
  *****************************************************************************/
 void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02, int nchains, int nat, double **cm)
 {
-	int i,j,k=0;
+        int i,j,k=0;
 	double r;
 	FILE *fout;
 
@@ -52,9 +52,9 @@ void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r
 		srand(time(0));	
 	}
 	if (parms->debug>1)  fprintf(stderr,"\n\nGo contacts:\n");
-
-	for (i=0;i<nat;i++)
-		for (j=i;j<nat;j++)
+	
+	for (i=0;i<nat;++i)
+		for (j=i;j<nat;++j)
 		{
 			if (cm[i][j]>0)									// if it is a native contact
 			{
@@ -76,7 +76,7 @@ void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r
 				r02[i][j] = r;
 				r02[j][i] = r02[i][j];
 				if (parms->debug>1)  fprintf(stderr,"%d-%d\t",i,j);
-				k++;
+				++k;
 			}
 
 			if (parms->go_noise==2)								// if you want to add non-go noise
@@ -97,8 +97,8 @@ void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r
 	{
 		fout = fopen(parms->cntfile,"w");
 		if (!fout) Error("Cannot open file to write native contacts");
-		for (i=0;i<nat;i++)
-			for (j=0;j<nat;j++)
+		for (i=0;i<nat;++i)
+			for (j=0;j<nat;++j)
 				if (cm[i][j]>0) fprintf(fout,"%4d %4d\n",i,j);
 
 
@@ -108,16 +108,129 @@ void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r
 
 }
 
+double Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02)
+{
+	int i,ii,j,k=0,iaa1,iaa2,itype1,itype2,lines=0;
+	double energy,r,mean=0,stdev=0,appoenergy;
+	char aux[500],aa1[3],aa2[3];
+	FILE *fp, *contfp;
+	int naapairs=210;
+	struct s_pairscont cont[210]; //max contact map between aa types
+
+	// Read the rescaling factors for the aa pairs
+	if(parms->coevo_allatom)
+	{
+		contfp = fopen(parms->maxcontpairsfile,"r");
+		if (!contfp) Error("Cannot open pairs contact statistic file");
+		else fprintf(stderr,"Reading pairs contact statistics file....\n");
+		i=0;
+		while(fscanf(contfp,"%s %s %d",(cont[i].nameaa1),(cont[i].nameaa2),&(cont[i].max))==3)
+	    {
+			++i;
+		}
+		fclose(contfp);
+	}
+	//calculate std deviation of contact energies
+	fprintf(stderr,"Reading coevolutionary contact file\n");
+	fp = fopen(parms->coevofile,"r");
+	if (!fp) Error("Coevolutionary contact file does not exist");
+
+	// Mean calculation (first cycle)
+	while(fgets(aux,500,fp)!=NULL)
+	{
+		if((sscanf(aux,"%d %s %d %s %lf",&iaa1,aa1,&iaa2,aa2,&energy) == 5) && (lines>0))
+		{
+			mean+=energy;
+		}	
+		++lines;
+	}
+	lines-=1;
+	mean/=(double)lines;
+
+	fclose(fp);
+
+	fp = fopen(parms->coevofile,"r");
+
+	
+	// Standard deviation calculation (second cycle)
+	i=0;
+	while(fgets(aux,500,fp)!=NULL)
+	{
+		if((sscanf(aux,"%d %s %d %s %lf",&iaa1,aa1,&iaa2,aa2,&energy) == 5) && i!=0)
+		{
+			stdev+=(mean-energy)*(mean-energy);
+		}	
+		++i;
+	}
+	stdev=sqrt(stdev/(double)(lines-1));	
+	fclose(fp);
+
+
+	fp = fopen(parms->coevofile,"r");
+
+	while(fgets(aux,500,fp)!=NULL)
+	{
+		if ( sscanf(aux,"%d %s %d %s %lf",&iaa1,aa1,&iaa2,aa2,&energy) == 5)
+		{
+			for(i=0;i<p->nback;++i)
+			{
+				for(j=i;j<p->nback;++j)
+				{
+					// Check the aminoacid id, ignoring the sidechain of the N atom and glicines
+					if( ( ( ((p->back)+i)->iaa == iaa1 ) && ( ((p->back)+j)->iaa == iaa2 ) ) &&
+					   (strcmp(((p->back)+i)->type,"N")) && ( strcmp(((p->back)+j)->type,"N") ) &&
+					  (strcmp(aa1,"GLY")) && (strcmp(aa2,"GLY"))  )
+					{
+						itype1 = (((p->back)+i)->side)->itype;
+						itype2 = (((p->back)+j)->side)->itype;
+						++k;
+						
+						// set the interaction distance
+						r = parms->rnat * parms->rnat;
+						r2[itype1][itype2] = r;
+						r2[itype2][itype1] = r2[itype1][itype2];
+						
+						// set the hardcore distance
+						r = parms->rhard * parms->rhard;
+						r02[itype1][itype2] = r;
+						r02[itype2][itype1] = r02[itype1][itype2];
+						
+						// set the interaction energy (such that std deviation=1)
+						if(parms->coevo_allatom)
+						{
+							//normalize energy over max contacts
+							for(ii=0;ii<naapairs;++ii)
+							{
+								if((!strcmp(aa1,cont[ii].nameaa1) && !strcmp(aa2,cont[ii].nameaa2)) || (!strcmp(aa2,cont[ii].nameaa1) && !strcmp(aa1,cont[ii].nameaa2)))
+								{
+									appoenergy=energy/(double)cont[ii].max;
+								}
+							}
+						}
+						e[itype1][itype2] = appoenergy/stdev;
+						e[itype2][itype1] = e[itype1][itype2];
+					}
+				}
+			}
+		}
+	}
+	fclose(fp);
+	
+	if (parms->debug>0) fprintf(stderr,"Found %d contacts in coevolutionary contact file\n",k);
+	fprintf(stderr,"mean=%lf     stdev=%lf\n",mean,stdev);
+	return stdev;
+}
+
 void Go_Dihedrals(struct s_parms *parms, struct s_polymer *p, int nc, double *dih01, double *dih03, struct s_potential *u)
 {
 	int i,j,ia,out;
 
-	for (i=0;i<nc;i++)
-		for (j=2;j<(p+i)->nback-1;j++)
+	for (i=0;i<nc;++i)
+		for (j=2;j<(p+i)->nback-1;++j)
 		{
 			ia =  (((p+i)->back)+j)->ia;
 			u->dih01[ia] = Dihedral( (((p+i)->back)+j-2)->pos, (((p+i)->back)+j-1)->pos, 
-						(((p+i)->back)+j)->pos, (((p+i)->back)+j+1)->pos, p->tables,&out);
+									 (((p+i)->back)+j)->pos, (((p+i)->back)+j+1)->pos, p->tables,&out);
 			u->e_dih1[ia] = parms->e_dih1;
 			u->dih03[ia] = u->dih01[ia];
 			u->e_dih3[ia] = parms->e_dih3;
@@ -128,8 +241,8 @@ void Go_Angles(struct s_parms *parms, struct s_polymer *p, int nc, double *ang, 
 {
 	int i,j,ia,out;
 
-	for (i=0;i<nc;i++)
-		for (j=1;j<(p+i)->nback-1;j++)
+	for (i=0;i<nc;++i)
+		for (j=1;j<(p+i)->nback-1;++j)
 		{
 			ia =  (((p+i)->back)+j)->ia;
 			u->ang0[ia] = Angle( (((p+i)->back)+j-1)->pos, (((p+i)->back)+j)->pos, (((p+i)->back)+j+1)->pos, p->tables,&out );
@@ -151,6 +264,9 @@ void Ram_Dihedrals(struct s_parms *p, struct s_potential *u)
 		u->dih0[1][0] = p->phi_0_b;
 		u->dih0[0][1] = p->psi_0_a;
 		u->dih0[1][1] = p->psi_0_b;
+		u->dih_ka = p->dih_ka;
+		u->dih_kb = p->dih_kb;
+		
 	}
 }
 
@@ -168,10 +284,10 @@ double **ContactMap(struct s_parms *parms, struct s_polymer *p, int nchains, int
 	if (debug>2) fprintf(stderr,"Contact map:\n");
 
 	// loop on backbone atoms
-	for (c1=0;c1<nchains;c1++)
-		for (c2=c1;c2<nchains;c2++)
-			for (ib1=0;ib1<(p+c1)->nback;ib1++)
-				for (ib2=0;ib2<(p+c2)->nback;ib2++)
+	for (c1=0;c1<nchains;++c1)
+		for (c2=c1;c2<nchains;++c2)
+			for (ib1=0;ib1<(p+c1)->nback;++ib1)
+				for (ib2=0;ib2<(p+c2)->nback;++ib2)
 					if (c1!=c2 || ib1<=ib2-parms->imin)
 					{
 						// backbone-backbone interactions
@@ -186,7 +302,7 @@ double **ContactMap(struct s_parms *parms, struct s_polymer *p, int nchains, int
 						}
 
 						// sidechain-backbone interactions
-						for (is1=0;is1<(((p+c1)->back)+ib1)->nside;is1++)
+						for (is1=0;is1<(((p+c1)->back)+ib1)->nside;++is1)
 						{
 							d = Dist( (((((p+c1)->back)+ib1)->side)+is1)->pos, (((p+c2)->back)+ib2)->pos );
 							if ( d < parms->rnat )
@@ -199,7 +315,7 @@ double **ContactMap(struct s_parms *parms, struct s_polymer *p, int nchains, int
 
 							}
 						}
-						for (is2=0;is2<(((p+c2)->back)+ib2)->nside;is2++)
+						for (is2=0;is2<(((p+c2)->back)+ib2)->nside;++is2)
 						{
 							d = Dist( (((((p+c2)->back)+ib2)->side)+is2)->pos, (((p+c1)->back)+ib1)->pos );
 							if ( d < parms->rnat )
@@ -212,9 +328,10 @@ double **ContactMap(struct s_parms *parms, struct s_polymer *p, int nchains, int
 
 							}
 						}
+
 						// sidechain-sidechain interactions
-						for (is1=0;is1<(((p+c1)->back)+ib1)->nside;is1++)
-							for (is2=0;is2<(((p+c2)->back)+ib2)->nside;is2++)
+						for (is1=0;is1<(((p+c1)->back)+ib1)->nside;++is1)
+							for (is2=0;is2<(((p+c2)->back)+ib2)->nside;++is2)
 							{
 								d = Dist( (((((p+c1)->back)+ib1)->side)+is1)->pos, (((((p+c2)->back)+ib2)->side)+is2)->pos );
 								if ( d < parms->rnat )
@@ -241,14 +358,59 @@ int SetGoTypes(struct s_polymer *p, int nchains, int nat)
 
 	fprintf(stderr,"Set Go types\n");
 
-	for (ic=0;ic<nchains;ic++)
-		for (i=0;i<(p+ic)->nback;i++)
+	for (ic=0;ic<nchains;++ic)
+		for (i=0;i<(p+ic)->nback;++i)
 		{
 			(((p+ic)->back)+i)->itype = (((p+ic)->back)+i)->ia;
-			for (j=0;j<(((p+ic)->back)+i)->nside;j++) (((((p+ic)->back)+i)->side)+j)->itype = (((((p+ic)->back)+i)->side)+j)->ia;
+			for (j=0;j<(((p+ic)->back)+i)->nside;++j) (((((p+ic)->back)+i)->side)+j)->itype = (((((p+ic)->back)+i)->side)+j)->ia;
 		}
 
 	return nat;
+}
+
+/*****************************************************************************
+ Assign as atom types an incremental number on aminoacids
+ *****************************************************************************/
+int SetGoAATypes(struct s_polymer *p, int nchains, int nat)
+{
+	int ic,i,j,k=1,typecontrol;
+	
+	fprintf(stderr,"Set Go types (amino acids based)\n");
+	typecontrol=(((p+0)->back)+0)->iaa;
+
+	for (ic=0;ic<nchains;++ic)
+	{
+		//fprintf(stderr,"%d\t%d\n",typecontrol,k);
+		for (i=0;i<(p+ic)->nback;++i)
+		{
+			(((p+ic)->back)+i)->itype = 0;
+			// If we have a new amino acid, we change the atom type
+			if( ((((p+ic)->back)+i)->iaa != typecontrol) && (strcmp((((p+ic)->back)+i)->aa,"GLY")))
+			{
+				++k;
+				typecontrol = (((p+ic)->back)+i)->iaa;
+				//fprintf(stderr,"%d\n",typecontrol);
+				//fprintf(stderr,"oldk:%d\tnewk:%d\tatomtype:%s\n",typecontrol,k,(((p+ic)->back)+i)->aa);
+			}
+			// Apply the new type
+			// Skip Glycines
+			if (!strcmp((((p+ic)->back)+i)->aa,"GLY") )
+			{
+				for (j=0;j<(((p+ic)->back)+i)->nside;++j)
+					(((((p+ic)->back)+i)->side)+j)->itype = 0;
+			}
+			// Set the atomtypes to all the remaining sidechains
+			else
+			{
+				for (j=0;j<(((p+ic)->back)+i)->nside;++j)
+				{
+				(((((p+ic)->back)+i)->side)+j)->itype = k;
+				}
+			}
+		}
+	}
+	// k+1 to take into account the backbone type (0)
+	return k+1;
 }
 
 /*****************************************************************************
@@ -263,12 +425,12 @@ int ReadTypes(struct s_polymer *p, int nchains, int nat, char *nfile)
 	// read from file
 	fprintf(stderr,"Reading atom types from file %s\n",nfile);
 
-	fp = fopen(nfile,"r");
+        fp = fopen(nfile,"r");
 	if (!fp) Error("Cannot open file for reading atom types, check atomtypes directive");
 
 	while(fgets(aux,500,fp)!=NULL)
 	{
-		if ( sscanf(aux,"%d %s %s",&(type[it]),atom[it],aa[it]) == 3) it++;
+		if ( sscanf(aux,"%d %s %s",&(type[it]),atom[it],aa[it]) == 3) ++it;
 		if (it>=NTYPEMAX) Error("NTYPEMAX too small in ReadTypes");
 		if (it>nt) nt=it;
 	}	
@@ -277,12 +439,12 @@ int ReadTypes(struct s_polymer *p, int nchains, int nat, char *nfile)
 	fclose(fp);
 
 	// assign types
-	for (ic=0;ic<nchains;ic++)
-		for (i=0;i<(p+ic)->nback;i++)
+	for (ic=0;ic<nchains;++ic)
+		for (i=0;i<(p+ic)->nback;++i)
 		{
 			// backbone
 			(((p+ic)->back)+i)->itype = -1;
-			for (k=0;k<it;k++)
+			for (k=0;k<it;++k)
 				if (  ( !strcmp((((p+ic)->back)+i)->type, atom[k]) || !strcmp( "*", atom[k]) )
 					&&  ( !strcmp( (((p+ic)->back)+i)->aa, aa[k]) || !strcmp( "*", aa[k])) )
 						(((p+ic)->back)+i)->itype = type[k];
@@ -294,10 +456,10 @@ int ReadTypes(struct s_polymer *p, int nchains, int nat, char *nfile)
 			}
 
 			// sidechain
-			for (j=0;j<(((p+ic)->back)+i)->nside;j++)
+			for (j=0;j<(((p+ic)->back)+i)->nside;++j)
 			{
 				(((((p+ic)->back)+i)->side)+j)->itype = -1;
-				for (k=0;k<it;k++)
+				for (k=0;k<it;++k)
 					if ( ( !strcmp((((((p+ic)->back)+i)->side)+j)->type, atom[k]) || !strcmp( "*", atom[k]) )
 						&& ( !strcmp( (((p+ic)->back)+i)->aa, aa[k]) || !strcmp( "*", aa[k])) )
 							(((((p+ic)->back)+i)->side)+j)->itype = type[k];
@@ -325,14 +487,14 @@ void DisulphideBonds(struct s_parms *parms, struct s_polymer *p, double **e, dou
 
 	fprintf(stderr,"Adding disulphide bonds...\n");
 
-	for (ic=0;ic<nchains;ic++)
-		for (jc=0;jc<nchains;jc++)
-			for (i=0;i<(p+ic)->nback;i++)
-				for (j=0;j<(p+jc)->nback;j++)
+	for (ic=0;ic<nchains;++ic)
+		for (jc=0;jc<nchains;++jc)
+			for (i=0;i<(p+ic)->nback;++i)
+				for (j=0;j<(p+jc)->nback;++j)
 					if ( !strcmp( (((p+ic)->back)+i)->aa , "CYS" ) )
 						if ( !strcmp( (((p+jc)->back)+j)->aa , "CYS" ) )
-							for (ki=0;ki<(((p+ic)->back)+i)->nside;ki++)
-								for (kj=0;kj<(((p+jc)->back)+j)->nside;kj++)
+							for (ki=0;ki<(((p+ic)->back)+i)->nside;++ki)
+								for (kj=0;kj<(((p+jc)->back)+j)->nside;++kj)
 									if ( !strncmp( (((((p+ic)->back)+i)->side)+ki)->type , "S" ,1) )
 										if ( !strncmp( (((((p+jc)->back)+j)->side)+kj)->type , "S" ,1) )
 											if (ic!=jc || i!=j)
@@ -359,8 +521,8 @@ void HydrophobicInteraction(struct s_parms *parms, struct s_polymer *p, double *
 
 	fprintf(stderr,"Adding hydrophobic interaction...\n");
 
-	for (i=0;i<natypes;i++)
-		for (j=0;j<natypes;j++)
+	for (i=0;i<natypes;++i)
+		for (j=0;j<natypes;++j)
 			if (parms->hydro_at[i]==1 && parms->hydro_at[j]==1)
 			{
 				e[i][j] = parms->hydro_e;
@@ -393,13 +555,13 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
 	if (!strcmp(kind,"GO_DIST_CA"))
 	{
         int nrest = 0;
-        for (ic=0;ic<nchains;ic++)
-			for (i=0;i<(p+ic)->nback;i++)
-                for (jc=ic;jc<nchains;jc++) {
+        for (ic=0;ic<nchains;++ic)
+			for (i=0;i<(p+ic)->nback;++i)
+                for (jc=ic;jc<nchains;++jc) {
                     // same chain
                     if (ic == jc) {
                         nCA = 0;
-                        for (j=i+1;j<(p+jc)->nback;j++) {
+                        for (j=i+1;j<(p+jc)->nback;++j) {
                             // counts CA atoms to check imin condition
                             if  (!strcmp((((p+jc)->back)+j)->type,"CA") )
                                 nCA++;
@@ -409,7 +571,7 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
                     }
                     // different chains
                     else {
-                        for (j=0;j<(p+jc)->nback;j++) {
+                        for (j=0;j<(p+jc)->nback;++j) {
                             if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
                                 nrest++;
                         }
@@ -418,12 +580,12 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
         
 		fprintf(fp,"ndata %d\n",nrest);
         
-        for (ic=0;ic<nchains;ic++)
-			for (i=0;i<(p+ic)->nback;i++)
-                for (jc=ic;jc<nchains;jc++) {
+        for (ic=0;ic<nchains;++ic)
+			for (i=0;i<(p+ic)->nback;++i)
+                for (jc=ic;jc<nchains;++jc) {
                     if (ic == jc) {
                         nCA = 0;
-                        for (j=i+1;j<(p+jc)->nback;j++) {
+                        for (j=i+1;j<(p+jc)->nback;++j) {
                             if  (!strcmp((((p+jc)->back)+j)->type,"CA") )
                                 nCA++;
                             if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") && ( nCA >= imin ) )
@@ -432,7 +594,7 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
                         }
                     }
                     else {
-                        for (j=0;j<(p+jc)->nback;j++) {
+                        for (j=0;j<(p+jc)->nback;++j) {
                             if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") )
                                 fprintf(fp,"%d\t%d\t\t1\t%lf\t0.5\n",(((p+ic)->back)+i)->ia,(((p+jc)->back)+j)->ia,
                                         Dist( (((p+ic)->back)+i)->pos, (((p+jc)->back)+j)->pos ) );
@@ -445,13 +607,13 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
 	{
         int nrest = 0;
         int iaa,jaa,iside,jside;
-        for (ic=0;ic<nchains;ic++)
-            for (i=0;i<(p+ic)->nback;i++) {
+        for (ic=0;ic<nchains;++ic)
+            for (i=0;i<(p+ic)->nback;++i) {
                 iaa = i/3 + 1;  //define aminoacid id
-                for (jc=ic;jc<nchains;jc++) {
+                for (jc=ic;jc<nchains;++jc) {
                     if (ic == jc) {    // same chain
                         nCA = 0;
-                        for (j=i;j<(p+jc)->nback;j++) {
+                        for (j=i;j<(p+jc)->nback;++j) {
                             jaa = j/3 + 1;
                             if ((jaa-iaa)%2 == 0) { // only counts restraints between even aa and between even aa
                                 if  (!strcmp((((p+jc)->back)+j)->type,"CA") ) // counts CA atoms to check imin condition
@@ -471,7 +633,7 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
                     }
                     // different chains
                     else {
-                        for (j=0;j<(p+jc)->nback;j++) {
+                        for (j=0;j<(p+jc)->nback;++j) {
                             jaa = j/3 + 1;
                             if ((jaa-iaa)%2 == 0) { // only counts restraints between even aa and between even aa
                                 if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") ) {
@@ -492,13 +654,13 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
         
         fprintf(fp,"ndata %d\n",nrest);
         
-        for (ic=0;ic<nchains;ic++)
-            for (i=0;i<(p+ic)->nback;i++) {
+        for (ic=0;ic<nchains;++ic)
+            for (i=0;i<(p+ic)->nback;++i) {
                 iaa = i/3 + 1;  //define aminoacid id
-                for (jc=ic;jc<nchains;jc++) {
+                for (jc=ic;jc<nchains;++jc) {
                     if (ic == jc) {    // same chain
                         nCA = 0;
-                        for (j=i;j<(p+jc)->nback;j++) {
+                        for (j=i;j<(p+jc)->nback;++j) {
                             jaa = j/3 + 1;
                             if (abs((iaa-jaa))%2 == 0) { // only counts restraints between even aa and between even aa
                                 if  (!strcmp((((p+jc)->back)+j)->type,"CA") ) // counts CA atoms to check imin condition
@@ -528,7 +690,7 @@ void PrintOpGoFile(char *nfile, double **cm, struct s_polymer *p, int nchains, c
                     }
                     // different chains
                     else {
-                        for (j=0;j<(p+jc)->nback;j++) {
+                        for (j=0;j<(p+jc)->nback;++j) {
                             jaa = j/3 + 1;
                             if (abs((iaa-jaa))%2 == 0) { // only counts restraints between even aa and between odd aa
                                 if ( !strcmp((((p+ic)->back)+i)->type,"CA") && !strcmp((((p+jc)->back)+j)->type,"CA") ) {

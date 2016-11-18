@@ -87,8 +87,8 @@ struct s_optimizepot *InitializeOptimizePot(struct s_mc_parms *parms, int ntypes
 
 	// set default hardcores and width
 	if (parms->op_r>0)
-		for (i=0;i<ntypes;i++)
-			for (j=i+u->g_imin;j<ntypes;j++)
+		for (i=0;i<ntypes;++i)
+			for (j=i+u->g_imin;j<ntypes;++j)
 				if ( u->r_2[i][j] <0 )
 	  			{
 					 u->r_2[i][j] = parms->op_r * parms->op_r;
@@ -181,7 +181,7 @@ struct s_optimizepot_input *ReadOPRestrains(struct s_mc_parms *parms)
 	int i;
 	char aux[500];
 	FILE *fp;
-	
+        	
 	// allocate input structure
 	x = (struct s_optimizepot_input *) calloc(1,sizeof(struct s_optimizepot_input));
 	if (x==NULL) Error("Cannot allocate s_optimizepot_input");
@@ -191,7 +191,7 @@ struct s_optimizepot_input *ReadOPRestrains(struct s_mc_parms *parms)
 	if (!fp) Error("Cannot open restrain file");	
 	
 	//read first lines
-	fgets(aux,500,fp);
+	fscanf(fp,"%s",aux);
 	if (sscanf(aux,"ndata %d",&(x->ndata)) != 1) Error("First line of restrain data should be: ndata <int>");
 
 	// allocate arrays
@@ -204,7 +204,7 @@ struct s_optimizepot_input *ReadOPRestrains(struct s_mc_parms *parms)
 	x->i4 = AlloInt(x->ndata);
 
 	// read file
-	for (i=0;i<x->ndata;i++)
+	for (i=0;i<x->ndata;++i)
 	{
 		fgets(aux,500,fp);
 
@@ -245,11 +245,11 @@ void OP_GetRestrain(int it, struct s_polymer *p, int ipol, struct s_optimizepot_
 {
 	int i,k,l,m,i1,i2,i3,i4;
 	double xraw,d;
-	ipol=0;
+
 	// loop on all restrains 
-	for (i=0;i<opi->ndata;i++)
+	for (i=0;i<opi->ndata;++i)
 	{
-			
+		
 		i1 = opi->i1[i];
 		i2 = opi->i2[i];
 		xraw = 0.;
@@ -257,7 +257,7 @@ void OP_GetRestrain(int it, struct s_polymer *p, int ipol, struct s_optimizepot_
 		// contact between amino acids
 		if ( opi->datatype[i] == 0 )
 		{
-			for (k=0;k<(((p+ipol)->back)+i1)->ncontacts;k++)
+			for (k=0;k<(((p+ipol)->back)+i1)->ncontacts;++k)
 				if ( *(((((p+ipol)->back)+i1)->contacts)+k) == i2 ) xraw = 1.;
 		}
 		// distance between atoms
@@ -278,9 +278,9 @@ void OP_GetRestrain(int it, struct s_polymer *p, int ipol, struct s_optimizepot_
 		{
 			i3 = opi->i3[i];		
 			i4 = opi->i4[i];		
-			for (k=i1;k<=i2;k++)
-				for (l=i3;l<=i4;l++)
-					for (m=0;m<(((p+ipol)->back)+k)->ncontacts;m++)
+			for (k=i1;k<=i2;++k)
+				for (l=i3;l<=i4;++l)
+					for (m=0;m<(((p+ipol)->back)+k)->ncontacts;++m)
 						if ( *(((((p+ipol)->back)+k)->contacts)+m) == l ) xraw = 1.;
 		}
 		
@@ -291,7 +291,7 @@ void OP_GetRestrain(int it, struct s_polymer *p, int ipol, struct s_optimizepot_
 	#ifdef OP_DEBUG
 	 FILE *fp;
 	 fp = fopen("op_log","a");
-	 for (i=0;i<opi->ndata;i++)
+	 for (i=0;i<opi->ndata;++i)
 	 	fprintf(fp,"restrains: snap=%5d restr=%4d  value=%lf  T\n",it,i,p->op->restrain[it][i]);
 	 fclose(fp);
 	#endif
@@ -309,7 +309,7 @@ void OP_AddEnergy(struct s_polymer *p, int a1, int a2, double mul)
 	icon = p->op->ncontacts;
                                                                           
 	// if there is already a contact between types a1 and a2, sum mul
-	for (i=0;i<icon;i++)
+	for (i=0;i<icon;++i)
 		if ( (a1 == p->op->it1[i] && a2 == p->op->it2[i]) ||
 			(a1 == p->op->it2[i] && a2 == p->op->it1[i]) ) 
 		{
@@ -336,13 +336,13 @@ void OP_AddEnergy(struct s_polymer *p, int a1, int a2, double mul)
 		if (!p->op->it1) Error("Cannot reallocate it1");
 		p->op->it2 = (int *) realloc(p->op->it2,( OP_NCONTMAX * p->op->nallocont * sizeof(int)));
 		if (!p->op->it2) Error("Cannot reallocate it2");
-		for (iframe=0;iframe<p->op->nframesmax;iframe++)
+		for (iframe=0;iframe<p->op->nframesmax;++iframe)
 		{
 			p->op->mul[iframe] = (double *) realloc( (p->op->mul[iframe]) , ( OP_NCONTMAX * p->op->nallocont * sizeof(double) ) );
 			if (!p->op->mul[iframe]) Error("Cannot reallocate mul");
 		}
-		for (iframe=0;iframe<p->op->nframesmax;iframe++)
-			for (i=p->op->ncontacts;i<OP_NCONTMAX * p->op->nallocont;i++) p->op->mul[iframe][i] = 0;
+		for (iframe=0;iframe<p->op->nframesmax;++iframe)
+			for (i=p->op->ncontacts;i<OP_NCONTMAX * p->op->nallocont;++i) p->op->mul[iframe][i] = 0;
 	}
 	#else
 	if ( p->op->ncontacts >= OP_NCONTMAX) Error("OP_NCONTMAX too small");
@@ -385,7 +385,7 @@ void OP_SamplePotential(struct s_polymer *p, struct s_mc_parms *parms, int ntype
 	}
 	
 	// minimize
-	for (istep=0;istep<parms->op_itermax;istep++)
+	for (istep=0;istep<parms->op_itermax;++istep)
 	{
 		iw = irand(p->op->ncontacts);
 		deltae = (frand()-0.5) * parms->op_step;
@@ -409,7 +409,7 @@ void OP_SamplePotential(struct s_polymer *p, struct s_mc_parms *parms, int ntype
 		// reject
 		else
 		{	
-			for (ifr=0;ifr<p->op->nframes;ifr++)			// return to previous value
+			for (ifr=0;ifr<p->op->nframes;++ifr)			// return to previous value
 				p->op->enew[ifr] -= deltae * p->op->mul[ifr][iw];	
 		}
 
@@ -423,8 +423,8 @@ void OP_SamplePotential(struct s_polymer *p, struct s_mc_parms *parms, int ntype
 	}
 
 	// calculate the properties of the new matrix
-	for (i=0;i<ntypes;i++)
-		for (j=i+1;j<ntypes;j++) 
+	for (i=0;i<ntypes;++i)
+		for (j=i+1;j<ntypes;++j) 
 		{ 
 			eav += u[i][j]; 
 			eav2 += u[i][j]*u[i][j]; 
@@ -442,46 +442,46 @@ void OP_SamplePotential(struct s_polymer *p, struct s_mc_parms *parms, int ntype
 	// print to file
 	sprintf(aux,"restraints_%d.dat",irun);
 	fp = fopen(aux,"w");
-	for (i=0;i<parms->op_input->ndata;i++)
+	for (i=0;i<parms->op_input->ndata;++i)
 		fprintf(fp,"%d\t%lf\t%lf\t%lf\n",i,p->op->rest_av[i],parms->op_input->expdata[i],parms->op_input->sigma[i]);
 	fclose(fp);
 
 	// reset structures
-	for (i=0;i<p->op->ncontacts;i++)
+	for (i=0;i<p->op->ncontacts;++i)
 	{
 		p->op->it1[i] = 0;
 		p->op->it2[i] = 0;
-		for (ifr=0;ifr<p->op->nframes;ifr++)  p->op->mul[ifr][i] = 0;
+		for (ifr=0;ifr<p->op->nframes;++ifr)  p->op->mul[ifr][i] = 0;
 	}
-	for (ifr=0;ifr<p->op->nframes;ifr++)
+	for (ifr=0;ifr<p->op->nframes;++ifr)
 	{
 		p->op->eold[ifr] = 0;
 		p->op->efix[ifr] = 0;
 		p->op->enew[ifr] = 0;
 		p->op->t[ifr] = -1;
-		for (i=0;i<parms->op_input->ndata;i++)  p->op->restrain[ifr][i] = 0;
+		for (i=0;i<parms->op_input->ndata;++i)  p->op->restrain[ifr][i] = 0;
 	}
-	for (i=0;i<parms->op_input->ndata;i++) p->op->rest_av[i] = 0;
+	for (i=0;i<parms->op_input->ndata;++i) p->op->rest_av[i] = 0;
 	p->op->ncontacts = 0;
 	p->op->nframes = 0;
 	p->op->icount = 0;
 
 	// reset structures						
-	for (i=0;i<p->op->ncontacts;i++)
+	for (i=0;i<p->op->ncontacts;++i)
 	{
 		p->op->it1[i] = 0;
 		p->op->it2[i] = 0;
-		for (ifr=0;ifr<p->op->nframes;ifr++)  p->op->mul[ifr][i] = 0;
+		for (ifr=0;ifr<p->op->nframes;++ifr)  p->op->mul[ifr][i] = 0;
 	}
-	for (ifr=0;ifr<p->op->nframes;ifr++)
+	for (ifr=0;ifr<p->op->nframes;++ifr)
 	{
 		p->op->eold[ifr] = 0;
 		p->op->efix[ifr] = 0;
 		p->op->enew[ifr] = 0;
 		p->op->t[ifr] = -1;
-		for (i=0;i<parms->op_input->ndata;i++)  p->op->restrain[ifr][i] = 0;
+		for (i=0;i<parms->op_input->ndata;++i)  p->op->restrain[ifr][i] = 0;
 	}
-	for (i=0;i<parms->op_input->ndata;i++) p->op->rest_av[i] = 0;
+	for (i=0;i<parms->op_input->ndata;++i) p->op->rest_av[i] = 0;
 	p->op->ncontacts = 0;
 	p->op->nframes = 0;
 	p->op->icount = 0;	
@@ -499,13 +499,13 @@ double OP_function(double **e, struct s_optimizepot *x, struct s_optimizepot_inp
 	double chi2,enew,eold,mul,emax=-9E19,z=0.,boltz;
 	int ifr,icont,it1,it2,ir;
 
-	for (ir=0;ir<in->ndata;ir++) x->rest_av[ir]=0.;
+	for (ir=0;ir<in->ndata;++ir) x->rest_av[ir]=0.;
                              
 	// calculate energies
-	for (ifr=0;ifr<x->nframes;ifr++)
+	for (ifr=0;ifr<x->nframes;++ifr)
 	{
 		x->enew[ifr] = x->efix[ifr];			// one-body energy
-		for (icont=0;icont<x->ncontacts;icont++)	// calculate new two-body energy
+		for (icont=0;icont<x->ncontacts;++icont)	// calculate new two-body energy
 			if (x->mul[ifr][icont]>0)		// if in frame ifr there is the icont contact
 			{
 				it1 = x->it1[icont];
@@ -520,21 +520,21 @@ double OP_function(double **e, struct s_optimizepot *x, struct s_optimizepot_inp
 	}
                            
 	// calculate thermal averages
-	for (ifr=0;ifr<x->nframes;ifr++)
+	for (ifr=0;ifr<x->nframes;++ifr)
 	{
 		eold = x->eold[ifr];						// total energy with the original matrix
 		enew = x->enew[ifr];
 		boltz = exp(-enew/parms->op_T + eold/x->t[ifr] - emax);
 
 		// make the average
-		for (ir=0;ir<in->ndata;ir++) 
+		for (ir=0;ir<in->ndata;++ir) 
 			x->rest_av[ir] +=  x->restrain[ifr][ir] * boltz;
                                                                                                                             
 		z += boltz;
 	}
 
 
-	for (ir=0;ir<in->ndata;ir++) x->rest_av[ir] /= z;
+	for (ir=0;ir<in->ndata;++ir) x->rest_av[ir] /= z;
 	
 	chi2 = Chi2(x->rest_av,in->expdata,in->sigma,in->ndata);
 
@@ -549,7 +549,7 @@ double Chi2(double *x, double *xexp, double *sigma, int n)
 	int i;
 	double chi2=0.;
 
-	for (i=0;i<n;i++)
+	for (i=0;i<n;++i)
 		chi2 += (x[i] - xexp[i])*(x[i] - xexp[i]) / ( sigma[i] * sigma[i] );
 
 	return chi2;
@@ -565,11 +565,11 @@ double OP_functionDiff(int iw, double deltae, struct s_optimizepot *x, struct s_
 	double chi2,enew,eold,emax=-9E19,z=0.,boltz;
 	int ifr,ir;
 
-	for (ir=0;ir<in->ndata;ir++) x->rest_av[ir]=0.;
+	for (ir=0;ir<in->ndata;++ir) x->rest_av[ir]=0.;
 
 
 	// calculate energies
-	for (ifr=0;ifr<x->nframes;ifr++)
+	for (ifr=0;ifr<x->nframes;++ifr)
 	{
 		// if the iw contact is present in the ifr frame, then its energy is affected
 		if ( x->mul[ifr][iw] > 0 )
@@ -581,19 +581,19 @@ double OP_functionDiff(int iw, double deltae, struct s_optimizepot *x, struct s_
 	}
 
 	// calculate thermal averages
-	for (ifr=0;ifr<x->nframes;ifr++)
+	for (ifr=0;ifr<x->nframes;++ifr)
 	{
 		eold = x->eold[ifr];						// total energy with the original matrix
 		enew = x->enew[ifr];
 		boltz = exp(-enew/parms->op_T + eold/x->t[ifr] - emax);
 
 		// make the average
-		for (ir=0;ir<in->ndata;ir++)
+		for (ir=0;ir<in->ndata;++ir)
 			x->rest_av[ir] += x->restrain[ifr][ir] * boltz;
 		z += boltz;
 	}
 
-	for (ir=0;ir<in->ndata;ir++) x->rest_av[ir] /= z;
+	for (ir=0;ir<in->ndata;++ir) x->rest_av[ir] /= z;
 	
 	chi2 = Chi2(x->rest_av,in->expdata,in->sigma,in->ndata);
 
@@ -601,10 +601,10 @@ double OP_functionDiff(int iw, double deltae, struct s_optimizepot *x, struct s_
 	 FILE *fp;
 	 fp = fopen("op_log","a");
 	 fprintf(fp,"minim:  iw=%d deltae=%lf\n",iw,deltae);
- 	 for (ifr=0;ifr<x->nframes;ifr++)
+ 	 for (ifr=0;ifr<x->nframes;++ifr)
 	 	fprintf(fp,"\teold[%d]=%lf enew[%d]=%lf efix[%d]=%lf mul[%d]=%lf",ifr,x->eold[ifr],ifr,x->enew[ifr],ifr,x->efix[ifr],ifr,x->mul[ifr][iw]);
          fprintf(fp,"\nemax=%lf\n",emax);
-         for (ir=0;ir<in->ndata;ir++)
+         for (ir=0;ir<in->ndata;++ir)
 		fprintf(fp,"\t <x>[%d]=%lf\t",ir,x->rest_av[ir]);
          fprintf(fp,"\n");
          fprintf(fp,"\n");

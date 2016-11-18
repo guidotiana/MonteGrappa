@@ -49,7 +49,7 @@ struct s_polymer *AlloPolymer(int npol, int nback, int nside, int nrot, int nato
 	size = npol*sizeof(struct s_polymer);
 	if (!p) Error("Cannot allocate polymer");
 
-	for (ipol=0;ipol<npol;ipol++)
+	for (ipol=0;ipol<npol;++ipol)
 	{
 		(p+ipol)->back = (struct s_back *) calloc(nback,sizeof(struct s_back));
 		if (!(p+ipol)->back) Error("Cannot allocate backbone");
@@ -60,7 +60,7 @@ struct s_polymer *AlloPolymer(int npol, int nback, int nside, int nrot, int nato
 		size += nback * sizeof(struct vector *);
 
 		// allocate sidechains
-		for (ires=0;ires<nback;ires++)
+		for (ires=0;ires<nback;++ires)
 		{
 			(((p+ipol)->back)+ires)->nside = 0;
 			(((p+ipol)->back)+ires)->nrot = 0;
@@ -90,13 +90,13 @@ struct s_polymer *AlloPolymer(int npol, int nback, int nside, int nrot, int nato
 
 			if (!noside)
 			{
-				for (iside=0;iside<nside;iside++)
+				for (iside=0;iside<nside;++iside)
 				{
 					(((((p+ipol)->back)+ires)->side)+iside)->rot = (struct s_rotamers *) calloc(nrot,sizeof(struct s_rotamers));
 					size += nrot*sizeof(struct s_rotamers);
 				}
 
-				for (iside=0;iside<natoms;iside++) ((p+ipol)->vback)[iside] = NULL;
+				for (iside=0;iside<natoms;++iside) ((p+ipol)->vback)[iside] = NULL;
 			}
 		}
 
@@ -126,7 +126,7 @@ struct s_tables *InitTables(FILE *fp)
       if (!t->fast_sqrt) Error("cannot allocate sqrt in table");
       size += FSQRT_L*sizeof(double);
 
-      for (i=0;i<FSQRT_L;i++)  *((t->fast_sqrt)+i) = sqrt( (double)i / FSQRT_BINRC );
+      for (i=0;i<FSQRT_L;++i)  *((t->fast_sqrt)+i) = sqrt( (double)i / FSQRT_BINRC );
 
       // Sin and Cos
       t->fast_sin = (double *) calloc(FTRIG_L,sizeof(double));
@@ -136,8 +136,8 @@ struct s_tables *InitTables(FILE *fp)
       if (!t->fast_cos) Error("cannot allocate cos in table");
       size += FTRIG_L*sizeof(double);
 
-      for (i=0;i<FTRIG_L;i++)  *((t->fast_sin)+i) = sin( (double)i / FTRIG_BINRC / 180. * PI);
-      for (i=0;i<FTRIG_L;i++)  *((t->fast_cos)+i) = cos( (double)i / FTRIG_BINRC / 180. * PI);
+      for (i=0;i<FTRIG_L;++i)  *((t->fast_sin)+i) = sin( (double)i / FTRIG_BINRC / 180. * PI);
+      for (i=0;i<FTRIG_L;++i)  *((t->fast_cos)+i) = cos( (double)i / FTRIG_BINRC / 180. * PI);
 
       // Exp
       t->fast_expp = (double *) calloc(FEXP_L,sizeof(double));
@@ -145,13 +145,13 @@ struct s_tables *InitTables(FILE *fp)
       size += FEXP_L*sizeof(double);
       t->fast_expm = (double *) calloc(FEXP_L,sizeof(double));
       if (!t->fast_expm) Error("cannot allocate expm in table");
-      for (i=0;i<FEXP_L;i++)  *((t->fast_expm)+i) = exp( -(double)i / FEXP_BINRC );
+      for (i=0;i<FEXP_L;++i)  *((t->fast_expm)+i) = exp( -(double)i / FEXP_BINRC );
       size += FEXP_L*sizeof(double);
 
       // Acos
       t->fast_acos = (double *) calloc(FACOS_L,sizeof(double));
       if (!t->fast_sin) Error("cannot allocate sin in table");
-      for (i=0;i<FACOS_L;i++)  *((t->fast_acos)+i) = 180. * acos( (double) i / FACOS_BINRC - 1.) / PI;
+      for (i=0;i<FACOS_L;++i)  *((t->fast_acos)+i) = 180. * acos( (double) i / FACOS_BINRC - 1.) / PI;
       size += FACOS_L*sizeof(double);
 
       fprintf(fp,"Allocate tables of size %lf MB\n",(double)size/1024/1024);
@@ -163,57 +163,40 @@ struct s_tables *InitTables(FILE *fp)
 //ASTEMPERING
 void FreePolymer(struct s_polymer *p,int npol, int nback, int nside, int shell, int noside){
  
-int ires,iside,ipol;
+	int ires,iside,ipol;
 
 
 
-for (ipol=0;ipol<npol;ipol++)
+	for (ipol=0;ipol<npol;++ipol)
 	{
-		for (ires=0;ires<nback;ires++)
+		for (ires=0;ires<nback;++ires)
 		{
-		if (!noside)
+			if (!noside)
 			{
-			for (iside=0;iside<nside;iside++)
+				for (iside=0;iside<nside;++iside)
+				{
+					free((((((p+ipol)->back)+ires)->side)+iside)->rot);
+				}
+			}
+			if (shell)
 			{
-				free((((((p+ipol)->back)+ires)->side)+iside)->rot);
-
+				free((((p+ipol)->back)+ires)->shell);
+				free((((p+ipol)->back)+ires)->shell_p);
 			}
 
+			if (!noside)
+				free((((p+ipol)->back)+ires)->side);
 
+			free((((p+ipol)->back)+ires)->contacts);
+			free((((p+ipol)->back)+ires)->contacts_p);
+
+			free((((p+ipol)->back)+ires)->e) ;
 		}
 
-if (shell)
-{
-free((((p+ipol)->back)+ires)->shell);
-free((((p+ipol)->back)+ires)->shell_p);
-}
-
-
-if (!noside)
-free((((p+ipol)->back)+ires)->side);
-
-free((((p+ipol)->back)+ires)->contacts);
-free((((p+ipol)->back)+ires)->contacts_p);
-
-free((((p+ipol)->back)+ires)->e) ;
-
-
-
-}
-
-free((p+ipol)->vback);
-free((p+ipol)->back);
-
+		free((p+ipol)->vback);
+		free((p+ipol)->back);
 	}
-
-
-
-free(p);
-
-
-
-
-
+	free(p);
 }
 
 
@@ -232,7 +215,7 @@ free(t);
 
 
 
-struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodihpot, int hb)
+struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodihpot, int hb, int nohfields)
 {
 	int i,k;
 	struct s_potential *x;
@@ -248,7 +231,7 @@ struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodi
 	x->r0_2 = (double **) calloc(ntypes,sizeof(double *));
 	if (!(x->r0_2)) Error("Cannot allocate r0 in potential structure");
 
-	for (i=0;i<ntypes;i++)
+	for (i=0;i<ntypes;++i)
 	{
 		*((x->e)+i) = (double *) calloc(ntypes,sizeof(double));
 		if (!(*((x->e)+i))) Error("Cannot allocate e in potential structure");
@@ -257,7 +240,7 @@ struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodi
 		*((x->r0_2)+i) = (double *) calloc(ntypes,sizeof(double));
 		if (!(*((x->r0_2)+i))) Error("Cannot allocate r0 in potential structure");
 
-		for (k=0;k<ntypes;k++)
+		for (k=0;k<ntypes;++k)
 		{
 			(x->e)[i][k] = 0;
 			(x->r_2)[i][k] = -1;
@@ -306,7 +289,7 @@ struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodi
             x->ab_propensity = (double **) calloc(2,sizeof(double *));
             if (!(x->ab_propensity)) Error("Cannot allocate ab_propensity in potential structure");
 
-            for (i=0;i<2;i++)
+            for (i=0;i<2;++i)
             {
                   *((x->sigma)+i) = (double *) calloc(2,sizeof(double));
                   if (!(*((x->sigma)+i))) Error("Cannot allocate sigma in potential structure");
@@ -314,12 +297,12 @@ struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodi
                   if (!(*((x->dih0)+i))) Error("Cannot allocate dih0 in potential structure");
                   *((x->ab_propensity)+i) = (double *) calloc(NAAMAX,sizeof(double));
                   if (!(*((x->sigma)+i))) Error("Cannot allocate ab-propensity in potential structure");
-                  for (k=0;k<2;k++)
+                  for (k=0;k<2;++k)
                   {
                         (x->sigma)[i][k] = 0;
                         (x->dih0)[i][k] = 0;
                   }
-                  for (k=0;k<NAAMAX;k++)
+                  for (k=0;k<NAAMAX;++k)
                         (x->ab_propensity)[i][k] = LARGE;
             }
       }
@@ -333,13 +316,18 @@ struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodi
 	x->g_imin=0;
 	x->boxtype = 'n';
 
+	if (!nohfields){
+		x->h_values = (double *) calloc(ntypes,sizeof(double));
+		if (!(x->h_values)) Error("Cannot allocate h_values in potential structure");
+	}
+	
 	if (hb)
 	{
 		x->hb =  (int *) calloc(natoms,sizeof(int));
 		if (!(x->hb)) Error("Cannot allocate hb in potential structure");
 		x->hb_iam =  (int *) calloc(natoms,sizeof(int));
 		if (!(x->hb_iam)) Error("Cannot allocate hb_iam in potential structure");
-		for (i=0;i<natoms;i++) x->hb[i]=0;
+		for (i=0;i<natoms;++i) x->hb[i]=0;
 	}
 
 	return x;
@@ -348,68 +336,61 @@ struct s_potential *AlloPotential(int natoms, int ntypes, int noangpot, int nodi
 //ASTEMPERING
 void FreePotential(struct s_potential *x, int ntypes, int noangpot, int nodihpot, int hb){
 
-int i;
+	int i;
 
-if (hb)
-         {
-                free(x->hb);
-free(x->hb_iam);
-}
-free(x->hc_type);
-free(x->hc_r0);
-
-
-
-if (!nodihpot)
-      {
-            free(x->e_dih1);
-            free(x->dih01);
-            free(x->e_dih3);
-            free(x->dih03);
-            free(x->dih_pa);
-            free(x->dih_pb);
-            free(x->dih_which);
-            free(x->dih_f_psi_a);
-            free(x->dih_f_psi_b);
-            free(x->dih_f_phi_a);
-            free(x->dih_f_phi_b);
-
-            for (i=0;i<2;i++)
-            {
-                  free(*((x->sigma)+i));	
-                  free(*((x->dih0)+i));		
-                  free(*((x->ab_propensity)+i));
-            }
-            free(x->sigma);
-            free(x->dih0);
-            free(x->ab_propensity);
-      }
-
-if (!noangpot)
-{
-free(x->e_ang);
-free(x->ang0);
-}
+	if (hb)
+	{
+		free(x->hb);
+		free(x->hb_iam);
+	}
+	free(x->hc_type);
+	free(x->hc_r0);
 
 
 
+	if (!nodihpot)
+	{
+		free(x->e_dih1);
+		free(x->dih01);
+		free(x->e_dih3);
+		free(x->dih03);
+		free(x->dih_pa);
+		free(x->dih_pb);
+		free(x->dih_which);
+		free(x->dih_f_psi_a);
+		free(x->dih_f_psi_b);
+		free(x->dih_f_phi_a);
+		free(x->dih_f_phi_b);
 
-	for (i=0;i<ntypes;i++)
-{
-free(*((x->e)+i));
-free(*((x->r_2)+i));
-free(*((x->r0_2)+i));
+		for (i=0;i<2;++i)
+		{
+			free(*((x->sigma)+i));
+			free(*((x->dih0)+i));
+			free(*((x->ab_propensity)+i));
+		}
+		free(x->sigma);
+		free(x->dih0);
+		free(x->ab_propensity);
+	}
 
-}
+	if (!noangpot)
+	{
+		free(x->e_ang);
+		free(x->ang0);
+	}
 
-free(x->e);
-free(x->r_2);
-free(x->r0_2);
+	for (i=0;i<ntypes;++i)
+	{
+		free(*((x->e)+i));
+		free(*((x->r_2)+i));
+		free(*((x->r0_2)+i));
+	}
 
-free(x);
+	free(x->e);
+	free(x->r_2);
+	free(x->r0_2);
 
-
-
+	free(x);
 }
 
 
@@ -428,11 +409,11 @@ int **AlloIntMatrix(int l, int m)
   x = (int **) calloc(l,sizeof(int *));
   if (!x) Error("Cannot allocate int matrix");
 
-  for (i=0;i<l;i++)
+  for (i=0;i<l;++i)
     {
       *(x+i) = calloc(m,sizeof(int));
       if (!(*(x+i))) Error("Cannot allocate int matrix");
-      for (j=0;j<m;j++) *(*(x+i)+j) = 0;
+      for (j=0;j<m;++j) *(*(x+i)+j) = 0;
     }
 
   return x;
@@ -449,11 +430,11 @@ double **AlloDoubleMatrix(int l, int m)
   x = (double **) calloc(l,sizeof(double *));
   if (!x) Error("Cannot allocate double matrix");
 
-  for (i=0;i<l;i++)
+  for (i=0;i<l;++i)
     {
       *(x+i) = calloc(m,sizeof(double));
       if (!(*(x+i))) Error("Cannot allocate double matrix");
-      for (j=0;j<m;j++) *(*(x+i)+j) = 0.;
+      for (j=0;j<m;++j) *(*(x+i)+j) = 0.;
     }
 
   return x;
@@ -462,7 +443,7 @@ double **AlloDoubleMatrix(int l, int m)
 //ASTEMPERING
 void FreeDoubleMatrix(double **x,int l){
 int i;
-for (i=0;i<l;i++) free(*(x+i));
+for (i=0;i<l;++i) free(*(x+i));
 
 free(x);
 
@@ -477,7 +458,7 @@ int *AlloInt(int n)
 	x = (int *) calloc(n,sizeof(int));
 	if (!x) Error("Cannot allocate int vector");
 
-	for (i=0;i<n;i++) x[i]=0;
+	for (i=0;i<n;++i) x[i]=0;
 
 	return x;
 }
@@ -490,7 +471,7 @@ double *AlloDouble(int n)
 	x = (double *) calloc(n,sizeof(double));
 	if (!x) Error("Cannot allocate double vector");
 
-	for (i=0;i<n;i++) x[i]=0.;
+	for (i=0;i<n;++i) x[i]=0.;
 
 	return x;
 }

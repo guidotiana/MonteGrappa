@@ -115,10 +115,10 @@ int AdjustSTempering(struct st_stuff *p, double step)
 		if (j==-1) return -1;							// continue with same temperature, without resetting histograms
 		else if (j==0)									// continue with same temperature, reset histograms
 		{	
-			for (it=0;it<p->st_ntemp;it++)
-				for (i=0;i<p->st_nbin;i++) p->st_h[it][i]=0;
+			for (it=0;it<p->st_ntemp;++it)
+				for (i=0;i<p->st_nbin;++i) p->st_h[it][i]=0;
 
-			for (it=0;it<p->st_ntemp;it++)
+			for (it=0;it<p->st_ntemp;++it)
 			{
 				p->st_prob_up[it]=0;
 				p->st_prob_down[it]=0;
@@ -140,7 +140,7 @@ int AdjustSTempering(struct st_stuff *p, double step)
 
 	// store a reliable density of states
 	if (p->st_iter>0)
-		for (i=0;i<p->st_nbin;i++)
+		for (i=0;i<p->st_nbin;++i)
 			p->st_reliable_lg[i] = p->st_current_lg[i];
 	else													// in the first run, there is not a current_lg
     {
@@ -149,7 +149,7 @@ int AdjustSTempering(struct st_stuff *p, double step)
 				p->st_f,p->st_paranoid,p->st_ignoreb,NULL,p->st_deltat,p->st_binok);
     }
 	// store reliable temperatures and weights
-	for (it=0;it<p->st_ntemp;it++)
+	for (it=0;it<p->st_ntemp;++it)
 	{
 		p->st_reliable_t[it] = p->st_temp[it];
 		p->st_reliable_g[it] = p->st_g[it];
@@ -194,7 +194,7 @@ int AdjustSTempering(struct st_stuff *p, double step)
 //	if (p->st_debug>1) fprintf(stderr,"\nWriting density of states to file...\n");
 //	fthe = fopen(p->st_nfdos,"w");
 //	if (!fthe) FatalError("Cannot open file for writing density of states");
-//	for (i=0;i<p->st_nbin;i++) fprintf(fthe,"%lf\t%lf\n",p->st_emin+p->st_ebin*i,p->st_reliable_lg[i]);
+//	for (i=0;i<p->st_nbin;++i) fprintf(fthe,"%lf\t%lf\n",p->st_emin+p->st_ebin*i,p->st_reliable_lg[i]);
 //	fclose(fthe);
 
 	// print histograms
@@ -256,7 +256,7 @@ int AdjustSTempering(struct st_stuff *p, double step)
 	if (p->st_debug>0)
 	{
 		fprintf(stderr,"Now there are %d temperatures:\n",p->st_ntemp);
-		for (j=0;j<p->st_ntemp;j++) fprintf(stderr,"%lf (g=%lf) ",p->st_temp[j],p->st_g[j]);
+		for (j=0;j<p->st_ntemp;++j) fprintf(stderr,"%lf (g=%lf) ",p->st_temp[j],p->st_g[j]);
 		fprintf(stderr,"\nBACK TO SIMULATION\n\n");
 	}
 
@@ -264,13 +264,13 @@ int AdjustSTempering(struct st_stuff *p, double step)
 	}
 	//FINE MODIFICHE
 	// reset counts
-	for (it=0;it<p->st_ntemp;it++)
+	for (it=0;it<p->st_ntemp;++it)
 	{
 		p->st_prob_up[it]=0;
 		p->st_prob_down[it]=0;
 		p->st_counts[it]=0;
 
-		for(i=0;i<p->st_nbin;i++)
+		for(i=0;i<p->st_nbin;++i)
 		p->st_h[it][i] = 0;
 	}
 
@@ -360,7 +360,7 @@ void OptimalWeights(int ntemp, double *t, double *g, double emin, double ebin, i
 	if (debug>0) fprintf(stderr,"  T[0]=%lf g[0]=%lf  ",t[0],g[0]);
 
 	// other temperatures (to zero-th reference temperature)
-	for (it=1;it<ntemp;it++)
+	for (it=1;it<ntemp;++it)
 	{
 		g[it] = CalculateG(lg, emin, ebin, nbin, t[it], KB, binok, gmethod) - g0;
 		if (debug>0) fprintf(stderr,"  T[%d]=%lf g[%d]=%lf  ",it,t[it],it,g[it]);
@@ -380,7 +380,7 @@ double EstimatedJumpProb (const gsl_vector *v, void *params)
 	double t[NTEMPMAX];
 
 	// copy the set of temperatures in *t
-	for(i=0;i<gp->ntemp-2;i++)
+	for(i=0;i<gp->ntemp-2;++i)
 		t[i+1] = gsl_vector_get(v, i);
 	t[0] = gp->tfirst;
 	t[gp->ntemp-1] = gp->tlast;
@@ -403,14 +403,14 @@ double EstimatedJumpProb (const gsl_vector *v, void *params)
 	if (gp->debug>3)
 		{
 			fprintf(stderr,"   Jump probabilities:\n   T=");
-			for (it=0;it<gp->ntemp;it++) fprintf(stderr,"%lf ",t[it]);
+			for (it=0;it<gp->ntemp;++it) fprintf(stderr,"%lf ",t[it]);
 			fprintf(stderr,"\n");
 		}
 
-	for (it=0;it<gp->ntemp-1;it++)		// taking away last
+	for (it=0;it<gp->ntemp-1;++it)		// taking away last
 	{
 		prob = 0.;					// calculates p(i,i+1)
-		for (i=0;i<gp->nbin;i++)			// loop over energies
+		for (i=0;i<gp->nbin;++i)			// loop over energies
 		{
 			if (gp->binok[i]==1) 
 			{
@@ -428,10 +428,10 @@ double EstimatedJumpProb (const gsl_vector *v, void *params)
 	if (gp->debug>3) fprintf(stderr,"\n           ");
 
 	// probabilities of increasing T
-	for (it=1;it<gp->ntemp;it++)			// taking away first
+	for (it=1;it<gp->ntemp;++it)			// taking away first
 	{
 		prob = 0.;						// calculates p(i,i+1)
-		for (i=0;i<gp->nbin;i++)			// loop over energies
+		for (i=0;i<gp->nbin;++i)			// loop over energies
 		{
 			if (gp->binok[i]==1) 
 			{
@@ -467,7 +467,7 @@ double MaximizeTempProb(int ntemp, double *temp, double *g, double emin, double 
 	double lprob = -9999.;
 	double oldt[NTEMPMAX],oldg[NTEMPMAX];
 
-	for (i=0;i<ntemp;i++)
+	for (i=0;i<ntemp;++i)
 	{
 		oldt[i] = temp[i];
 		oldg[i] = g[i];
@@ -493,7 +493,7 @@ double MaximizeTempProb(int ntemp, double *temp, double *g, double emin, double 
      // starting point
      OptimalWeights(ntemp,temp,g,emin,ebin,nbin,lg,0,binok,gmethod);
      x = gsl_vector_alloc (ntemp-2);
-     for (i=0;i<ntemp-2;i++)
+     for (i=0;i<ntemp-2;++i)
      {
     	 gsl_vector_set (x, i, temp[i+1]);
     	 if (debug>1) fprintf(stderr," T[%d]=%lf\n",i+1,temp[i+1]);
@@ -524,7 +524,7 @@ double MaximizeTempProb(int ntemp, double *temp, double *g, double emin, double 
          if (debug>3)
         	 {
 				 fprintf(stderr,"\n * iter=%d\tNew temperatures:\n",(int)iter);
-				 for (i=0;i<ntemp-2;i++) fprintf(stderr," T[%d]=%lf\n",i+1,gsl_vector_get (s->x, i));
+				 for (i=0;i<ntemp-2;++i) fprintf(stderr," T[%d]=%lf\n",i+1,gsl_vector_get (s->x, i));
 				 fprintf(stderr," status = %s\n",gsl_strerror (status));
         	 }
 
@@ -544,24 +544,24 @@ double MaximizeTempProb(int ntemp, double *temp, double *g, double emin, double 
     		 fprintf(stderr,"Minimum NOT found ");
     	 fprintf (stderr,"after %5d iterations,  log(p)/n=%lf size=%e\n", (int)iter, (double)lprob/ntemp,size);
     	 fprintf (stderr,"T[0]=%lf ",temp[0]);
-    	 for (i=0;i<ntemp-2;i++) fprintf (stderr,"T[%d]=%lf ",i+1,gsl_vector_get (s->x, i) );
+    	 for (i=0;i<ntemp-2;++i) fprintf (stderr,"T[%d]=%lf ",i+1,gsl_vector_get (s->x, i) );
     	 fprintf(stderr,"T[%d]=%lf\n",ntemp-1,temp[ntemp-1]);
     	 fprintf (stderr,"g[0]=%lf ",g[0]);
-    	 for (i=1;i<ntemp-1;i++) fprintf (stderr,"g[%d]=%lf ",i,g[i]);
+    	 for (i=1;i<ntemp-1;++i) fprintf (stderr,"g[%d]=%lf ",i,g[i]);
     	 fprintf(stderr,"g[%d]=%lf\n",ntemp-1,g[ntemp-1]);
      }
 
      // copy back new temperatures
 	 if (status == GSL_SUCCESS)
 	 {
-		 for (i=0;i<ntemp-2;i++)
+		 for (i=0;i<ntemp-2;++i)
 			 temp[i+1] = gsl_vector_get (s->x, i);
 		 OptimalWeights(ntemp,temp,g,emin,ebin,nbin,lg,debug,binok,gmethod);
 		 if (debug>0) fprintf(stderr,"Change accepted.\n");
 	 }
 	 else
 	{
-		 for (i=0;i<ntemp;i++)
+		 for (i=0;i<ntemp;++i)
 		 {
 			 temp[i] = oldt[i];
 			 g[i] = oldg[i];
@@ -592,7 +592,7 @@ int ReduceTemperatures(int ntemp, double *temp, double *g, double emin, double e
 
 	if (debug>0) fprintf(stderr,"Reducing temperatures\n");
 
-	for (i=0;i<ntemp;i++)
+	for (i=0;i<ntemp;++i)
 	{
 		oldt[i] = temp[i];
 		oldg[i] = g[i];
@@ -605,7 +605,7 @@ int ReduceTemperatures(int ntemp, double *temp, double *g, double emin, double e
 		gsl_vector *x;
 		struct gsl_param gp = {ntemp,temp[0],temp[ntemp-1],g,boltzp,ebin,emin,nbin,debug,lg,binok,gmethod};
 		x = gsl_vector_alloc (ntemp-2);
-		for (i=0;i<ntemp-2;i++) gsl_vector_set (x, i, temp[i+1]);
+		for (i=0;i<ntemp-2;++i) gsl_vector_set (x, i, temp[i+1]);
 		lpthresh = -EstimatedJumpProb(x,&gp)/ntemp;
 		gsl_vector_free (x);
 
@@ -642,7 +642,7 @@ int ReduceTemperatures(int ntemp, double *temp, double *g, double emin, double e
 
 			if (ntemp >= ntold)								// ntemp cannot be larger than before
 			{
-				for (i=0;i<ntold;i++)
+				for (i=0;i<ntold;++i)
 				{
 					temp[i] = oldt[i];
 					g[i] = oldg[i];
@@ -657,7 +657,7 @@ int ReduceTemperatures(int ntemp, double *temp, double *g, double emin, double e
 	if (debug>0)
 		{
 			fprintf(stderr,"\nChosen %d temperatures (log(p)/n=%lf):\n",ntemp,lprob);
-			for (i=0;i<ntemp;i++) fprintf(stderr,"T[%d] = %lf (g=%lf)\n",i,temp[i],g[i]);
+			for (i=0;i<ntemp;++i) fprintf(stderr,"T[%d] = %lf (g=%lf)\n",i,temp[i],g[i]);
 			fprintf(stderr,"\n");
 		}
 
@@ -749,7 +749,7 @@ double EstimatedJumpSingleProbability(double t1, double t2, double *lg, double e
 			fprintf(stderr,"   Jump probabilities for T=%lf -> T=%lf\n",t1,t2);
 
 	prob = 0.;
-	for (i=0;i<nbin;i++)			// loop over energies
+	for (i=0;i<nbin;++i)			// loop over energies
 	{
 		if (binok[i] == 1){
 			beta1 = 1./(KB*t1);
@@ -782,16 +782,16 @@ int CheckHistograms(int *counts, double *temp, int ntemp, double hthresh, int de
 
 	if (debug>0) fprintf(stderr,"Check histogram counts:    (thresh=%lf)\n",hthresh/ntemp);
 
-	for (it=0;it<ntemp;it++) ztot += counts[it];
+	for (it=0;it<ntemp;++it) ztot += counts[it];
 
-	for (it=0;it<ntemp;it++)
+	for (it=0;it<ntemp;++it)
 	{
 		z[it] = (double) counts[it] / ztot;
 		if (debug>0) fprintf(stderr,"z(T=%lf)=%lf ",temp[it],z[it]);
 	}
 	if (debug>0) fprintf(stderr,"\n");
 
-	for (it=0;it<ntemp;it++)
+	for (it=0;it<ntemp;++it)
 		if (z[it] <= hthresh/ntemp) return 0;
 
 	return 1;
@@ -809,10 +809,10 @@ void AddHistogramPile(int ntemp, double *temp, double **h, double **oldh, double
 	if ((*noldt)+ntemp >= NHISTOMAX) FatalError("NHISTOMAX too small");
 
 	// add all histograms to oldhisto
-	for (it=0;it<ntemp;it++)
+	for (it=0;it<ntemp;++it)
 	{
 		iold = it + *noldt;					// index of new histogram
-		for (i=0;i<nbin;i++) oldh[iold][i] = h[it][i];			// copy histogram
+		for (i=0;i<nbin;++i) oldh[iold][i] = h[it][i];			// copy histogram
 		oldt[iold] = temp[it];					// copy temperature
 		oldt_iter[iold] = iter;					// label each histo according to when it was collected
 	}
@@ -824,11 +824,11 @@ void AddHistogramPile(int ntemp, double *temp, double **h, double **oldh, double
 	if (sum==1)
 	{
 		did = 0;
-		for (it=0;it<(*noldt);it++)
-			for (it2=it+1;it2<(*noldt);it2++)
+		for (it=0;it<(*noldt);++it)
+			for (it2=it+1;it2<(*noldt);++it2)
 				if (oldt[it]<=oldt[it2]+EPSILON && oldt[it]>=oldt[it2]-EPSILON)		// if two temperatures are equal
 				{
-					for (i=0;i<nbin;i++)
+					for (i=0;i<nbin;++i)
 						{
 							oldh[it][i] += oldh[it2][i];							// add latter to former
 							oldh[it2][i] = oldh[(*noldt)-1][i];						// delete latter
@@ -845,13 +845,13 @@ void AddHistogramPile(int ntemp, double *temp, double **h, double **oldh, double
 	else if (sum==2)
 	{
 		did = 0;
-		for (it=0;it<(*noldt);it++)
-			for (it2=it+1;it2<(*noldt);it2++)
+		for (it=0;it<(*noldt);++it)
+			for (it2=it+1;it2<(*noldt);++it2)
 				if (oldt[it]<=oldt[it2]+EPSILON && oldt[it]>=oldt[it2]-EPSILON)		// if two temperatures are equal
 				{
 					if (oldt_iter[it]<oldt_iter[it2])							// if it is older than it2
 					{
-						for (i=0;i<nbin;i++)
+						for (i=0;i<nbin;++i)
 						{
 							oldh[it][i] = oldh[it2][i];							// overwrite it
 							oldh[it2][i] = oldh[(*noldt)-1][i];					// delete last
@@ -862,7 +862,7 @@ void AddHistogramPile(int ntemp, double *temp, double **h, double **oldh, double
 					}
 					else														// if it2 is older than it
 					{
-						for (i=0;i<nbin;i++)
+						for (i=0;i<nbin;++i)
 						{
 							oldh[it2][i] = oldh[it][i];							// overwrite it2
 							oldh[it][i] = oldh[(*noldt)-1][i];					// delete last
@@ -882,10 +882,10 @@ void AddHistogramPile(int ntemp, double *temp, double **h, double **oldh, double
 	if (n>0)
 	{
 		discard = iter - n;
-		for (i=0;i<*noldt;i++)
+		for (i=0;i<*noldt;++i)
 			if (oldt_iter[i] <= discard)
 			{
-				for (ie=0;ie<nbin;ie++) oldh[i][ie] = oldh[(*noldt)-1][ie];
+				for (ie=0;ie<nbin;++ie) oldh[i][ie] = oldh[(*noldt)-1][ie];
 				oldt[i] = oldt[(*noldt)-1];
 				oldt_iter[i] = oldt_iter[(*noldt)-1];
 				(*noldt) --;
@@ -913,7 +913,7 @@ int CheckHistogramsAdjust2(int *counts, double *temp, double *g, int *ntemp, dou
 	double z[NTEMPMAX],ztot=0,lastt;
 
 	// obtain data from *counts
-	for (it=0;it<*ntemp;it++)
+	for (it=0;it<*ntemp;++it)
 	{
 		z[it] = (double) counts[it];
 		ztot += (double) counts[it];
@@ -921,7 +921,7 @@ int CheckHistogramsAdjust2(int *counts, double *temp, double *g, int *ntemp, dou
 
 	// normalize counts over all temperatures
 	if (debug>0) fprintf(stderr,"Check histogram counts (2): (threshold=%lf)\n",hthresh/(*ntemp));
-	for (it=0;it<*ntemp;it++)
+	for (it=0;it<*ntemp;++it)
 	{
 		z[it] /= ztot;
 		ok=1;
@@ -961,7 +961,7 @@ int CheckHistogramsAdjust2(int *counts, double *temp, double *g, int *ntemp, dou
 		lastt = temp[(*ntemp)-1];
 
 		// reset temperatures and weights to the last reliable
-		for (it=1;it<*nreliable_t;it++)
+		for (it=1;it<*nreliable_t;++it)
 		{
 			temp[it] = reliable_t[it];
 			g[it] = reliable_g[it];
@@ -980,7 +980,7 @@ int CheckHistogramsAdjust2(int *counts, double *temp, double *g, int *ntemp, dou
 			if (debug>0)
 			{
 				fprintf(stderr,"Resetting to last reliable temperatures and getting closer the lowest:\n");
-				for (j=0;j<*ntemp;j++) fprintf(stderr,"%lf (g=%lf)\t",temp[j],g[j]);
+				for (j=0;j<*ntemp;++j) fprintf(stderr,"%lf (g=%lf)\t",temp[j],g[j]);
 				fprintf(stderr,"\nBACK TO SIMULATION\n\n");
 			}
 
@@ -1013,7 +1013,7 @@ int CheckHistogramsAdjust3(int *counts, double *temp, double *g, int *ntemp, int
 	double z[NTEMPMAX],ztot=0;
 
 	// obtain data from *counts
-	for (it=0;it<*ntemp;it++)
+	for (it=0;it<*ntemp;++it)
 	{
 		z[it] = (double) counts[it];
 		ztot += (double) counts[it];
@@ -1021,7 +1021,7 @@ int CheckHistogramsAdjust3(int *counts, double *temp, double *g, int *ntemp, int
 
 	// normalize counts over all temperatures
 	if (debug>0) fprintf(stderr,"Check histogram counts: (threshold=%lf)\n",hthresh/(*ntemp));
-	for (it=0;it<*ntemp;it++)
+	for (it=0;it<*ntemp;++it)
 	{
 		z[it] /= ztot;
 		hole[it]=0;
@@ -1060,7 +1060,7 @@ int CheckHistogramsAdjust3(int *counts, double *temp, double *g, int *ntemp, int
 	if (nbadh>0)
 	{
 		// find holes between temperatures (calculating z only on the visited replica)
-		for (it=1;it<*ntemp;it++)
+		for (it=1;it<*ntemp;++it)
 			if ( (z[it] >= hthresh/ngoodh && z[it-1] < hthresh/ngoodh) ||
 					(z[it-1] >= hthresh/ngoodh && z[it] < hthresh/ngoodh) ||
 					prob_up[it]<counts[it]*pthresh || prob_down[it-1]<counts[it-1]*pthresh)
@@ -1072,7 +1072,7 @@ int CheckHistogramsAdjust3(int *counts, double *temp, double *g, int *ntemp, int
 			}
 
 
-			for (i=0;i<nholes;i++)
+			for (i=0;i<nholes;++i)
 			{
 				temp[*ntemp] = (temp[hole[i]-1] + temp[hole[i]])/2.;
 
@@ -1092,7 +1092,7 @@ int CheckHistogramsAdjust3(int *counts, double *temp, double *g, int *ntemp, int
 			if (debug>0)
 			{
 				fprintf(stderr,"Retrying with new temperatures:\n");
-				for (j=0;j<*ntemp;j++) fprintf(stderr,"%lf (g=%lf)\t",temp[j],g[j]);
+				for (j=0;j<*ntemp;++j) fprintf(stderr,"%lf (g=%lf)\t",temp[j],g[j]);
 				fprintf(stderr,"\nBACK TO SIMULATION\n\n");
 			}
 
@@ -1115,7 +1115,7 @@ int CheckHistogramsAdjust(int *counts, double *temp, double *g, double *reliable
 	double z[NTEMPMAX],ztot=0;
 
 	// obtain data from *counts
-	for (it=0;it<*ntemp;it++)
+	for (it=0;it<*ntemp;++it)
 	{
 		z[it] = (double) counts[it];
 		ztot += (double) counts[it];
@@ -1123,7 +1123,7 @@ int CheckHistogramsAdjust(int *counts, double *temp, double *g, double *reliable
 
 	// normalize counts over all temperatures
 	if (debug>0) fprintf(stderr,"Check histogram counts: (threshold=%lf)\n",hthresh/(*ntemp));
-	for (it=0;it<*ntemp;it++)
+	for (it=0;it<*ntemp;++it)
 	{
 		z[it] /= ztot;
 		hole[it]=0;
@@ -1162,7 +1162,7 @@ int CheckHistogramsAdjust(int *counts, double *temp, double *g, double *reliable
 	if (nbadh>0)
 	{
 		// find holes between temperatures (calculating z only on the visited replica)
-		for (it=1;it<*ntemp;it++)
+		for (it=1;it<*ntemp;++it)
 			if ( (z[it] >= hthresh/ngoodh && z[it-1] < hthresh/ngoodh) ||
 					(z[it-1] >= hthresh/ngoodh && z[it] < hthresh/ngoodh) ||
 					prob_up[it]<counts[it]*pthresh || prob_down[it-1]<counts[it-1]*pthresh)
@@ -1173,7 +1173,7 @@ int CheckHistogramsAdjust(int *counts, double *temp, double *g, double *reliable
 				if (debug>0) fprintf(stderr,"There is a hole between T=%lf and T=%lf\n",temp[it-1],temp[it]);
 			}
 
-		for (i=0;i<nholes;i++)
+		for (i=0;i<nholes;++i)
 		{
 				temp[*ntemp] = (temp[hole[i]-1] + temp[hole[i]])/2.;
 				g[*ntemp] = CalculateG(reliable_lg, emin, ebin, nbin, temp[*ntemp], KB, binok, gmethod) -
@@ -1194,7 +1194,7 @@ int CheckHistogramsAdjust(int *counts, double *temp, double *g, double *reliable
 		if (debug>0)
 		{
 				fprintf(stderr,"Retrying with new temperatures:\n");
-				for (j=0;j<*ntemp;j++) fprintf(stderr,"%lf (g=%lf)\t",temp[j],g[j]);
+				for (j=0;j<*ntemp;++j) fprintf(stderr,"%lf (g=%lf)\t",temp[j],g[j]);
 				fprintf(stderr,"\nBACK TO SIMULATION\n\n");
 		}
 
@@ -1215,38 +1215,38 @@ void ManageRestart(struct st_stuff *p, double step)
 		{
 			((p->st_st_restart)+i)->step = ((p->st_st_restart)+i-1)->step;
 			((p->st_st_restart)+i)->ntemp = ((p->st_st_restart)+i-1)->ntemp;
-			for (j=0;j<NTEMPMAX;j++)
+			for (j=0;j<NTEMPMAX;++j)
 			{
 				(((p->st_st_restart)+i)->temp)[j] = (((p->st_st_restart)+i-1)->temp)[j];
 				(((p->st_st_restart)+i)->g)[j] = (((p->st_st_restart)+i-1)->g)[j];
 			}
-			for (j=0;j<p->st_nbin;j++)
+			for (j=0;j<p->st_nbin;++j)
 				(((p->st_st_restart)+i)->lg)[j] = (((p->st_st_restart)+i-1)->lg)[j];
 		}
 
 	// write the current data on the 0-th element of the stack
 	((p->st_st_restart)+0)->step = step;
 	((p->st_st_restart)+0)->ntemp = p->st_nreliable_t;
-	for (j=0;j<NTEMPMAX;j++)
+	for (j=0;j<NTEMPMAX;++j)
 	{
 		(((p->st_st_restart)+0)->temp)[j] = p->st_reliable_t[j];
 		(((p->st_st_restart)+0)->g)[j] = p->st_reliable_g[j];
 	}
-	for (j=0;j<p->st_nbin;j++)
+	for (j=0;j<p->st_nbin;++j)
 		(((p->st_st_restart)+0)->lg)[j] = p->st_reliable_lg[j];
 
 	// print restart
 	fr = fopen("RESTART_ST","w");
 	if (!fr) FatalError("Cannot open restart file for writing");
 
-	for (i=0;i<NRESTARTS;i++)
+	for (i=0;i<NRESTARTS;++i)
 		if ( ((p->st_st_restart)+i)->step >-1 )
 		{
 			fprintf(fr,"restart %d\n",i);
 			fprintf(fr,"%lf\t%d\n",((p->st_st_restart)+i)->step,((p->st_st_restart)+i)->ntemp);
-			for (j=0;j<((p->st_st_restart)+i)->ntemp;j++) fprintf(fr,"%lf\t%lf\n",(((p->st_st_restart)+i)->temp)[j],(((p->st_st_restart)+i)->g)[j]);
+			for (j=0;j<((p->st_st_restart)+i)->ntemp;++j) fprintf(fr,"%lf\t%lf\n",(((p->st_st_restart)+i)->temp)[j],(((p->st_st_restart)+i)->g)[j]);
 			fprintf(fr,"%lf %lf %d\n",p->st_emin,p->st_ebin,p->st_nbin);
-			for (j=0;j<p->st_nbin;j++) fprintf(fr,"%lf\n",(((p->st_st_restart)+i)->lg)[j]);
+			for (j=0;j<p->st_nbin;++j) fprintf(fr,"%lf\n",(((p->st_st_restart)+i)->lg)[j]);
 		}
 
 	fclose(fr);
@@ -1256,8 +1256,8 @@ void FilterHistograms(double **h, double **hout, int ntemp, int nbin, double bin
 {
 	int i,it;
 
-	for (it=0;it<ntemp;it++)
-		for (i=0;i<nbin;i++)
+	for (it=0;it<ntemp;++it)
+		for (i=0;i<nbin;++i)
 		{
 			if (h[it][i]>binthresh) hout[it][i] = h[it][i];
 			else hout[it][i] = 0;

@@ -24,7 +24,12 @@ struct s_parms
 	char poutfile[200];
 	char eoutfile[200];
 	char cntfile[200];
+	char coevofile[200];
 	char ab_propensityfile[200];
+	char h_fieldsfile[200];
+	char maxcontfile[200];
+        char maxcontpairsfile[200];
+
 
 	char potential[50];
 	char atomtypes[50];
@@ -40,7 +45,7 @@ struct s_parms
 	double k_native_r;
 	double k_native_hc;
 	char back_a[100][100];
-    	int move_a[100];
+	int move_a[100];
 	int n_back_a;
 	double tthresh;				// threshold to define a bonded interaction
 	int debug;
@@ -69,7 +74,7 @@ struct s_parms
 	double hydro_e;
 	double hydro_r;
 	char typesfile[100];
-    
+
     int dih_ram;				//energy dihedrals with minimum in Ramachandran dihedrals
 	double e_dihram;
 	double sig_a_phi;
@@ -80,7 +85,12 @@ struct s_parms
 	int phi_0_b;
 	int psi_0_a;
 	int psi_0_b;
+	double dih_ka,dih_kb; //weight of alpha-beta dihedrals
+	
 
+	int h_fields;				//H fields for CoCaInE-derived potentials
+	double hfs_alpha;			// alpha parameter
+	int coevo_allatom;
 
 };
 
@@ -133,6 +143,13 @@ struct atom_gromacs
 	double mass[50];
 };
 
+struct s_pairscont{
+  int max;
+  char nameaa1[5];
+  char nameaa2[5];
+};
+
+
 void Parse(FILE *fp, struct s_parms *p);
 void AppendPotentialComments(struct s_parms *p, char *eoutfile);
 struct atom_s *AlloAtoms(int n);
@@ -148,6 +165,7 @@ int **AlloIntMatrix(int l, int m);
 int PDB2CACB(struct atom_s *pdb, struct atom_s *ca, int n);
 int PDB2CA(struct atom_s *pdb, struct atom_s *ca, int n);
 int PDB2NCAC(struct atom_s *pdb, struct atom_s *ca, int n);
+int PDB2BackCB(struct atom_s *pdb, struct atom_s *ca, int n);
 int ReadPDB(struct atom_s *x, char *pdbfile, int hydrogens, int *nchain, int *nbackmax, struct s_parms *p);
 int IsBackbone(char *atom, struct s_parms *p);
 void CreateTopology(struct atom_s *a, int n, int **top, double thresh, int debug);
@@ -161,16 +179,16 @@ double DumbRMSD2(struct vector *a, struct vector *b, int n);
 void SetRotamersSimilarToPDB(int nc, struct s_polymer *p, struct atom_s *a, int napdb);
 void CopyPDB(struct atom_s *from, struct atom_s *to, int n);
 int SimplifyPDB(struct atom_s *x, int n, char *model);
-void ReadPropensity(char *fname, struct s_potential *u);
-
 
 // energy.c
 double **ContactMap(struct s_parms *parms, struct s_polymer *p, int nchains, int nat, int debug);
 void Go_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r, double **r0, int nchains, int natoms, double **cm);
+double Ext_Pairs(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02);
 void Go_Dihedrals(struct s_parms *parms, struct s_polymer *p, int nc, double *dih01, double *dih03, struct s_potential *u);
 void Go_Angles(struct s_parms *parms, struct s_polymer *p, int nc, double *ang, struct s_potential *u);
 void Ram_Dihedrals(struct s_parms *p, struct s_potential *u);
 int SetGoTypes(struct s_polymer *p, int nchains, int nat);
+int SetGoAATypes(struct s_polymer *p, int nchains, int nat);
 void DisulphideBonds(struct s_parms *parms, struct s_polymer *p, double **e, double **r2, double **r02, int nchains, int nat);
 void OP_AddEnergy(struct s_polymer *p, int a1, int a2, double mul);
 int ReadTypes(struct s_polymer *p, int nchains, int nat, char *nfile);
@@ -187,3 +205,7 @@ int AddDefaultCB(struct s_polymer *p, int nc, int *N, int *CA, int *C, int naa, 
 void SubstituteDefaultCB(struct s_polymer *p, int nc);
 int Rot2Polymer(int nrot_kinds, int nchains, struct s_polymer *p, struct rot_input_s *r, struct s_parms *parms);
 
+//io.c
+void ReadPropensity(char *fname, struct s_potential *u);
+void ReadHFields(char *fname, char *contstat, struct s_potential *u, struct s_polymer *p, int nchain, double hfs_alpha, double stdev);
+void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, int noangpot, int nodihpot, int hb, int nohfields);
