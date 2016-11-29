@@ -2029,7 +2029,7 @@ void PrintPotential(struct s_potential *u, char *eoutfile, int nat, int ntypes, 
             fprintf(fout,"ia\tp_a\tp_b\n");
 			//stampo:	iaa	prop_a[iaa]	prop_b[iaa]
 			for(i=0;i<NAAMAX;++i)
-				if(u->ab_propensity[0][i]<2)
+				if(u->ab_propensity[0][i]<LARGE)
 					fprintf(fout,"%d\t%lf\t%lf\n",i,u->ab_propensity[0][i],u->ab_propensity[1][i]);
 		}
         
