@@ -50,7 +50,7 @@ void Error(char *text)
   fprintf(stdout,"after %3.1f s. at %s\n",(double) ( clock() / CLOCKS_PER_SEC ),
                                     asctime(localtime(&rawtime)));
   fprintf(stderr,"---------------------------------------------\n\n");
-
+  fprintf(stderr," DON'T\n PANIC\n\n");
   exit(1);
 }
 
@@ -510,7 +510,8 @@ struct s_mc_parms *ReadMcParms(char *fname)
 		ReadParD(aux,"moverot",&(x->movetype[8]));
 		ReadParD(aux,"comcluster",&(x->movetype[9]));
 		ReadParD(aux,"rotcluster",&(x->movetype[10]));
-
+		ReadParD(aux,"backrub",&(x->movetype[11]));
+                ReadParD(aux,"backsiderub",&(x->movetype[12]));
 		ReadParF(aux,"r_cloose",&(x->r_cloose));
 		ReadParF(aux,"a_cloose",&(x->a_cloose));
 		ReadParF(aux,"d_cloose",&(x->d_cloose));

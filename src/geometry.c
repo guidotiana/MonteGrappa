@@ -128,6 +128,105 @@ int Flip(struct s_polymer *p, int iw, double dw)
 	return 1;
 }
 
+// iw is a CA
+int BackFlip(struct s_polymer *p, int iw, double dw)
+{
+        struct vector a,b,u,du,newu;
+        double invnormb2,coeff,invnormb,norm2b,invnormT,norm2T,T[3][3];
+	int i,iwhold=iw;	
+        if (iw<1 || iw>p->nback-2) return 0;            // cannot apply to first and last atom
+
+        // preceding CA 
+        a.x = (((p->back)+iw-3)->pos).x;
+        a.y = (((p->back)+iw-3)->pos).y;
+        a.z = (((p->back)+iw-3)->pos).z;
+
+        // following atom
+        b.x = (((p->back)+iw+3)->pos).x;
+        b.y = (((p->back)+iw+3)->pos).y;
+        b.z = (((p->back)+iw+3)->pos).z;
+
+
+	// Translate b to the system defined by a
+         b.x -= a.x;
+          b.y -= a.y;
+          b.z -= a.z;
+	
+	for(i=0;i<5;++i) 
+	{
+	  iw=iwhold-2+i;	
+          // atoms to be moved around the axis passing by a and b
+          u.x = (((p->back)+iw)->pos).x;
+          u.y = (((p->back)+iw)->pos).y;
+          u.z = (((p->back)+iw)->pos).z;
+
+
+          // Translate u to the system defined by a
+          u.x -= a.x;
+          u.y -= a.y;
+          u.z -= a.z;
+
+          // db = b - u
+          du.x = b.x - u.x;
+          du.y = b.y - u.y;
+          du.z = b.z - u.z;
+
+          // coefficient for the 2nd column of base-change matrix
+          norm2b = Norm2(b);
+          if (norm2b<EPSILON) return 0;
+          invnormb2 = 1. / norm2b;                        // inverse of the square norm of b (translated by a)
+          if (invnormb2<EPSILON) return 0;                // PARANOID
+          coeff = 0.5 * (( Norm2(u) - Norm2(du) ) * invnormb2 + 1.);
+
+          // base-change matrix (first two columns)
+          invnormb = FastSqrt(invnormb2,p->tables);
+
+
+          T[0][0] = b.x * invnormb;               T[0][1] = u.x - coeff * b.x;
+          T[1][0] = b.y * invnormb;               T[1][1] = u.y - coeff * b.y;
+          T[2][0] = b.z * invnormb;               T[2][1] = u.z - coeff * b.z;
+
+          // normalize 2nd column of the matrix
+          norm2T = T[0][1]*T[0][1] + T[1][1]*T[1][1] + T[2][1]*T[2][1];
+          if (norm2T<EPSILON) return 0;
+          invnormT = 1. / norm2T;
+
+          invnormT = FastSqrt(invnormT,p->tables);
+          if (invnormT<EPSILON) return 0; // PARANOIND
+          T[0][1] = T[0][1] * invnormT;
+          T[1][1] = T[1][1] * invnormT;
+          T[2][1] = T[2][1] * invnormT;
+
+          // the third colum is the vector product of the first two
+          T[0][2] = T[1][0] * T[2][1] - T[2][0] * T[1][1];
+          T[1][2] = T[2][0] * T[0][1] - T[0][0] * T[2][1];
+          T[2][2] = T[0][0] * T[1][1] - T[1][0] * T[0][1];
+
+          // rotate u
+          u.x = coeff / invnormb;
+          u.y = FastCos(dw,p->tables) / invnormT;
+          u.z = FastSin(dw,p->tables) / invnormT;
+
+          MatrixVectorProduct(T,u,&newu);
+
+          // translate back in a
+          newu.x += a.x;
+          newu.y += a.y;
+          newu.z += a.z;
+
+          // actually moves the atom
+          (((p->back)+iw)->pos).x = newu.x;
+          (((p->back)+iw)->pos).y = newu.y;
+          (((p->back)+iw)->pos).z = newu.z;
+
+
+	}
+
+        return 1;
+}
+
+
+
 int MoveHead(struct s_polymer *p, struct s_mc_parms *mc_parms)
 {
 	struct vector c;

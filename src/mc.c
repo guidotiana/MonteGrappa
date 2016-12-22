@@ -240,6 +240,23 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
                         mdone[7]++;
                 }
 
+		if( mcount[11] == parms->movetype[11])
+		{
+			ok=BackRub(p,oldp,pot,parms,t);
+			if(ok>-1) mcount[11]=0;
+			if(ok==1) macc[11]++;
+			mdone[11]++;
+		}
+	    	if ( mcount[12] == parms->movetype[12] )
+		{
+			ok=BackSideRub(p,oldp,pot,parms,t);
+			if(ok>-1) mcount[12]=0;
+			if(ok==1) macc[12]++;
+			mdone[12]++;
+
+		}
+		
+
 		
 		if (mcount[1] == parms->movetype[1])						// pivot of backbone
 		{
@@ -565,6 +582,11 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 	#endif
 	if(parms->movetype[0]!=-1)
 		fprintf(stderr,"\tFlip:\t%d / %d = %lf\n",macc[0],mdone[0],(double)macc[0]/mdone[0]);
+	if(parms->movetype[11]!=-1)
+                fprintf(stderr,"\tBackRub:\t%d / %d = %lf\n",macc[11],mdone[11],(double)macc[11]/mdone[11]);
+	if(parms->movetype[12]!=-1)
+                fprintf(stderr,"\tBackSideRub:\t%d / %d = %lf\n",macc[12],mdone[12],(double)macc[12]/mdone[12]);
+
 	if(parms->movetype[1]!=-1) 
 		fprintf(stderr,"\tPivot:\t%d / %d = %lf\n",macc[1],mdone[1],(double)macc[1]/mdone[1]);
 	if(parms->movetype[2]!=-1) 

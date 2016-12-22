@@ -53,7 +53,7 @@
         #define NCONTMAX	200		// maximum number of other atoms in contact with a given one (in polymer structure)
         #define NCONTMAX2	10000		// twice the number of other atoms in contact with a given one (in the moving structure, i.e. >>NCONTMAX)
         #define NSHELLMAX	1000		// maximum number of atoms in the shell of a given one
-        #define NMOVES		11		// number of types of allowed moves
+        #define NMOVES		13		// number of types of allowed moves
         #define NDIHFMAX	361		// maximum number of bins in tabled dihedral potential
 
         #define NREPMAX		40
@@ -238,6 +238,8 @@ struct s_polymer *Allo_Fragment(int npol, int nback,int nang, FILE *flog);
 int LocalMove(struct s_polymer *p, struct s_polymer *oldp,struct s_polymer *fragment,struct s_potential *pot,int nmul,struct s_mc_parms *parms, double t);
 int Compute_G(struct s_polymer *fragment,struct s_polymer *p,int ip,int istart,int natom_fragment,int nang,struct s_mc_parms *parms);
 void FreeFragment(struct s_polymer *f,struct s_mc_parms *parms);
+int BackRub(struct s_polymer *p, struct s_polymer *oldp,struct s_potential *pot,struct s_mc_parms *parms,double t);
+int BackSideRub(struct s_polymer *p, struct s_polymer *oldp,struct s_potential *pot,struct s_mc_parms *parms,double t);
 
 //misc.c
 int irand(int r);
@@ -258,6 +260,7 @@ void CopyVector(struct vector *from, struct vector *to);
 
 // geometry.c
 int Flip(struct s_polymer *p, int iw, double dw);
+int BackFlip(struct s_polymer *p,int iw,double dw);
 int MoveHead(struct s_polymer *p, struct s_mc_parms *mc_parms);
 int MoveTail(struct s_polymer *p, struct s_mc_parms *mc_parms);
 struct angles Cartesian2Spherical( struct vector A, struct vector B,
