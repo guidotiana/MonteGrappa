@@ -82,16 +82,21 @@ int main(int argc, char *argv[])
 	mpiparms->my_rank=my_rank;
 	mpiparms->nprocs=nprocs;
 
+	strcpy(polname,argv[1]);
+	if(!strcmp(polname,"checkpoint")){
+	#ifdef ACTIVE_MPI
+		MPI_Barrier(MPI_COMM_WORLD);
+	#else
+		fprintf(stderr,"WARNING! Using checkpoint.pol as input polymer file\n");
+	#endif
+	}
+	
 	
 	
 	if(my_rank==0)
 	{
-	
-	
 	#endif
-
 		Welcome(stderr);
-		strcpy(polname,argv[1]);
 		strcpy(potname,argv[2]);
 
 
@@ -132,8 +137,6 @@ int main(int argc, char *argv[])
 		}
 	#endif
 
-	
-	
 	#ifdef ACTIVE_MPI
 	}
 	MPI_Barrier(MPI_COMM_WORLD);
@@ -171,7 +174,7 @@ int main(int argc, char *argv[])
 		fragment=Allo_Fragment(parms->npol,parms->nmul_local,parms->nmul_local,parms->flog);
 	}
 	
-	fprintf(stderr,"\n");
+	//fprintf(stderr,"\n");
 	startp->tables = InitTables(fproc);                         // keep tables only in (polymer+0)
 
 	for (i=0;i<parms->npol;++i) (polymer+i)->tables = startp->tables; // tables of all polymers point to same address
@@ -179,14 +182,55 @@ int main(int argc, char *argv[])
 	for (i=1;i<parms->npol;++i) (startp+i)->tables = startp->tables;  // tables of all polymers point to same address
 
 	// Read polymer stuff from file
-	if(parms->nreplicas==1)
+	//if(parms->nreplicas==1)
+	//{
+	if(!strcmp(polname,"checkpoint"))
 	{
-		//fprintf(stderr,"rank %d !!!!! \n",my_rank);		
+		#ifdef ACTIVE_MPI
+		if(my_rank == 0){
+			fprintf(stderr,"WARNING! Using checkpoint_proc$rep.pol as input polymer files\n");
+			fprintf(stderr,"Number of processes: %d\n",nprocs);
+		}
+		// Read all polymers from process 0 and send it from the last to the 2nd replica
+		for(i=nprocs-1;i>0;--i)
+		{
+			if(my_rank == 0)
+			{
+				sprintf(polname,"checkpoint_proc%d.pol",i);
+				ReadPolymer(polname,startp,parms->flog,parms->npol, parms->debug, &nat, &ntypes);
+				ComputeIAPDB(startp,parms);
+			}
+			
+			MPI_Barrier(MPI_COMM_WORLD);
+			for (j=0;j<parms->npol;++j)
+			{
+				if((my_rank == 0) || (my_rank == i)){
+					send_struct(&((startp+j)->nback),mpiparms->my_rank, nprocs, &nat, &ntypes, astatus);
+					startp = send_pol_to_proc(mpiparms->my_rank,i, nprocs, (startp+j)->nback, mpiparms->Back_mpi, mpiparms->Side_mpi, mpiparms->Rot_mpi, startp, astatus, j, parms->nshell, parms->nosidechains);
+				}
+				MPI_Barrier(MPI_COMM_WORLD);
+			}
+			MPI_Barrier(MPI_COMM_WORLD);
+		}
 		if(my_rank==0)
-        	{
-        		ReadPolymer(polname,startp,parms->flog,parms->npol, parms->debug, &nat, &ntypes);
-		        ComputeIAPDB(startp,parms);
-	        }
+		{
+			sprintf(polname,"checkpoint_proc%d.pol",i);
+			ReadPolymer(polname,startp,parms->flog,parms->npol, parms->debug, &nat, &ntypes);
+			ComputeIAPDB(startp,parms);
+			sprintf(polname,"checkpoint",i);
+		}
+		#else
+		sprintf(polname,"checkpoint.pol");
+		ReadPolymer("checkpoint.pol",startp,parms->flog,parms->npol, parms->debug, &nat, &ntypes);
+		ComputeIAPDB(startp,parms);
+		#endif
+	}
+	else{
+		if(my_rank==0)
+		{
+			ReadPolymer(polname,startp,parms->flog,parms->npol, parms->debug, &nat, &ntypes);
+			ComputeIAPDB(startp,parms);
+		}
 		
 		#ifdef ACTIVE_MPI
 		MPI_Barrier(MPI_COMM_WORLD);
@@ -198,10 +242,10 @@ int main(int argc, char *argv[])
 		MPI_Barrier(MPI_COMM_WORLD);
 		if(parms->debug>1)
 			fprintf(fproc,"iproc=%d\tnat=%d\tntypes=%d\tnback=%d\n",mpiparms->my_rank,nat,ntypes, startp->nback);
-
 		#endif
-
-	}//end of if nreplicas==1
+	
+	}
+	//}//end of if nreplicas==1
         
 
 /*
@@ -367,7 +411,7 @@ int main(int argc, char *argv[])
 			
 			SetTrueShellFlags(polymer,parms);
 			UpdateShell(polymer,parms);
-                        SetFalseShellFlags(polymer,parms);
+			SetFalseShellFlags(polymer,parms);
 
 		}
 		#ifdef ACTIVE_MPI

@@ -45,11 +45,12 @@ int softexit;
 
 void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *replica, struct s_polymer *native, struct s_potential *pot, struct s_mc_parms *parms, FILE *ftrj, FILE *fe, struct s_polymer *oldp, FILE *fproc,int irun, struct s_mpi_parms *mpiparms)
 {
-	int i,ok=0,iprinttrj=0,iprintlog=0,iprinte=0,ntm=0,ci,mcount[NMOVES],macc[NMOVES],mdone[NMOVES];
+	int i,ok=0,iprinttrj=0,iprintlog=0,iprinte=0,icheckpoint=0,ntm=0,ci,mcount[NMOVES],macc[NMOVES],mdone[NMOVES];
 //	int anneal_count=0, anneal_status=0;
 
 	double t;
-	unsigned long long istep=0;               
+	unsigned long long istep=0;
+	char fchkp[100];
 		
 	if(parms->shell==1)
 		parms->ishell=0;
@@ -359,6 +360,20 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 			fflush(fe);
 			iprinte = 0;
 		}
+		
+		// print checkpoint
+		if (icheckpoint == parms->ncheckpoint && ok>-1){
+			//Define checkpoint filename
+			#ifdef ACTIVE_MPI
+			sprintf(fchkp,"checkpoint_proc%d.pol",my_rank);
+			#else
+			sprintf(fchkp,"checkpoint.pol");
+			#endif
+			
+			PrintPolymer(fchkp,p,parms->npol);
+			icheckpoint = 0;
+		}
+		
 //		fprintf(stderr,"ETOT\t%lf\n",p->etot);
 		// update shell
 		if (parms->shell==1)
@@ -530,7 +545,7 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 					fprintf(stderr,"\nstep=%llu\n",istep);
                 	//if(my_rank==0)fprintf(stderr,"~MPI: PT ...");
 			ExchangePol(p,replica,oldp,parms,pot,my_rank,parms->ntemp,0,ex_count,ex_acc,Backtype,Sidetype,Rottype,astatus,istep,fexchange);	
-			if(my_rank==0)fprintf(stderr,"\n");
+			//if(my_rank==0)fprintf(stderr,"\n");
 			fflush(fexchange);	
 
 		}	
@@ -564,9 +579,10 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
                 if (ok>-1)
                 {
                 	istep ++;
-                        iprinttrj ++;
-                        iprintlog ++;
-                        iprinte ++;
+					iprinttrj ++;
+                    iprintlog ++;
+					iprinte ++;
+					icheckpoint ++;
                  //       parms->ishell ++;
                 }
 

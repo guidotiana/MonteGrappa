@@ -410,6 +410,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
 	x->randdw = 1;
 	x->nprinttrj = 1000;
 	x->nprintlog = 1000;
+	x->ncheckpoint = 1000;
 	strcpy(x->fntrj,"traj");
 	x->r2shell = 6.;
 	x->ntemp = 0;
@@ -468,7 +469,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
 
 	while(fgets(aux,1000,fp)!=NULL)
 	{
-                ReadParD(aux,"nconf",&(x->nconf));
+		ReadParD(aux,"nconf",&(x->nconf));
 
 		ReadParD(aux,"nchains",&(x->npol));
 		ReadParLLU(aux,"nstep",&(x->nstep));
@@ -485,6 +486,7 @@ struct s_mc_parms *ReadMcParms(char *fname)
 		ReadParD(aux,"nprinttrj",&(x->nprinttrj));
 		ReadParD(aux,"nprintlog",&(x->nprintlog));
 		ReadParD(aux,"nprinte",&(x->nprinte));
+		ReadParD(aux,"ncheckpoint",&(x->ncheckpoint));
 		ReadParS(aux,"traj",x->fntrj);
 		ReadParS(aux,"logfile",nlog);
 		ReadParS(aux,"lastp",x->flastp);

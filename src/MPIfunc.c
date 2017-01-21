@@ -220,7 +220,7 @@ void Create_parms_datatype(MPI_Datatype *Parmstype){
 	x = malloc(1 * sizeof(struct s_mc_parms));
 	if (!x) Error("Cannot allocate mc_parms");
 
-	MPI_Aint adress[70];
+	MPI_Aint adress[71];
 	MPI_Get_address(x, &adress[0]);
 	MPI_Get_address(&(*x).npol, &adress[1]);
 	MPI_Get_address(&(*x).nstep, &adress[2]);
@@ -237,113 +237,118 @@ void Create_parms_datatype(MPI_Datatype *Parmstype){
 	MPI_Get_address(&(*x).nprinttrj, &adress[13]);
 	MPI_Get_address(&(*x).nprintlog, &adress[14]);
 	MPI_Get_address(&(*x).nprinte, &adress[15]);
-	MPI_Get_address(&(*x).shell, &adress[16]);
-	MPI_Get_address(&(*x).nshell, &adress[17]);
-	MPI_Get_address(&(*x).r2shell, &adress[18]);
-	MPI_Get_address(&(*x).ntemp, &adress[19]);
-	MPI_Get_address(&(*x).T, &adress[20]);
-	MPI_Get_address(&(*x).randdw, &adress[21]);
-	MPI_Get_address(&(*x).debug, &adress[22]);
-	MPI_Get_address(&(*x).movetype, &adress[23]);
-	MPI_Get_address(&(*x).nmul_mpivot, &adress[24]);
-	MPI_Get_address(&(*x).nmul_lpivot, &adress[25]);
-	MPI_Get_address(&(*x).nmul_mflip, &adress[26]);
-	MPI_Get_address(&(*x).nosidechains, &adress[27]);
-	MPI_Get_address(&(*x).noangpot, &adress[28]);
-	MPI_Get_address(&(*x).nodihpot, &adress[29]);
-	MPI_Get_address(&(*x).nohfields, &adress[30]);
-	MPI_Get_address(&(*x).nrun, &adress[31]);
-	MPI_Get_address(&(*x).always_restart, &adress[32]);
-	MPI_Get_address(&(*x).record_native, &adress[33]);
-	MPI_Get_address(&(*x).acc, &adress[34]);
-	MPI_Get_address(&(*x).mov, &adress[35]);
-	MPI_Get_address(&(*x).disentangle, &adress[36]);
-	MPI_Get_address(&(*x).stempering, &adress[37]);
-	MPI_Get_address(&(*x).dx_com, &adress[38]);
-	MPI_Get_address(&(*x).dx_clm, &adress[39]);
-	MPI_Get_address(&(*x).r_cloose, &adress[40]);
-	MPI_Get_address(&(*x).a_cloose, &adress[41]);
-	MPI_Get_address(&(*x).d_cloose, &adress[42]);
-	MPI_Get_address(&(*x).hb, &adress[43]);
-	MPI_Get_address(&(*x).anneal, &adress[44]);
-	MPI_Get_address(&(*x).anneal_often, &adress[45]);
-	MPI_Get_address(&(*x).anneal_step, &adress[46]);
-	MPI_Get_address(&(*x).anneal_t, &adress[47]);
-	MPI_Get_address(&(*x).anneal_recov, &adress[48]);
-	MPI_Get_address(&(*x).r_contact, &adress[49]);
+	MPI_Get_address(&(*x).ncheckpoint, &adress[16]);
+	MPI_Get_address(&(*x).shell, &adress[17]);
+	MPI_Get_address(&(*x).nshell, &adress[18]);
+	MPI_Get_address(&(*x).r2shell, &adress[19]);
+	MPI_Get_address(&(*x).ntemp, &adress[20]);
+	MPI_Get_address(&(*x).T, &adress[21]);
+	MPI_Get_address(&(*x).randdw, &adress[22]);
+	MPI_Get_address(&(*x).debug, &adress[23]);
+	MPI_Get_address(&(*x).movetype, &adress[24]);
+	MPI_Get_address(&(*x).nmul_mpivot, &adress[25]);
+	MPI_Get_address(&(*x).nmul_lpivot, &adress[26]);
+	MPI_Get_address(&(*x).nmul_mflip, &adress[27]);
+	MPI_Get_address(&(*x).nosidechains, &adress[28]);
+	MPI_Get_address(&(*x).noangpot, &adress[29]);
+	MPI_Get_address(&(*x).nodihpot, &adress[30]);
+	MPI_Get_address(&(*x).nohfields, &adress[31]);
+	MPI_Get_address(&(*x).nrun, &adress[32]);
+	MPI_Get_address(&(*x).always_restart, &adress[33]);
+	MPI_Get_address(&(*x).record_native, &adress[34]);
+	MPI_Get_address(&(*x).acc, &adress[35]);
+	MPI_Get_address(&(*x).mov, &adress[36]);
+	MPI_Get_address(&(*x).disentangle, &adress[37]);
+	MPI_Get_address(&(*x).stempering, &adress[38]);
+	MPI_Get_address(&(*x).dx_com, &adress[39]);
+	MPI_Get_address(&(*x).dx_clm, &adress[40]);
+	MPI_Get_address(&(*x).r_cloose, &adress[41]);
+	MPI_Get_address(&(*x).a_cloose, &adress[42]);
+	MPI_Get_address(&(*x).d_cloose, &adress[43]);
+	MPI_Get_address(&(*x).hb, &adress[44]);
+	MPI_Get_address(&(*x).anneal, &adress[45]);
+	MPI_Get_address(&(*x).anneal_often, &adress[46]);
+	MPI_Get_address(&(*x).anneal_step, &adress[47]);
+	MPI_Get_address(&(*x).anneal_t, &adress[48]);
+	MPI_Get_address(&(*x).anneal_recov, &adress[49]);
+	MPI_Get_address(&(*x).r_contact, &adress[50]);
 	#ifdef OPTIMIZEPOT
-	MPI_Get_address(&(*x).op_minim, &adress[50]);
-	MPI_Get_address(&(*x).op_itermax, &adress[51]);
-	MPI_Get_address(&(*x).op_step, &adress[52]);
-	MPI_Get_address(&(*x).op_T, &adress[53]);
-	MPI_Get_address(&(*x).op_deltat, &adress[54]);
-	MPI_Get_address(&(*x).op_stop, &adress[55]);
-	MPI_Get_address(&(*x).op_print, &adress[56]);
-	MPI_Get_address(&(*x).op_emin, &adress[57]);
-	MPI_Get_address(&(*x).op_emax, &adress[58]);
-	MPI_Get_address(&(*x).op_wait, &adress[59]);
-	MPI_Get_address(&(*x).op_r, &adress[60]);
-	MPI_Get_address(&(*x).op_r0, &adress[61]);
-	MPI_Get_address(&(*x).nstep_exchange, &adress[62]);
-	MPI_Get_address(&(*x).nmul_local,&adress[63]);
-	MPI_Get_address(&(*x).chi2start,&adress[64]);
-	MPI_Get_address(&(*x).ishell,&adress[65]);
-	MPI_Get_address(&(*x).bgs_a,&adress[66]);
-	MPI_Get_address(&(*x).bgs_b,&adress[67]);
-	MPI_Get_address(&(*x).dtheta,&adress[68]);
+	MPI_Get_address(&(*x).op_minim, &adress[51]);
+	MPI_Get_address(&(*x).op_itermax, &adress[52]);
+	MPI_Get_address(&(*x).op_step, &adress[53]);
+	MPI_Get_address(&(*x).op_T, &adress[54]);
+	MPI_Get_address(&(*x).op_deltat, &adress[55]);
+	MPI_Get_address(&(*x).op_stop, &adress[56]);
+	MPI_Get_address(&(*x).op_print, &adress[57]);
+	MPI_Get_address(&(*x).op_emin, &adress[58]);
+	MPI_Get_address(&(*x).op_emax, &adress[59]);
+	MPI_Get_address(&(*x).op_wait, &adress[60]);
+	MPI_Get_address(&(*x).op_r, &adress[61]);
+	MPI_Get_address(&(*x).op_r0, &adress[62]);
+	MPI_Get_address(&(*x).nstep_exchange, &adress[63]);
+	MPI_Get_address(&(*x).nmul_local,&adress[64]);
+	MPI_Get_address(&(*x).chi2start,&adress[65]);
+	MPI_Get_address(&(*x).ishell,&adress[66]);
+	MPI_Get_address(&(*x).bgs_a,&adress[67]);
+	MPI_Get_address(&(*x).bgs_b,&adress[68]);
+	MPI_Get_address(&(*x).dtheta,&adress[69]);
 
-	MPI_Get_address(&(*x).iT_bias,&adress[69]);
-	MPI_Get_address(&(*x).nreplicas,&adress[70]);
+	MPI_Get_address(&(*x).iT_bias,&adress[70]);
+	MPI_Get_address(&(*x).nreplicas,&adress[71]);
 
 
 	#else
-	MPI_Get_address(&(*x).nstep_exchange, &adress[50]);
+	MPI_Get_address(&(*x).nstep_exchange, &adress[51]);
 	#endif
 	
 
 	
 	#ifdef OPTIMIZEPOT
-	MPI_Datatype type[70]={MPI_INT, MPI_INT, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_CHAR, MPI_CHAR, //10
-		MPI_CHAR, MPI_CHAR, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, //20
-		MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT,  MPI_INT, //30
-		MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE,  MPI_DOUBLE,  MPI_DOUBLE, //40
-		MPI_DOUBLE, MPI_DOUBLE, MPI_INT,  MPI_INT,  MPI_INT,  MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_CHAR, //50
-		MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, //60
-		 MPI_DOUBLE, MPI_INT, MPI_INT,MPI_INT,MPI_INT,MPI_DOUBLE,MPI_DOUBLE,MPI_DOUBLE,MPI_INT,MPI_INT};
-	int blocklen[70]={1,1,1,1,1,1,1,1,50,50,//10
-		50,50,1,1,1,1,1,1,1,NREPMAX, //20
-		1,1,NMOVES,1,1,1,1,1,1,1, //30
+	MPI_Datatype type[71]={MPI_INT, MPI_INT, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_CHAR, MPI_CHAR, //10
+		MPI_CHAR, MPI_CHAR, MPI_INT, MPI_INT, MPI_INT, MPI_INT,MPI_INT, MPI_INT, MPI_DOUBLE, MPI_INT, //20
+		MPI_DOUBLE, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, //30
+		MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE,  MPI_DOUBLE, //40
+		MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_INT,  MPI_INT,  MPI_INT,  MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, //50
+		MPI_CHAR, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_DOUBLE, MPI_INT, //60
+		MPI_DOUBLE, MPI_DOUBLE, MPI_INT, MPI_INT,MPI_INT,MPI_INT,MPI_DOUBLE,MPI_DOUBLE,MPI_DOUBLE,MPI_INT, //70
+		MPI_INT	};
+	int blocklen[71]={1,1,1,1,1,1,1,1,50,50,//10
+		50,50,1,1,1,1,1,1,1,1, //20
+		NREPMAX,1,1,NMOVES,1,1,1,1,1,1, //30
 		1,1,1,1,1,1,1,1,1,1, //40
-		1,1,1,1,1,1,1,1,1,50,//50
-		1,1,1,1,1,1,1,1,1,1, //60
-		1,1,1,1,1,1,1,1,1,1}; //70
-	MPI_Aint disp[70];
+		1,1,1,1,1,1,1,1,1,1,//50
+		50,1,1,1,1,1,1,1,1,1, //60
+		1,1,1,1,1,1,1,1,1,1 //70
+		,1};
+	MPI_Aint disp[71];
 	
 	int i;
-	for(i=0; i<70; ++i)
+	for(i=0; i<71; ++i)
 		disp[i]=adress[i+1]-adress[0];
 	
-	MPI_Type_create_struct(70,blocklen,disp,type,Parmstype);
+	MPI_Type_create_struct(71,blocklen,disp,type,Parmstype);
 	MPI_Type_commit(Parmstype);
 	//free(x);
 	#else
-	MPI_Datatype type[50]={MPI_INT, MPI_INT, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_CHAR, MPI_CHAR, //10
-		MPI_CHAR, MPI_CHAR, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, //20
-		MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, //30
-		MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE,  MPI_DOUBLE,  MPI_DOUBLE, //40
-		MPI_DOUBLE, MPI_DOUBLE, MPI_INT,  MPI_INT,  MPI_INT,  MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, MPI_INT};
-	int blocklen[50]={1,1,1,1,1,1,1,1,50,50,//10
-		50,50,1,1,1,1,1,1,1,NREPMAX, //20
-		1,1,NMOVES,1,1,1,1,1,1,1, //30
+	MPI_Datatype type[51]={MPI_INT, MPI_INT, MPI_LONG, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_CHAR, MPI_CHAR, //10
+		MPI_CHAR, MPI_CHAR, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE, MPI_INT, //20
+		MPI_DOUBLE, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, //30
+		MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_DOUBLE,  MPI_DOUBLE, //40
+		MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_INT,  MPI_INT,  MPI_INT,  MPI_INT, MPI_DOUBLE, MPI_INT, MPI_DOUBLE, //50
+		MPI_INT};
+	int blocklen[51]={1,1,1,1,1,1,1,1,50,50,//10
+		50,50,1,1,1,1,1,1,1,1, //20
+		NREPMAX,1,1,NMOVES,1,1,1,1,1,1, //30
 		1,1,1,1,1,1,1,1,1,1, //40
-		1,1,1,1,1,1,1,1,1,1};
-	MPI_Aint disp[50];
+		1,1,1,1,1,1,1,1,1,1, //50
+		1};
+	MPI_Aint disp[51];
 	
 	int i;
-	for(i=0; i<50; ++i)
+	for(i=0; i<51; ++i)
 		disp[i]=adress[i+1]-adress[0];
 	
-	MPI_Type_create_struct(50,blocklen,disp,type,Parmstype);
+	MPI_Type_create_struct(51,blocklen,disp,type,Parmstype);
 	MPI_Type_commit(Parmstype);
 	free(x);
 	#endif
@@ -432,13 +437,17 @@ void send_struct_to_proc(int *nback, int iproc,int jproc, int nprocs, int *nat, 
                 MPI_Pack(nat,1,MPI_INT,buffer,buffer_size,&position,MPI_COMM_WORLD);
                 MPI_Pack(ntypes,1,MPI_INT,buffer,buffer_size,&position,MPI_COMM_WORLD);
                 MPI_Pack(nback,1,MPI_INT,buffer,buffer_size,&position,MPI_COMM_WORLD);
+				fprintf(stderr,"Hi! I am replica %d and I am sending data to replica %d!\n",iproc,jproc);
 
-                MPI_Send(buffer,position,MPI_PACKED,jproc, 200+i, MPI_COMM_WORLD);
+                MPI_Send(buffer,position,MPI_PACKED,jproc, 200+iproc, MPI_COMM_WORLD);
         }
         if(iproc==jproc)
         {
+				fprintf(stderr,"Hi! I am replica %d and I am waiting for a structure!\n",iproc);
                 MPI_Recv(buffer,buffer_size,MPI_PACKED,0, 200+iproc, MPI_COMM_WORLD, &astatus);
                 position=0;
+				fprintf(stderr,"Hi! I am replica %d and I have to unpack stuff!\n",iproc);
+
                 MPI_Unpack(buffer,buffer_size,&position,nat,1,MPI_INT,MPI_COMM_WORLD);
                 MPI_Unpack(buffer,buffer_size,&position,ntypes,1,MPI_INT,MPI_COMM_WORLD);
                 MPI_Unpack(buffer,buffer_size,&position,nback,1,MPI_INT,MPI_COMM_WORLD);
@@ -687,6 +696,25 @@ void send_double_array(int length, int iproc, double *m, int source)
 			m[i]=mm[i];
 	return;
 }
+
+void send_char_array(int length, int iproc, char *m, int source)
+{
+	int i;
+	char mm[length];
+	
+	if(iproc==source)
+		for(i=0; i<length; ++i)
+			mm[i]=m[i];
+	
+	MPI_Bcast(&mm,length,MPI_CHAR,source,MPI_COMM_WORLD);
+	
+	if(iproc!=source)
+		for(i=0; i<length; ++i)
+			m[i]=mm[i];
+	return;
+}
+
+
 
 /*****************************************************************************
  Copy a polymer structure from a replica to another 

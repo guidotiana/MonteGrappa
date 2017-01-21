@@ -63,6 +63,7 @@ struct s_potential *send_pot(int nat, int ntypes, int noangpot, int nodihpot, in
 void send_double_matrix(int length1, int length2, int iproc, double **m, int source);
 void send_int_matrix(int length1, int length2, int iproc, int **m, int source);
 void send_double_array(int length, int iproc, double *m, int source);
+void send_char_array(int length, int iproc, char *m, int source);
 
 
 //exchange

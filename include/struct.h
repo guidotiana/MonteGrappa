@@ -301,6 +301,7 @@ struct s_mc_parms
 	int nprinttrj;		// when to print trajectory file
 	int nprintlog;		// when to print log
 	int nprinte;		// when to print energy
+	int ncheckpoint;	// when to print a checkpoint (.pol)
 	FILE *flog;
 	int shell;		// 1=activate shell
 	int nshell;		// update shell every %d step
