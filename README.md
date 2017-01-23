@@ -8,17 +8,18 @@
 
 
                  WELCOME TO
-               MONTEGRAPPA 1.2 
+               MONTEGRAPPA 1.3 
 
 ===============================================
 
 
-This file will help you to compile and install Montegrappa v1.2 .
+This file will help you to compile and install Montegrappa v1.3 .
 The package contains three programs:
 
 	- "montegrappa", the main Monte Carlo engine 
 	- "grappino", a tool to create the input files for montegrappa.
 	- "mhistogram", a data analysis tool
+	- "mgp2pdb", a simple converter from .pol files to .pdb
 
 The code needs GSL libraries and the MPI environment to be correctly 
 installed on your machine. This is a requirement to enable STEMPERING
@@ -37,8 +38,8 @@ The whole distribution can be quickly compiled just typing in your terminal
 
 	$ make all
 
-The binary files "montegrappa", "montegrappa_mpi", "grappino" 
-and "mhistogram" will be created in the ./bin directory. 
+The binary files "montegrappa", "montegrappa_mpi", "grappino", "mhistogram", 
+and "mgp2pdb" will be created in the ./bin directory. 
 
 
 OPENMP (experimental): To activate OpenMP, change the following lines 
@@ -94,5 +95,6 @@ The tools can be compiled alone, with the commands
 
       $ make grappino
       $ make mhistogram
+	  $ make mgp2pdb
 
 The executables "grappino" and "mhistogram" will be created in the ./bin directory.
