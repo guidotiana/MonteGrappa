@@ -190,7 +190,7 @@ void FreeTables(struct s_tables *t);
 
 
 // mc.c
-void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *replica, struct s_polymer *native, struct s_potential *pot, struct s_mc_parms *parms, FILE *ftrj, FILE *fe, struct s_polymer *oldp, FILE *fproc, int irun,struct s_mpi_parms *mpiparms);
+void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *replica, struct s_polymer *native, struct s_potential *pot, struct s_mc_parms *parms, FILE *ftrj, FILE *fe, struct s_polymer *oldp, FILE *fproc, int irun, unsigned long long chkp_step, struct s_mpi_parms *mpiparms);
 void CopyResiduePositions(struct s_back *from, struct s_back *to);
 void CopyResiduePositions_NOCONT(struct s_back *from, struct s_back *to);
 int MoveBackboneFlip(struct s_polymer *p,struct s_polymer *oldp, struct s_mc_parms *mc_parms, struct s_potential *u,unsigned long long step, int debug, double t);

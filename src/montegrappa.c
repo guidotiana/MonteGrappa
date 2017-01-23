@@ -43,10 +43,11 @@ int main(int argc, char *argv[])
 	struct s_polymer *polymer, *startp, *oldp,*fragment=NULL,*replica;
 	struct s_mc_parms *parms=0;
 	struct s_potential *u;
-	char polname[50],potname[50],fname[50];
+	char polname[50],potname[50],fname[50],aux[50];
 	int i,nat,ntypes,irun,ci,out,nrestr;
+	unsigned long long int chkp_step=0;
 
-	FILE *ftrj=NULL,*fe=NULL,*fproc=NULL;
+	FILE *ftrj=NULL,*fe=NULL,*fproc=NULL,*fp=NULL;
 
 
 	double **ematold;
@@ -81,18 +82,33 @@ int main(int argc, char *argv[])
 
 	mpiparms->my_rank=my_rank;
 	mpiparms->nprocs=nprocs;
+	#endif
 
 	strcpy(polname,argv[1]);
+	
 	if(!strcmp(polname,"checkpoint")){
 	#ifdef ACTIVE_MPI
 		MPI_Barrier(MPI_COMM_WORLD);
+		if(my_rank == 0){
+			fp = fopen("checkpoint.dat","r");
+			while(fgets(aux,500,fp)!=NULL){
+				chkp_step = strtoull(aux,NULL,10);
+			}
+			fclose(fp);
+		}
+		MPI_Bcast(&chkp_step, 1, MPI_UNSIGNED_LONG_LONG, 0, MPI_COMM_WORLD);
+		MPI_Barrier(MPI_COMM_WORLD);
 	#else
-		fprintf(stderr,"WARNING! Using checkpoint.pol as input polymer file\n");
+		fp = fopen("checkpoint.dat","r");
+		while(fgets(aux,500,fp)!=NULL){
+			chkp_step = strtoull(aux,NULL,10);
+		}
+		fclose(fp);
 	#endif
 	}
 	
 	
-	
+	#ifdef ACTIVE_MPI
 	if(my_rank==0)
 	{
 	#endif
@@ -189,7 +205,7 @@ int main(int argc, char *argv[])
 		#ifdef ACTIVE_MPI
 		if(my_rank == 0){
 			fprintf(stderr,"WARNING! Using checkpoint_proc$rep.pol as input polymer files\n");
-			fprintf(stderr,"Number of processes: %d\n",nprocs);
+			fprintf(stderr,"Corrected starting step: %llu\n",chkp_step);
 		}
 		// Read all polymers from process 0 and send it from the last to the 2nd replica
 		for(i=nprocs-1;i>0;--i)
@@ -217,22 +233,23 @@ int main(int argc, char *argv[])
 			sprintf(polname,"checkpoint_proc%d.pol",i);
 			ReadPolymer(polname,startp,parms->flog,parms->npol, parms->debug, &nat, &ntypes);
 			ComputeIAPDB(startp,parms);
-			sprintf(polname,"checkpoint",i);
+			sprintf(polname,"checkpoint");
 		}
 		#else
+		fprintf(stderr,"WARNING! Using checkpoint.pol as input polymer file\n");
 		sprintf(polname,"checkpoint.pol");
-		ReadPolymer("checkpoint.pol",startp,parms->flog,parms->npol, parms->debug, &nat, &ntypes);
+		fprintf(stderr,"Corrected starting step: %llu\n",chkp_step);
+		ReadPolymer(polname,startp,parms->flog,parms->npol, parms->debug, &nat, &ntypes);
 		ComputeIAPDB(startp,parms);
 		#endif
 	}
 	else{
+		#ifdef ACTIVE_MPI
 		if(my_rank==0)
 		{
 			ReadPolymer(polname,startp,parms->flog,parms->npol, parms->debug, &nat, &ntypes);
 			ComputeIAPDB(startp,parms);
 		}
-		
-		#ifdef ACTIVE_MPI
 		MPI_Barrier(MPI_COMM_WORLD);
 		for (i=0;i<parms->npol;++i)
 		{
@@ -242,6 +259,10 @@ int main(int argc, char *argv[])
 		MPI_Barrier(MPI_COMM_WORLD);
 		if(parms->debug>1)
 			fprintf(fproc,"iproc=%d\tnat=%d\tntypes=%d\tnback=%d\n",mpiparms->my_rank,nat,ntypes, startp->nback);
+		#else
+		fprintf(stderr,"POLNAME: %s\n",polname);
+		ReadPolymer(polname,startp,parms->flog,parms->npol, parms->debug, &nat, &ntypes);
+		ComputeIAPDB(startp,parms);
 		#endif
 	
 	}
@@ -328,7 +349,6 @@ int main(int argc, char *argv[])
 	   
 	#ifdef OPTIMIZEPOT
 	char fname_op[50];
-	FILE *fp;
 	#ifdef ACTIVE_MPI
 	sprintf(fname_op,"op_log_proc%d.pdb",my_rank);
 	#else
@@ -498,9 +518,9 @@ int main(int argc, char *argv[])
 	
 		// MAKE MONTE CARLO
 		#ifdef ACTIVE_MPI		
-		Do_MC(polymer,fragment,replica,startp,u,parms,ftrj,fe,oldp,fproc,irun,mpiparms);	
+		Do_MC(polymer,fragment,replica,startp,u,parms,ftrj,fe,oldp,fproc,irun,chkp_step,mpiparms);
 		#else
-		Do_MC(polymer,fragment,replica,startp,u,parms,ftrj,fe,oldp,fproc,irun,0);		
+		Do_MC(polymer,fragment,replica,startp,u,parms,ftrj,fe,oldp,fproc,irun,chkp_step,0);
 		#endif
 		#ifdef OPTIMIZEPOT
 		if (strcmp(parms->op_minim,"none"))

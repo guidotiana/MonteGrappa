@@ -43,13 +43,13 @@
  *****************************************************************************/
 int softexit;
 
-void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *replica, struct s_polymer *native, struct s_potential *pot, struct s_mc_parms *parms, FILE *ftrj, FILE *fe, struct s_polymer *oldp, FILE *fproc,int irun, struct s_mpi_parms *mpiparms)
+void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *replica, struct s_polymer *native, struct s_potential *pot, struct s_mc_parms *parms, FILE *ftrj, FILE *fe, struct s_polymer *oldp, FILE *fproc,int irun, unsigned long long chkp_step, struct s_mpi_parms *mpiparms)
 {
 	int i,ok=0,iprinttrj=0,iprintlog=0,iprinte=0,icheckpoint=0,ntm=0,ci,mcount[NMOVES],macc[NMOVES],mdone[NMOVES];
 //	int anneal_count=0, anneal_status=0;
 
 	double t;
-	unsigned long long istep=0;
+	unsigned long long istep=chkp_step;
 	char fchkp[100];
 		
 	if(parms->shell==1)
@@ -372,6 +372,20 @@ void Do_MC(struct s_polymer *p, struct s_polymer *fragment, struct s_polymer *re
 			
 			PrintPolymer(fchkp,p,parms->npol);
 			icheckpoint = 0;
+			#ifdef ACTIVE_MPI
+			if(my_rank == 0)
+			{
+				FILE *chkpf=fopen("checkpoint.dat","w");
+				fprintf(chkpf,"%llu\n",istep);
+				fclose(chkpf);
+			}
+			#else
+			FILE *chkpf=fopen("checkpoint.dat","w");
+			fprintf(chkpf,"%llu\n",istep);
+			fclose(chkpf);
+			#endif
+			
+			
 		}
 		
 //		fprintf(stderr,"ETOT\t%lf\n",p->etot);
