@@ -1595,11 +1595,11 @@ int ReadPotential(char *fname, struct s_potential *u, struct s_mc_parms *parms, 
 	    	}
 
 	    	// attractive well
-	    	if (sscanf(aux,"homopolymeric %lf %lf",&(u->g_ehomo),&(u->g_rhomo))==1)
+	    	if (sscanf(aux,"homopolymeric %lf %lf",&(u->g_ehomo),&(u->g_rhomo))==2)
 	    	{
 	    		for (i=0;i<ntype;++i)
 	    			for(j=0;j<ntype;++j)
-	    				if (i != j )
+	    				//if (i != j ) WHY?
 	    				{
 								(u->r_2)[j][i] = u->g_rhomo*u->g_rhomo;
 								(u->e)[j][i] = u->g_ehomo;
