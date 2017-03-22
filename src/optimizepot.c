@@ -191,7 +191,8 @@ struct s_optimizepot_input *ReadOPRestrains(struct s_mc_parms *parms)
 	if (!fp) Error("Cannot open restrain file");	
 	
 	//read first lines
-	fscanf(fp,"%s",aux);
+	//fscanf(fp,"%s",aux);
+	fgets(aux,500,fp);
 	if (sscanf(aux,"ndata %d",&(x->ndata)) != 1) Error("First line of restrain data should be: ndata <int>");
 
 	// allocate arrays

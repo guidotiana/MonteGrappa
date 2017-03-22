@@ -6,7 +6,7 @@ CCMP=mpicc
 #LFLAGS -pg
 #LFLAGS= -Wall -pg -fopenmp -lm -L/usr/local/lib
 #LFLAGS= -Wall -pg  -lm -L/usr/local/lib
-LFLAGS= -lm -Wall -L/opt/openmpi-1.10.1/lib
+LFLAGS= -lm -Wall #-L/opt/openmpi-1.10.1/lib
 
 #LGSLFLAGS= -lgsl -lgslcblas 
 CFLAGS= -Wall -I/opt/local/include -Iinclude
