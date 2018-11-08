@@ -66,6 +66,7 @@ echo -e "traj\t\t"$rootname  >>$rootname.par
 echo "nosidechain"  >>$rootname.par
 echo "nodihpot"  >>$rootname.par
 echo "noangpot"  >>$rootname.par
+echo "nohfields"  >>$rootname.par
 echo -e "op_minim\tsample"   >>$rootname.par
 echo -e "op_file\t\t"$rootname.op   >>$rootname.par
 echo -e "op_deltat\t100000"  >>$rootname.par

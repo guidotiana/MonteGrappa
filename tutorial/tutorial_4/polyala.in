@@ -15,10 +15,10 @@ pdbfile         polyala.pdb
 
 #nosidechain
 rotamers
-rotfile	/home/fran/MonteGrappa-1.0/MonteGrappa-alpha/lib/rotamers.lib
+rotfile		../../lib/rotamers.lib
 pdb_rot                           
 
-atomtypes	/home/fran/MonteGrappa-1.0/MonteGrappa-alpha/lib/atomtypes.1.lib       
+atomtypes	../../lib/atomtypes.1.lib       
 
 
 #############
